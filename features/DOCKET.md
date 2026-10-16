@@ -668,3 +668,103 @@ D81 2026-10-15 [I>V]
   serves: N13
   touches: D80 D21 D55
 # roads not taken: the quiet timer keeps running through a pause and the conversation ends at the tenth minute. The visionary: "Pausing freezes the conversation".
+
+D82 2026-10-15 [V]
+  resp: the sweep's boundary question surfaced no assumption: "nothing" [V]
+  -> boundary
+  serves: N0
+  touches: D64
+
+N14 2026-10-15 [I>V] team 4 amends N7
+  need: we need Catch finished and demoable at every hour mark after hour four, because it is the fallback if the main idea fails on Saturday night; when the {10 hours} run out, the build follows a ratified cut order, and whatever is unbuilt is deferred, not failed [I>V]
+  tension: N5 -- the dropped thread is third in the order and the first catch that may be unbuilt at hour ten
+  tension: N3 -- names must stand alone as a complete demo, which is why they are built first
+# amends N7 after the adversarial pass's first objection: the ruled scope had grown to fourteen to sixteen hours by the interviewer's count.
+
+D83 2026-10-15 [I>V]
+  resp: the cut order, earliest built first: staying dark, names, the held page and the conversation boundary; the wearer's own promises and the notification; the dropped thread; keep and the jogger; promises owed to the wearer; pause; tick-off on the phone; restart persistence; scrolling past {20 names}; anything unbuilt when the {10 hours} run out is deferred to the fence, not counted as a failure [I>V]
+  -> structural
+  serves: N14
+  touches: N7 N14 D16 D17 D43 D21 D28 D35 D24 D25 D80 D39 D73
+# roads not taken: amend N7 to "as much as fits" with no order; cut restart persistence, scrolling and tick-off from the scope now.
+
+D84 2026-10-15 [V] ratifies N14
+  resp: the visionary chose the option "Ratify a cut order", whose text is N14 and D83 as written [V]
+  touches: N7 N14 D83
+
+D85 2026-10-15 [I>V]
+  pre: Catch is used outside the hackathon demo, in public release or any use beyond the event [I>V]
+  trig: the question of recording consent arises [I>V]
+  resp: by design Catch gives the people the wearer is with no sign that they are heard, and consent, where the law requires it, is the wearer's responsibility, as with any recorder; this stands as a named assumption until the trigger above reopens it [I>V]
+  -> fence-assumption consent-is-the-wearers-job
+  serves: N2
+  touches: D71 D15 D61 D44 D76
+# adversarial pass, objection 2. Roads not taken: add a behavior that nothing of another person's is kept verbatim; both; reopen compliance as a category. California Penal Code 632 (all-party consent for confidential communications) is the law in view; the demo itself is consented by everyone at the table.
+
+D86 2026-10-15 [I>V] amends D80
+  pre: Catch is listening and the lens shows only the dot [I>V]
+  trig: the wearer swipes down [I>V]
+  resp: Catch pauses: the lens shows `paused` in dim text for {1.5 seconds}, then a dim dash `–` in the dot's place for as long as the pause lasts, so that paused never looks like can't-hear, which shows nothing; nothing said while paused is heard, held or transcribed; swipe down again shows `listening` for {1.5 seconds} and the dot returns; swipe down keeps its other meanings while a page or prompt is showing [I>V]
+  why: {1.5 seconds} carried from D17 [I>V]
+  serves: N13
+  touches: D80 D37 D14 D81
+# restates D80 in full with the paused mark. Adversarial pass, objection 3: D37 (no dot = cannot hear) and D80 (no dot = paused) had made the two states identical. Roads not taken: accept it; a blinking dot for can't-hear.
+
+D87 2026-10-15 [I>V] reverses D59
+  resp: a repeated name within {2 minutes} of its first appearance is a second person and gets `(2)`, as in a round of introductions; a repeated name more than {2 minutes} later is the same person re-introducing to a newcomer and is listed once; Catch still cannot tell voices apart, so this is a rule about timing, not identity [I>V]
+  why: {2 minutes} is the interviewer's estimate of how long a round of introductions lasts; accepted by the visionary [I>V]
+  -> fence-assumption repeated-name-rule-by-timing
+  serves: N3
+  touches: D59 D57 D60 D44 D43
+# adversarial pass, objection 4: D44 and D59 together polluted the names page at the kickoff circle D43 was designed for. Reverses D59, which restores D57 (one Priya when she re-introduces later) and narrows D60.
+
+D88 2026-10-15 [I>V] amends D60
+  pre: Priya introduced herself at the start of the conversation [I>V]
+  trig: within {2 minutes}, a second person says "Hi, I'm Priya" [I>V]
+  resp: the lens shows `Priya (2)` for {1.5 seconds}, and the names page lists `Priya` and `Priya (2)` in the order heard; a third within the window gets `Priya (3)`; the same words more than {2 minutes} after the first are a re-introduction and change nothing on the page [I>V]
+  why: {2 minutes} is D87; {1.5 seconds} carried from D17 [I>V]
+  serves: N3
+  touches: D60 D87 D57
+# restates D60 in full under D87.
+
+D89 2026-10-15 [I>V] amends D45
+  pre: the wearer is in a conversation with Dev and the lens shows only the dot [I>V]
+  trig: the wearer says "I'll send you the deck tonight" [I>V]
+  resp: within {3 seconds} the lens shows `promised · send Dev the deck tonight`, a short summary that keeps any stated time or condition, in dim text in the lower third, holds it for {1.5 seconds}, goes back to the dot, and the promise is held for this conversation; a promise with no stated time or condition shows the bare action [I>V]
+  why: {3 seconds} replaces the {2 seconds} of D17 for promise lines, because a promise line needs a model to judge, summarize and fill in, where a name is a pattern on the transcript; {1.5 seconds} carried from D17 [I>V]
+  serves: N4
+  touches: D45 D46 D25 D26 D19
+# restates D45 in full with the promise-line latency. Adversarial pass, objection 5. The {3 seconds} applies equally to promises owed to the wearer (D25, D26) and filled-in promises (D46); names keep {2 seconds}. Roads not taken: mark the promise lines' {2 seconds} as TBR for Saturday; keep {2 seconds} everywhere.
+
+D90 2026-10-15 [I>V] amends D46
+  pre: Dev has just said "can you send me the budget by Friday?" and the lens shows only the dot [I>V]
+  trig: the wearer says "Yeah, I'll do it" [I>V]
+  resp: within {3 seconds} the lens shows `promised · send Dev the budget by Friday`, with the object and time filled in from what Dev just said, and the promise is held [I>V]
+  why: {3 seconds} is D89 [I>V]
+  serves: N4
+  sib: D47
+  touches: D46 D89
+
+D91 2026-10-15 [I>V] amends D25
+  pre: the wearer is in a conversation with Dev, whose name was caught earlier, and the lens shows only the dot [I>V]
+  trig: Dev, not the wearer, says "I'll send you the deck tonight" [I>V]
+  resp: within {3 seconds} the lens shows `Dev promised · send the deck tonight` in dim text in the lower third for {1.5 seconds}, and the promise is held in a second list, owed to the wearer, separate from the wearer's own promises [I>V]
+  why: {3 seconds} is D89; {1.5 seconds} carried from D17 [I>V]
+  serves: N4
+  touches: D25 D89 D45
+# restates D25 in full with the promise-line latency and the kept time word from D45.
+
+D92 2026-10-15 [I>V] amends D21
+  resp: a conversation ends after {10 minutes} in which the wearer does not speak, whatever anyone else says, or at once when the wearer long-presses; at either end the held names clear, the held promises go to the phone, and the wearer's next speech begins a new conversation [I>V]
+  why: {10 minutes} carried from D21 [I>V]
+  -> structural
+  serves: N3
+  serves: N4
+  touches: D21 D55 D56 D51 D44 D81
+# restates D21 in full: the quiet timer now runs on the wearer's own silence, not the room's. Adversarial pass, objection 6: under D21 and D44 a conversation in a busy hall might never end. Roads not taken: accept it with long-press as the escape; a ceiling of {3 hours}. D55, D56 and D51 read with "the wearer" in place of "everyone"; their numbers are unchanged.
+
+D93 2026-10-15 [V]
+  resp: the adversarial pass is closed by the visionary: "done", after six objections, five accepted as changes (N14 and D83, D85, D86, D87 and D88, D89 to D91, D92) and none rejected outright [V]
+  -> boundary
+  serves: N0
+  touches: D82
