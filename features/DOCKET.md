@@ -768,3 +768,56 @@ D93 2026-10-15 [V]
   -> boundary
   serves: N0
   touches: D82
+
+D94 2026-10-15 [V]
+  resp: the scope fence was read back in full, declined, named assumptions, out of reach by construction and deferred, and confirmed: "that's the complete fence" [V]
+  -> boundary
+  serves: N0
+  touches: D66 D67 D68 D69 D70 D71 D75 D15 D44 D87 D72 D77 D85 D83 D22
+
+D95 2026-10-15 [I>V]
+  resp: speaker identification is out of reach by construction: Catch knows the wearer's voice from everyone else's by loudness alone and never knows which other person is speaking; every ruling that names another person (D26, D87, D91) rests on a name having been caught, not on a voice being recognized [I>V]
+  -> structural
+  serves: N3
+  touches: D26 D87 D91 D94
+# written at the fence readback so the out-of-reach section cites a ruling rather than a note.
+
+D96 2026-10-15 [V]
+  resp: at the readback, walking the vision end to end from the morning to the last notification, the visionary found nothing missing: "no" [V]
+  -> boundary
+  serves: N0
+  touches: D94
+
+D97 2026-10-15 [V]
+  resp: at the readback's protocol question the visionary asked for the shape of the phone surfaces earlier: "some questions about that would have been reassuring"; the interviewer had rendered every lens state and no phone screen, so three shape questions were added before the technology step [V]
+  -> boundary
+  serves: N0
+  touches: D96 D28 D39 D24
+
+D98 2026-10-15 [I>V]
+  resp: a promise notification opens one screen for that conversation only: a header with the names caught and the time, a YOU section with the wearer's promises each with a tick box, an OWED TO YOU section with the promises owed each with a tick box, and, when the conversation was kept, a link to its jogger; open promises from other conversations are not on this screen [I>V]
+  -> structural
+  serves: N4
+  touches: D28 D39 D24 D97
+# chosen by option from rendered phone mockups at the crowded case (five yours, two owed). Roads not taken: one running list of every open promise grouped by conversation; an inbox of conversations with a tap into each.
+
+D99 2026-10-15 [I>V]
+  resp: a kept conversation's jogger is one flat list of short bullets in the order things came up, with the technical terms set off in bold inside the bullets so they can be scanned, the wearer's promises as bullets among them, and the missed-time line sitting where it fell; the header carries the names caught and the length; no glossary and no model-chosen topic headings [I>V]
+  -> structural
+  serves: N8
+  touches: D24 D53 D74 D98
+# chosen by option from rendered phone mockups at the stressing case (a {3 hour} technical workshop, about {40 bullets}, one gap). Roads not taken: a glossary of terms first, then the points; bullets grouped under model-chosen topic headings.
+
+D100 2026-10-15 [I>V]
+  resp: the phone's home screen is a history of conversations, newest first, grouped by day: each row shows the names caught (or "no name"), the time, the count of open promises or "all done", and a kept mark; a count of all open promises sits in the header; tapping a row opens that conversation's screen; conversations that produced neither a promise nor a keep never appear; nothing else is on the phone [I>V]
+  -> structural
+  serves: N4
+  serves: N8
+  touches: D98 D99 D51 N10
+# chosen by option from rendered phone mockups at the crowded case (a week, {18 conversations}). Roads not taken: open promises only with joggers kept {7 days} then gone; no home at all, the notification tray as the only way back.
+
+D101 2026-10-15 [V]
+  resp: the readback's boundary question surfaced no assumption: "nothing" [V]
+  -> boundary
+  serves: N0
+  touches: D82
