@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "docket": "docketry lint features/DOCKET.md --corpus features",
-    "docket:strict": "docketry lint features/DOCKET.md --corpus features --strict"
+    "docket:strict": "docketry lint features/DOCKET.md --corpus features --strict",
+    "validate": "node ~/Documents/RefLib/scope-tools/scope-validate.cjs features/*.feature"
   },
   "devDependencies": {
     "@bingh/docketry": "^0.1.0",
