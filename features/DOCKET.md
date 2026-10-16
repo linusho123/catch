@@ -528,3 +528,143 @@ D63 2026-10-15 [I>V]
   spread: A kept conversation of any length gets a jogger
   touches: D24 D62
 # the visionary: "it grows naturally as a conversation or topic grows in length/difficulty/technicality". Roads not taken: a minimum length to keep; splitting a long jogger into sections per hour.
+
+D64 2026-10-15 [V]
+  resp: the coverage-phase boundary question surfaced no assumption: "nothing" [V]
+  -> boundary
+  serves: N0
+  touches: D11
+
+D65 2026-10-15 [V]
+  resp: at the checklist triage the visionary selected usability, reliability, performance and security as the categories that matter for Catch, and left availability, ops burden, diagnosability, evolvability, lifecycle and compliance unselected [V]
+  -> boundary
+  serves: N0
+  touches: D64
+
+D66 2026-10-15 [I>V]
+  resp: availability beyond what D37 already rules (the dot disappears when Catch cannot hear) is declined as a scoping category: no further ruling on what is acceptable when Catch is down at the moment of need [I>V]
+  -> fence-declined availability
+  serves: N7
+  touches: D65 D37
+
+D67 2026-10-15 [I>V]
+  resp: ops burden is declined as a scoping category: no ruling on how long Catch must run unattended or what maintenance the team will not commit to [I>V]
+  -> fence-declined ops-burden
+  serves: N7
+  touches: D65
+
+D68 2026-10-15 [I>V]
+  resp: diagnosability is declined as a scoping category: no ruling on what the team must be able to find out when Catch breaks [I>V]
+  -> fence-declined diagnosability
+  serves: N7
+  touches: D65
+
+D69 2026-10-15 [I>V]
+  resp: evolvability is declined as a scoping category: no ruling on what must survive change, including the About Time evening entry as a known successor [I>V]
+  -> fence-declined evolvability
+  serves: N7
+  touches: D65
+
+D70 2026-10-15 [I>V]
+  resp: lifecycle is declined as a scoping category: no ruling on how Catch arrives, is upgraded or retired, or what a successor reads [I>V]
+  -> fence-declined lifecycle
+  serves: N7
+  touches: D65
+
+D71 2026-10-15 [I>V]
+  resp: compliance is declined as a scoping category: no ruling beyond D15 and N10 on recording-consent law or Even Hub store rules, and nobody is named to check them [I>V]
+  -> fence-declined compliance
+  serves: N7
+  touches: D65 D15 N10
+# unselected at the triage; declined with provenance (a checklist category, not derived from anything the visionary said). The adversarial pass may reopen compliance, since California is an all-party-consent state and the event is at UCLA.
+
+N11 2026-10-15 [I>V] user 2
+  need: I need to learn Catch's touch vocabulary once, from a short guide, since nothing on the lens teaches it [I>V]
+  means: a quick user guide for new users, outside the glasses [V]
+# usability sweep (a checklist category, not derived from anything the visionary said). The guide is the visionary's own answer; weight guessed 2.
+
+D72 2026-10-15 [I>V]
+  resp: people whose names or accents speech-to-text gets wrong often, and people new to the touch vocabulary, are accepted limits: Catch does nothing extra for either, and a quick user guide is the whole answer for the second; no third group was named [I>V]
+  -> fence-assumption usability-limits-accepted
+  serves: N11
+  touches: D65 D17 D34 D43
+
+N12 2026-10-15 [I>V] user 4
+  need: I need nothing Catch is holding for me to be lost when the app or the phone restarts mid-conversation [I>V]
+# reliability sweep (a checklist category). Weight guessed 4: the visionary answered "everything" without hesitation.
+
+D73 2026-10-15 [I>V]
+  pre: the wearer is {15 minutes} into a kept conversation in which two promises and three names are held [I>V]
+  trig: the Even app or the phone restarts, and Catch comes back {1 minute} later [I>V]
+  resp: everything is still there: the two promises, the three names in their order, the keep mark, and the transcript so far, so the jogger covers the whole conversation apart from the minute not heard; the conversation continues rather than starting fresh [I>V]
+  why: {15 minutes} and {1 minute} are the interviewer's example of a mid-conversation restart [I>V]
+  serves: N12
+  touches: D53 D37 D21
+# roads not taken: promises and the keep mark survive but not the names; nothing survives and the restart begins a new conversation.
+
+D74 2026-10-15 [I>V] amends D63
+  pre: the wearer kept a {3 hour} workshop from the start [I>V]
+  trig: the conversation ends and the jogger is written [I>V]
+  resp: the jogger stays one quick read with no sections, and grows naturally with the length, difficulty and technicality of what was said, never pressed to compress and never padded; its notification may take up to {a few minutes} to arrive for a conversation this long, against {30 seconds} for a short one [I>V]
+  why: {3 hours} sits at the long edge of the {25 minute} example in D24; {a few minutes} is the visionary's allowance for a long transcript; {30 seconds} is D52 [I>V]
+  serves: N8
+  spread: A kept conversation of any length gets a jogger
+  touches: D63 D52 D24
+# restates D63 in full with the arrival allowance. Performance sweep (a checklist category).
+
+D75 2026-10-15 [V]
+  resp: battery life with Catch listening all day is outside scope: no ruling on how long the glasses or the phone must last [V]
+  -> fence-declined battery
+  serves: N7
+  touches: D65
+# performance sweep. The visionary: "battery is outside scope".
+
+D76 2026-10-15 [I>V]
+  pre: a conversation that was not kept has ended, with or without promises [I>V]
+  trig: the tenth minute of quiet passes, or the wearer long-presses [I>V]
+  resp: the conversation's transcript and audio are deleted everywhere, the server included, so that nobody, the team included, can read it afterwards; only the promise summaries survive, and for a kept conversation only the jogger and the promise summaries [I>V]
+  serves: N10
+  touches: N10 D21 D28 D24
+# security sweep (a checklist category). The visionary: "Deleted everywhere".
+
+D77 2026-10-15 [V]
+  resp: for the hackathon the team is trusted as the operator: it may read the kept joggers and promise lists it hosts; no ruling restricts the team's own access, and nothing is ruled about any other party's access beyond D76 [V]
+  -> fence-assumption team-trusted-as-operator
+  serves: N10
+  touches: D76 D65
+# security sweep. Roads not taken: nobody but the wearer can read kept joggers and lists.
+
+N13 2026-10-15 [I>V] user 4
+  need: I need to make Catch stop listening on purpose, for a bathroom break, a doctor's visit or a talk someone asks me not to record, and start it again myself [I>V]
+  means: a pause gesture on the glasses [V]
+# domain question at the close of the sweep (the interviewer's own priors, named as such). Weight guessed 4: without it the only way to stop is to exit the app.
+
+D78 2026-10-15 [V]
+  resp: Catch hears English only; no other language is in scope [V]
+  -> structural
+  serves: N3
+  touches: D65
+
+D79 2026-10-15 [V]
+  resp: one wearer per account: a pair of glasses sends its promises and kept conversations to exactly one phone, the account holder's, and a shared pair at the demo table delivers everything to that one phone [V]
+  -> structural
+  serves: N4
+  touches: D1 D28
+
+D80 2026-10-15 [I>V]
+  pre: Catch is listening and the lens shows only the dot [I>V]
+  trig: the wearer swipes down [I>V]
+  resp: Catch pauses: the lens shows `paused` in dim text for {1.5 seconds}, then nothing, no dot, and nothing said while paused is heard, held or transcribed; swipe down again shows `listening` for {1.5 seconds} and the dot returns; swipe down keeps its other meanings while a page or prompt is showing [I>V]
+  why: {1.5 seconds} carried from D17 [I>V]
+  serves: N13
+  touches: D37 D14 D30 D40 D43
+# roads not taken: a Pause item in Even's contextual menu; long-press pausing as well as ending the conversation. Recommended and chosen.
+
+D81 2026-10-15 [I>V]
+  pre: the wearer is mid-conversation with Priya's name and one promise held, {4 minutes} into the quiet timer [I>V]
+  trig: the wearer swipes down to pause, stays paused for {12 minutes}, and swipes down again to resume [I>V]
+  resp: pausing freezes the conversation: on resume the wearer is still in it, Priya and the promise are still held, nothing went to the phone, and the quiet timer continues from {4 minutes}, not from zero and not expired [I>V]
+  why: {12 minutes} is the interviewer's example of a pause longer than the {10 minutes} of D21, to show the timer froze; {4 minutes} is an arbitrary point on the timer [I>V]
+  serves: N13
+  touches: D80 D21 D55
+# roads not taken: the quiet timer keeps running through a pause and the conversation ends at the tenth minute. The visionary: "Pausing freezes the conversation".
