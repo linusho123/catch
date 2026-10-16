@@ -1,0 +1,13 @@
+{
+  "name": "catch-scope",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "docket": "docketry lint features/DOCKET.md --corpus features",
+    "docket:strict": "docketry lint features/DOCKET.md --corpus features --strict"
+  },
+  "devDependencies": {
+    "@bingh/docketry": "^0.1.0",
+    "gherkin-node-test": "^0.11.0"
+  }
+}
