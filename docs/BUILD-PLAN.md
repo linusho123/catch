@@ -21,6 +21,8 @@ Every agent that runs a phase reads this file itself. It is written so that a mo
 3. **Head reviewer as integrator** (Opus): confirms or rejects every finding against the code, runs its own probes, produces `mustFix`, `questions`, and a verdict (ship / fix / block).
 4. **One fix round** (Opus): a failing test before each fix; a surviving probe is fixed by strengthening the binding, never by rewording a scenario. Then a **fresh verifier** checks each fix's test fails before and passes after, and that nothing outside the findings changed.
 5. **Gate** (Sonnet runs the commands; exit codes as reported): the phase's gate commands below, in order. A red gate blocks.
+
+**Two test lanes, so the suite is not run six times at full cost.** Every agent inside a phase (builder, reviewers' probes, head reviewer, fixer, verifier) runs the **fast lane**, `npm run test:fast`: oxlint, an incremental typecheck, the unit tests, and only the feature files this phase binds (`FEATURES=<files> npm run test:fast`). Only the **gate** runs the **full lane**, `npm test`: everything, including the iOS UI tests and the website's Playwright run once they exist. A probe is run against the fast lane; the gate confirms nothing else regressed. P0 defines both lanes; no later phase may fold the full lane into the fast one.
 6. **Integrate** (main session): merge to `main`, push, commit the run manifest, store the treecontext resume pointer, report the verdict and attribution, **stop for the operator's go-ahead**. Never start the next phase unprompted.
 
 Questions for the visionary raised during a phase are put to them before the fix round closes, never answered by an agent.
@@ -33,6 +35,7 @@ Questions for the visionary raised during a phase are put to them before the fix
 - **The fence holds.** Nothing in `OUT-OF-SCOPE.md` gets built: no battery work, no speaker identification, no un-keep from the glasses, no names to the phone, no compliance machinery.
 - **Numbers come from the rulings.** Two seconds for a name line, three for a promise line, a second and a half of dwell, five seconds of page, ten minutes of the wearer's silence, two minutes for the repeated-name window, thirty seconds or a few minutes for a jogger. A build that needs a different number asks the operator; it does not pick one.
 - **Register.** A feature file leaves `wip` only when every scenario in it is bound; outline rows a later phase binds are held by scenario-scoped `wip`. The run manifest (`{"run-manifest":1}`) is committed every phase.
+- **Tests are cheap by construction.** No scenario calls the real speech-to-text provider: fixtures are **pre-transcribed word-timing JSON** committed beside their audio, and the fixture player feeds words to the server on a **virtual clock** at up to twenty times real time; the two-second and three-second bounds are asserted on fixture time, not wall time. The real provider runs only behind `CATCH_REAL_STT=1`, by hand or nightly, never in a lane. The Even bridge stub is in-process. The server under test starts once per test worker, not once per scenario. A scenario that takes longer than two seconds in the fast lane is a finding for the reviewer with the risk lens.
 
 ## Architecture the phases assume (from DESIGN.md; the build's choices are marked)
 
@@ -79,17 +82,22 @@ If T is Saturday 20:00, P0–P6 land by about 06:00 Sunday and P7 by 06:30; P8�
 **Rulings:** D106 (the aBDD workflow), D104 (the order).
 
 **Builds:**
-- The repository layout above; `package.json` scripts at the root: `npm test` (lint features, run `features/` through gherkin-node-test with every file in `wip`, unit tests), `npm run validate` (unchanged: the scope lint), `npm run manifest` (writes and stages `run-manifest.ndjson`).
+- The repository layout above; `package.json` scripts at the root:
+  - `npm run test:fast`: `oxlint`, `tsc -b --incremental` (project references for `apps/lens`, `apps/web`, `server`, `test`; `tsBuildInfo` files git-ignored), the unit tests (`vitest run --project unit`), and gherkin-node-test over the feature files named in `FEATURES` (all of them when unset) with the `wip` register applied. Target: under one minute on a laptop at P1, under two at P10.
+  - `npm test`: `npm run lint:features`, the full typecheck, every Vitest project, gherkin-node-test over all of `features/`, and from P2 the iOS UI tests on a simulator, from P8 the website's `npm run verify` and Playwright run. The gate's lane.
+  - `npm run validate` (unchanged: the scope lint), `npm run manifest` (writes and stages `run-manifest.ndjson`).
+  - Vitest never type-checks (esbuild/oxc strip types); `tsc -b` is the one typecheck and runs once per lane. `typescript-eslint` is not installed; if a type-aware lint rule is ever wanted it joins the full lane only. `vitest --changed origin/main` is available to agents for local iteration and is never a lane.
+  - A `slowTestThreshold` of 300 ms in the Vitest config, so slow tests are named in every run.
 - `apps/lens/` from Even's `asr` template, renamed, building to a `dist/`; the simulator opens it and shows a blank page with one dim dot (this is the only lens output P0 may produce, and it is not yet bound).
 - `server/` skeleton: a health endpoint and a WebSocket that accepts PCM 16 kHz mono and echoes a byte count. Speech-to-text provider chosen and wired behind one interface, with a 10-second fixture transcribed end to end and its word timings printed.
-- `test/`: the Even bridge stub that records every `createStartUpPageContainer`, `rebuildPageContainer`, `textContainerUpgrade` and `shutDownPageContainer` payload with a timestamp; an audio fixture player that feeds PCM to the server at real-time pace; a notification capture; a store reader. One passing smoke test per harness piece.
+- `test/`: the Even bridge stub that records every `createStartUpPageContainer`, `rebuildPageContainer`, `textContainerUpgrade` and `shutDownPageContainer` payload with a fixture-clock timestamp; a fixture player that feeds **pre-transcribed word-timing JSON** to the server on a virtual clock (default twenty times real time; `--realtime` for timing probes, and PCM audio through the real provider only under `CATCH_REAL_STT=1`); a notification capture; a store reader; one server per test worker. One passing smoke test per harness piece, and one test that proves the fast lane finishes under one minute on the P0 tree.
 - `DESIGN.md` gains `chosen` lines for the server language and the speech-to-text provider, each with a changelog line.
 
 **Far-side checks:** the bridge stub's recorded payloads are the ground truth for every later "the wearer sees" step; P0 proves they are captured with timestamps and brightness.
-**Second reviewer's focus:** the harness itself. Can the bridge stub be bypassed (a direct DOM write that the lens never does)? Does the fixture player run at real-time pace, so two-second and three-second bounds mean something later?
+**Second reviewer's focus:** the harness itself. Can the bridge stub be bypassed (a direct DOM write that the lens never does)? Does the virtual clock preserve the fixture's word timings, so two-second and three-second bounds mean something later? Does the fast lane really skip the full lane's work, and does the full lane really run everything?
 **Expected probes:** none bound; the reviewers check that the harness fails loudly when the server is down.
-**Gate:** `npm run lint:features` 0; `npm test` 0 with every file in `wip`; `npm run validate` 0; `npm run manifest` committed.
-**Exit:** `main` has a scaffold a cold builder can extend without asking where anything goes.
+**Gate:** `npm run test:fast` 0 (and its timing printed); `npm test` 0 with every file in `wip`; `npm run validate` 0; `npm run manifest` committed.
+**Exit:** `main` has a scaffold a cold builder can extend without asking where anything goes, and two lanes whose costs are known.
 
 ## P1 — Staying dark, names, the held page, and the conversation boundary
 
@@ -106,7 +114,7 @@ If T is Saturday 20:00, P0–P6 land by about 06:00 Sunday and P7 by 06:30; P8�
 **Second reviewer's focus:** the split and the clock. The own-name exclusion (D29) and the "Priya (2)" rule (D88) on the other-louder fixture; the two-second bound measured from fixture time, not from when the server noticed; the ten-minute boundary measured on the wearer's silence, not the room's (D92).
 **Expected probes:** a dot drawn at brightness 3; a name line that never fades; a name caught from the wearer's own "I'm Linus"; "Priya (2)" at three minutes; a names page out of order; a conversation that ends on the room's silence; a tap that opens the page while a line is showing; a server outage that leaves the dot lit.
 **Register after P1:** `names` leaves `wip`; `staying-dark` and `holding` scenario-scoped `wip` for what later phases bind.
-**Gate:** `npm run lint:features` 0; `npm test` 0; `npm run validate` 0; `.ehpk` built; manifest committed.
+**Gate:** `npm test` 0; `npm run validate` 0; `.ehpk` built; manifest committed. (Every later phase's gate is `npm test` 0, `npm run validate` 0, manifest committed, plus what the phase names.)
 **Exit:** a judge can put the glasses on, hear "Hi, I'm Priya", see `Priya`, and tap to see the list. This is the first demo.
 
 ## P2 — The wearer's own promises, the notification, and the iPhone app

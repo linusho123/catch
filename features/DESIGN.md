@@ -54,8 +54,11 @@ The orienting document for the agent that builds Catch, with the human as second
 - Streaming speech-to-text with word timings, chosen for the best handling of names on the team's own names Saturday morning; a name line within two seconds, a promise line within three. [chosen]
 - One model pass per catch for promises (judge, summarize, keep the time word, fill the object from the other person's last sentence) and one per kept conversation for the jogger; names by pattern on the transcript. [chosen]
 - The demo day is captured live; the loud-venue backup is a quiet corner, not a recording. [chosen]
+- Two test lanes: a fast lane (oxlint, one incremental typecheck, unit tests, the current phase's feature files) for every agent inside a phase, and a full lane (everything, including the iOS UI tests and the website's browser run) for the gate alone. The suite is never type-checked twice. [chosen]
+- Tests never call the real speech-to-text provider: fixtures are pre-transcribed word timings on a virtual clock, with timing bounds asserted on fixture time; the real provider runs only by hand behind an environment flag. The Even bridge stub is in-process and one server serves each test worker. [chosen]
 
 ## Changelog
 
 - 2026-10-15 — initial draft (scope interview; docket D1–D108; electives D102, D103, D106, aliased E1–E3; D105 ladders E1 to a preference).
 - 2026-10-15 — after the signed read (D110): the seven held candidates ruled as D111–D117; this doc gains the surface-outline constraint (D115). Nothing else changed.
+- 2026-10-15 — two `chosen` constraints on test speed (two lanes; pre-transcribed fixtures on a virtual clock), at the visionary's request after the plan was written. No ruled line touched.
