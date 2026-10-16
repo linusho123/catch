@@ -19,9 +19,9 @@ The orienting document for the agent that builds Catch, with the human as second
 ## The lens, exactly
 
 - Idle: a single dim dot at the lowest brightness, top right. No dot means Catch cannot hear; a dim dash means the wearer paused it. [ruled: D14]
-- Gestures, with two meanings each depending on what is showing: tap opens the held page when only the dot shows and clears any line otherwise; long-press ends the conversation now; swipe up asks to keep the conversation when only the dot shows and scrolls back on a page; swipe down pauses or resumes when only the dot shows, declines the keep prompt, turns the names page to promises, and scrolls. Double-tap is Even's exit. [ruled: D40, D92]
+- Gestures, with two meanings each depending on what is showing: tap opens the held page when only the dot shows and clears any line otherwise; long-press ends the conversation now; swipe up asks to keep the conversation when only the dot shows and scrolls back on a page; swipe down pauses or resumes when only the dot shows, declines the keep prompt, turns the names page to promises, and scrolls. Double-tap is Even's exit. [ruled: D34, D40, D43, D86, D92]
 - The held page: names in the order heard, scrolling past twenty, then the promises page, the wearer's own first, then those owed; the page dismisses on a tap or after five seconds. [ruled: D43]
-- The lens never shows two things at once: the newest wins; an unanswered keep prompt returns after the line that displaced it. [ruled: D40]
+- The lens never shows two things at once: the newest wins; an unanswered keep prompt returns after the line that displaced it. [ruled: D32, D40]
 - The thread is the wearer's most recent continuous run of speech, last six words, never reaching back across someone else's turn. [ruled: D48]
 - Glyphs: the dot, the dash, the ellipsis, the middle dot and the down arrow must be confirmed on the real lens font before the demo; Even drops missing glyphs silently. [chosen]
 

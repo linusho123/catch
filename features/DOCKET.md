@@ -905,3 +905,9 @@ D108 2026-10-15 [I>V]
   serves: N0
   touches: D107
 # the pass is recorded so that the chain hash change between the readback (41aa8f970887) and drafting is explained by this entry, not by silent drift.
+
+D109 2026-10-15 [V]
+  resp: the gate is cold: the visionary reads the feature files, the fence and the ledger alone; the interviewer's adversarial pass over the draft fixes drafting defects before the read and holds contract-level findings until it is done; chosen before any audit artifact existed [V]
+  -> boundary
+  serves: N0
+  touches: D108
