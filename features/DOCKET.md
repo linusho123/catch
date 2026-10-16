@@ -111,6 +111,7 @@ D14 2026-10-15 [I>V]
   trig: any moment during that conversation [I>V]
   resp: the lens shows a single dim dot at the lowest brightness in the top-right corner, and nothing else [I>V]
   serves: N2
+  sib: none -- the dot is the absence of a catch, and its failure cases are the deaf and paused states
   touches: none
 # roads not taken: nothing at all (blank is identical to off); blank with a dot for {2 seconds} at conversation start only. Chosen by option from rendered mockups.
 
@@ -122,10 +123,11 @@ D15 2026-10-15 [I>V]
 # evidence: Even Realities FAQ ("privacy-by-design"), Dymesty and 9to5Google G2 reviews, 2026-10-15. Raised by the visionary against the first draft of the staying-dark scenario, which claimed "Dev has seen nothing".
 
 D16 2026-10-15 [I>V]
-  pre: the wearer is in a conversation of {3 minutes} in which nobody introduces themselves, the wearer makes no promise, and nobody cuts the wearer off [I>V]
-  trig: the {3 minutes} pass [I>V]
+  pre: the wearer is in a conversation of three minutes in which nobody introduces themselves, the wearer makes no promise, and nobody cuts the wearer off [I>V]
+  trig: the three minutes pass [I>V]
   resp: the lens has shown nothing but the dim dot the whole time [I>V]
-  serves: N2
+  serves: N2 N1
+  sib: none -- a lens showing something here is another catch firing, each with its own failure case
   touches: D14 D15
 
 D17 2026-10-15 [I>V]
@@ -133,15 +135,16 @@ D17 2026-10-15 [I>V]
   trig: another person says "Hi, I'm Priya" [I>V]
   resp: within {2 seconds} the lens shows `Priya` in dim text in the lower third of the lens, holds it for {1.5 seconds}, and goes back to the dot [I>V]
   why: {2 seconds} is the interviewer's allowance for streaming speech-to-text plus the model call, and {1.5 seconds} the interviewer's estimate of a readable glance; both accepted by the visionary as written [I>V]
-  serves: N3
+  serves: N3 N1
   sib: D29
+  spread: A catch line appears and fades
   touches: D14 D15
 
 D18 2026-10-15 [I>V]
   pre: in this conversation Priya, Marcus and Dana have each introduced themselves, and the lens shows only the dot [I>V]
   trig: the wearer taps the glasses [I>V]
-  resp: the lens shows the names heard in this conversation in the order heard, `Priya`, `Marcus`, `Dana`, and the list stays until the wearer taps again or {5 seconds} pass with no touch [I>V]
-  why: order heard was the interviewer's choice so that a round of introductions reads like a seating list; {5 seconds} is the interviewer's estimate of a reading glance at three names; both accepted as written [I>V]
+  resp: the lens shows the names heard in this conversation in the order heard, `Priya`, `Marcus`, `Dana`, and the list stays until the wearer taps again or five seconds pass with no touch [I>V]
+  why: order heard was the interviewer's choice so that a round of introductions reads like a seating list; five seconds is the interviewer's estimate of a reading glance at three names; both accepted as written [I>V]
   serves: N3
   touches: D17
 # the visionary asked for this after D17 ("so you don't only have 1.5 sec to see who is Priya"); it is the Holding area's happy path for names.
@@ -149,32 +152,31 @@ D18 2026-10-15 [I>V]
 D19 2026-10-15 [I>V]
   pre: the wearer is in a conversation with Dev and the lens shows only the dot [I>V]
   trig: the wearer says "I'll send you the deck tonight" [I>V]
-  resp: within {2 seconds} the lens shows `promised · send Dev the deck`, a short summary rather than the words as said, in dim text in the lower third, holds it for {1.5 seconds}, goes back to the dot, and the promise is now held for this conversation [I>V]
-  why: the same {2 seconds} and {1.5 seconds} as D17, for the same reasons [I>V]
+  resp: within two seconds the lens shows `promised · send Dev the deck`, a short summary rather than the words as said, in dim text in the lower third, holds it for a second and a half, goes back to the dot, and the promise is now held for this conversation [I>V]
+  why: the same two seconds and a second and a half as D17, for the same reasons [I>V]
   serves: N4
   touches: D14 D15 D17
 # roads not taken: show the promise in the wearer's exact words. The visionary chose the summary.
 
 D20 2026-10-15 [I>V]
   pre: the wearer is mid-sentence, saying "There are two reasons for this. The first is cost, and the second reason is", and the lens shows only the dot [I>V]
-  trig: another person starts talking within {half a second} of the wearer stopping, and the wearer stays quiet for {2 seconds} [I>V]
-  resp: the lens shows the wearer's last {6 words}, `…and the second reason is`, in dim text in the lower third, and keeps them there until the wearer speaks again, then goes back to the dot [I>V]
-  why: {half a second} is the interviewer's threshold for a cut-in rather than a normal turn; {2 seconds} of quiet is the interviewer's threshold for having lost the thread rather than pausing; {6 words} is the interviewer's estimate of enough context to resume on one lens line; all accepted as written [I>V]
+  trig: another person starts talking within half a second of the wearer stopping, and the wearer stays quiet for two seconds [I>V]
+  resp: the lens shows the wearer's last six words, `…and the second reason is`, in dim text in the lower third, and keeps them there until the wearer speaks again, then goes back to the dot [I>V]
+  why: half a second is the interviewer's threshold for a cut-in rather than a normal turn; two seconds of quiet is the interviewer's threshold for having lost the thread rather than pausing; six words is the interviewer's estimate of enough context to resume on one lens line; all accepted as written [I>V]
   serves: N5
   sib: D33
   touches: D14 D15
 
 D21 2026-10-15 [I>V]
-  resp: a conversation ends after {10 minutes} in which nobody talks, or at once when the wearer long-presses; at either end the held names clear, the held promises go to the phone, and the next speech begins a new conversation [I>V]
-  why: {10 minutes} is the interviewer's draft, long enough to survive a pause for coffee and short enough that the promises arrive while the conversation is fresh; chosen inside the option the visionary picked, to be probed in coverage [I>V]
+  resp: a conversation ends after ten minutes in which nobody talks, or at once when the wearer long-presses; at either end the held names clear, the held promises go to the phone, and the next speech begins a new conversation [I>V]
+  why: ten minutes is the interviewer's draft, long enough to survive a pause for coffee and short enough that the promises arrive while the conversation is fresh; chosen inside the option the visionary picked, to be probed in coverage [I>V]
   -> structural
-  serves: N3
-  serves: N4
+  serves: N3 N4
   touches: D18 D19
 # roads not taken: quiet only (no gesture); gesture only (no quiet). Chosen by option.
 
 D22 2026-10-15 [I>V]
-  pre: in a conversation with Dev the wearer said "I'll send you the deck tonight" and "I'll intro you to Sam", and then nobody has talked for {10 minutes} [I>V]
+  pre: in a conversation with Dev the wearer said "I'll send you the deck tonight" and "I'll intro you to Sam", and then nobody has talked for ten minutes [I>V]
   trig: the tenth minute passes [I>V]
   resp: the phone shows one notification listing the promises as commands with no "you" in them, "Send Dev the deck and introduce Dev to Sam"; a list too long for the notification is cut off with an ellipsis, and opening the notification shows the full list; and the next tap on the glasses shows no names from that conversation [I+V]
   serves: N4
@@ -182,8 +184,8 @@ D22 2026-10-15 [I>V]
 # corrected by the visionary: imperative wording ("Send Dev the deck", not "You said you'd send"), and the notification opens into a full list when cut off. Roads not taken: one notification per promise. Where the full list opens (custom app, website, or inside the Even app) is a stack question deferred to Phase 5½ per rule 3.
 
 D23 2026-10-15 [I>V]
-  resp: a conversation is marked as one to keep by a swipe up on the temple or ring, which shows "keep this conversation?" on the lens, confirmed by a tap within {3 seconds}; it can be done at any time during the conversation or before the quiet that ends it runs out [I>V]
-  why: {3 seconds} is the interviewer's window for a deliberate confirmation without it feeling like a timer; chosen inside the option the visionary picked [I>V]
+  resp: a conversation is marked as one to keep by a swipe up on the temple or ring, which shows "keep this conversation?" on the lens, confirmed by a tap within three seconds; it can be done at any time during the conversation or before the quiet that ends it runs out [I>V]
+  why: three seconds is the interviewer's window for a deliberate confirmation without it feeling like a timer; chosen inside the option the visionary picked [I>V]
   -> structural
   serves: N8
   touches: D18 D21
@@ -195,14 +197,16 @@ D24 2026-10-15 [I>V]
   resp: the phone shows a notification "Kept: conversation with" the person's name if one was heard, otherwise the time it happened; opening it shows a memory jogger, not a full summary: short bullets with no fixed count, quick to read, covering what she said about the projects, the specific technical terms that came up, the questions raised, and anything the wearer promised; it assumes the wearer already grasps the conversation and only needs the specifics back [I+V]
   why: {25 minute} is the visionary's own example scaled to a typical call; {10 minutes} is D21 [I>V]
   serves: N8
+  spread: A kept conversation of any length gets a jogger
+  sib: none -- a conversation never marked simply produces no jogger, which the handoff rules cover
   touches: D21 D22 D23
 # corrected by the visionary: no strict cap on bullets; a jogger that reviews specific technical terms, not a summary, because "if it was important enough to save, the user should already know some of it". Roads not taken: a capped list of {5 to 8} bullets; a paragraph summary.
 
 D25 2026-10-15 [I>V]
   pre: the wearer is in a conversation with Dev, whose name was caught earlier, and the lens shows only the dot [I>V]
   trig: Dev, not the wearer, says "I'll send you the deck tonight" [I>V]
-  resp: within {2 seconds} the lens shows `Dev promised · send the deck` in dim text in the lower third for {1.5 seconds}, and the promise is held in a second list, owed to the wearer, separate from the wearer's own promises [I>V]
-  why: the same {2 seconds} and {1.5 seconds} as D17 [I>V]
+  resp: within two seconds the lens shows `Dev promised · send the deck` in dim text in the lower third for a second and a half, and the promise is held in a second list, owed to the wearer, separate from the wearer's own promises [I>V]
+  why: the same two seconds and a second and a half as D17 [I>V]
   serves: N4
   touches: D19 D22 N9
 # the visionary asked the cost (about one extra hour: the loudness split and the detector already exist) and chose the separate list because "you can then follow up asking for Dev to send the deck". Roads not taken: nothing, only the wearer's own commitments; one undistinguished list.
@@ -212,6 +216,7 @@ D26 2026-10-15 [I>V]
   trig: another person says "I'll send you the deck tonight" [I>V]
   resp: the lens shows `they promised · send the deck`, and the owed-to-the-wearer list names the person as "they" until a name is caught in the same conversation, at which point the entry takes that name [I>V]
   serves: N4
+  sib: none -- an unnamed promise has no failure of its own beyond the non-commitment case
   touches: D25 D17
 
 N10 2026-10-15 [I>V] user 3 amends N9
@@ -223,7 +228,7 @@ D27 2026-10-15 [V] ratifies N10
   touches: N9 N10
 
 D28 2026-10-15 [I>V] amends D22
-  pre: in a conversation with Dev the wearer said "I'll send you the deck tonight" and "I'll intro you to Sam", Dev said "I'll send you the agenda", and then nobody has talked for {10 minutes} [I>V]
+  pre: in a conversation with Dev the wearer said "I'll send you the deck tonight" and "I'll intro you to Sam", Dev said "I'll send you the agenda", and then nobody has talked for ten minutes [I>V]
   trig: the tenth minute passes [I>V]
   resp: the phone shows one notification with the wearer's promises as commands with no "you" in them, "Send Dev the deck and introduce Dev to Sam", then a second line for promises owed to the wearer, "Owed to you: Dev sends the agenda"; a list too long for the notification is cut off with an ellipsis, and opening the notification shows the full lists; and the next tap on the glasses shows no names from that conversation [I>V]
   serves: N4
@@ -242,10 +247,9 @@ D29 2026-10-15 [I>V] !
 D30 2026-10-15 [I>V] amends D18
   pre: in this conversation Priya, Marcus and Dana have each introduced themselves, the wearer has promised to send Dev the deck and to introduce Dev to Sam, Dev has promised to send the agenda, and the lens shows only the dot [I>V]
   trig: the wearer taps the glasses [I>V]
-  resp: the lens shows the names page, headed `this conversation 1/2`, with the names in the order heard, `Priya`, `Marcus`, `Dana`, and a hint "↓ promises"; a swipe down turns to the promises page, the wearer's own first, "send Dev the deck", "introduce Dev to Sam", then "owed: Dev sends the agenda"; either page stays until the wearer taps again or {5 seconds} pass with no touch [I>V]
-  why: {5 seconds} carried from D18 [I>V]
-  serves: N3
-  serves: N4
+  resp: the lens shows the names page, headed `this conversation 1/2`, with the names in the order heard, `Priya`, `Marcus`, `Dana`, and a hint "↓ promises"; a swipe down turns to the promises page, the wearer's own first, "send Dev the deck", "introduce Dev to Sam", then "owed: Dev sends the agenda"; either page stays until the wearer taps again or five seconds pass with no touch [I>V]
+  why: five seconds carried from D18 [I>V]
+  serves: N3 N4
   touches: D18 D25 D28
 # restates D18 in full with the promises page. Roads not taken: one page with promises first and names in a line at the bottom; names only on the lens. Chosen by option from rendered mockups.
 
@@ -255,6 +259,8 @@ D31 2026-10-15 [I>V]
   resp: the lens shows one page reading `this conversation · nothing held`, which stays until the wearer taps again or {5 seconds} pass with no touch, then goes back to the dot [I>V]
   why: {5 seconds} carried from D18 [I>V]
   serves: N3
+  spread: A held page dismisses on its own
+  sib: none -- an empty page has no failure case; ignoring the tap was the road not taken
   touches: D30
 # roads not taken: ignore the tap. The visionary's words: "this conversation nothing held".
 
@@ -263,14 +269,15 @@ D32 2026-10-15 [I>V]
   trig: Dev says "I'll send you the deck" [I>V]
   resp: the newest wins: the promise line replaces the page at once, the page is gone, and the promise is held as usual [V]
   serves: N2
+  sib: none -- a collision has no wanted and unwanted pair; the page winning was the road not taken
   touches: D30 D25
 # the general rule for any collision of catches and pages: the lens never shows two things, the newest wins. Roads not taken: the page wins and the lens line is skipped; the line queues behind the page.
 
 D33 2026-10-15 [I>V] !
   pre: the wearer finishes a complete sentence, "and that's why we chose it", and the lens shows only the dot [I>V]
-  trig: Marcus starts talking {1.5 seconds} later and the wearer stays quiet while he talks [I>V]
-  resp: nothing: the lens keeps showing only the dot, because the gap was longer than {half a second} and the sentence was finished [I>V]
-  why: {1.5 seconds} is a typical polite turn gap, chosen by the interviewer to sit clearly outside the {half a second} cut-in window of D20 [I>V]
+  trig: Marcus starts talking a second and a half later and the wearer stays quiet while he talks [I>V]
+  resp: nothing: the lens keeps showing only the dot, because the gap was longer than half a second and the sentence was finished [I>V]
+  why: a second and a half is a typical polite turn gap, chosen by the interviewer to sit clearly outside the half a second cut-in window of D20 [I>V]
   serves: N5
   touches: D20
 
@@ -279,6 +286,7 @@ D34 2026-10-15 [I>V]
   trig: the wearer taps the glasses [I>V]
   resp: the line clears to the dot at once; the tap does not open the held page, which a tap opens only when nothing but the dot is showing [I>V]
   serves: N5
+  sib: none -- a tap that fails to dismiss is this ruling failing, not a sibling behaviour
   touches: D20 D30 D31 D32
 # the visionary asked for a way to dismiss a false trigger; recommended and chosen. Roads not taken: a fixed time-out of {20 seconds}; swipe down as a dedicated dismiss.
 
@@ -287,35 +295,38 @@ D35 2026-10-15 [I>V] amends D20
   trig: during the wearer's pause another person begins speaking and keeps speaking continuously for {2 to 3 seconds} [V]
   resp: the lens shows the wearer's last {6 words}, `…and the second reason is`, in dim text in the lower third, and keeps them there until the wearer speaks again or taps, then goes back to the dot [I+V]
   why: {2 to 3 seconds} of continuous speech from someone else is the visionary's own threshold for "they have taken the floor"; it replaces the interviewer's {half a second} cut-in window, so the other person may begin at any point in the pause; {6 words} carried from D20 [I+V]
-  serves: N5
+  serves: N5 N1
   sib: D36
+  spread: Someone else takes the floor
   touches: D20 D33 D34
 # restates D20 in full. The visionary: "if somebody does begin continuous speaking during the pause, then it does perform the catch".
 
 D36 2026-10-15 [I>V] !
   pre: the wearer stops mid-sentence at "and the second reason is" to find a word, and the lens shows only the dot [I>V]
-  trig: nobody else begins continuous speaking; {3 seconds} of silence pass [I+V]
+  trig: nobody else begins continuous speaking; three seconds of silence pass [I+V]
   resp: nothing: Catch waits and the lens keeps showing only the dot, however long the silence lasts, until someone else takes the floor or the wearer resumes [V]
-  why: {3 seconds} is the interviewer's example of a thinking pause; the wearer's own silence has no limit [I>V]
+  why: three seconds is the interviewer's example of a thinking pause; the wearer's own silence has no limit [I>V]
   serves: N5
   touches: D35
 # the visionary: "if nobody begins continuous speaking then it waits".
 
 D37 2026-10-15 [I>V]
   pre: the wearer is mid-conversation and the lens shows only the dot [I>V]
-  trig: Catch loses the ability to hear for {1 minute}, because its connection to speech-to-text drops [I>V]
+  trig: Catch loses the ability to hear for one minute, because its connection to speech-to-text drops [I>V]
   resp: the dot disappears for as long as Catch cannot hear and returns the moment it can; the dot means "listening", so no dot means "not right now" [I>V]
-  why: {1 minute} is the interviewer's example of a dropped connection [I>V]
+  why: one minute is the interviewer's example of a dropped connection [I>V]
   serves: N2
+  sib: none -- the dot staying while deaf is this ruling failing, not a sibling behaviour
   touches: D14
 # roads not taken: a one-time `not listening` line with the dot kept; no change. The visionary's words: "The dot disappears".
 
 D38 2026-10-15 [I>V]
   pre: a conversation with held promises has ended, and the wearer's phone is off or has no signal at that moment [I>V]
-  trig: the phone becomes reachable again, {3 hours} later [I>V]
+  trig: the phone becomes reachable again, three hours later [I>V]
   resp: the same notification arrives then, with every promise intact; promises wait for the phone no matter how long it takes, and are never dropped for being late [V]
-  why: {3 hours} is the interviewer's example of a long outage [I>V]
+  why: three hours is the interviewer's example of a long outage [I>V]
   serves: N4
+  sib: none -- a dropped promise was the road not taken, never a wanted behaviour
   touches: D28
 # roads not taken: wait only until the end of the day; drop them if unreachable at the end of the conversation.
 
@@ -324,6 +335,7 @@ D39 2026-10-15 [I>V]
   trig: the wearer ticks off "Send Dev the deck" [I>V]
   resp: that promise leaves the list, and the list now shows only "Introduce Dev to Sam"; promises owed to the wearer can be ticked off the same way [I>V]
   serves: N4
+  sib: none -- an unticked promise simply stays, which is the precondition of this entry
   touches: D28
 # roads not taken: Catch never tracks done; Catch hears "I sent you the deck" and marks it done itself. This is the second phone behavior beyond the notification (the first is opening the full list, D28), and the whole of the phone's job so far.
 
@@ -336,18 +348,20 @@ D40 2026-10-15 [I>V] amends D23
 
 D41 2026-10-15 [I>V]
   pre: the wearer has swiped up and the lens shows `keep this conversation?` [I>V]
-  trig: Dev asks the wearer something and the wearer does not tap for {40 seconds} [I>V]
-  resp: the prompt is still showing at the end of the {40 seconds}; nothing has been kept and nothing has been dismissed [I>V]
-  why: {40 seconds} is the interviewer's example of a distraction long enough that a {3 seconds} window would have expired [I>V]
+  trig: Dev asks the wearer something and the wearer does not tap for forty seconds [I>V]
+  resp: the prompt is still showing at the end of the forty seconds; nothing has been kept and nothing has been dismissed [I>V]
+  why: forty seconds is the interviewer's example of a distraction long enough that a three seconds window would have expired [I>V]
   serves: N8
+  sib: none -- the prompt fading was the road not taken; nothing else can happen here
   touches: D40
 
 D42 2026-10-15 [I>V]
   pre: the wearer has swiped up and the lens shows `keep this conversation?` [I>V]
   trig: Priya says "Hi, I'm Priya" [I>V]
-  resp: the `Priya` line replaces the prompt for {1.5 seconds}, Priya is held as usual, and then the prompt `keep this conversation?` returns and stays [I>V]
-  why: {1.5 seconds} carried from D17 [I>V]
+  resp: the `Priya` line replaces the prompt for a second and a half, Priya is held as usual, and then the prompt `keep this conversation?` returns and stays [I>V]
+  why: a second and a half carried from D17 [I>V]
   serves: N8
+  sib: none -- the prompt not returning is this ruling failing, not a sibling behaviour
   touches: D40 D32 D17
 
 D43 2026-10-15 [I>V] amends D30
@@ -355,8 +369,9 @@ D43 2026-10-15 [I>V] amends D30
   trig: the wearer taps the glasses [I>V]
   resp: the lens shows the names page headed `this conversation 1/2` with all {30 names} held in the order heard; swipe down scrolls the list; at the end of the list the next swipe down turns to the promises page, the wearer's own first, then those owed; swipe up scrolls back; either page stays until the wearer taps again or {5 seconds} pass with no touch [I>V]
   why: {30 people} is the interviewer's example of a kickoff circle, larger than one lens list of {20 items}; {5 seconds} carried from D18 [I>V]
-  serves: N3
-  serves: N4
+  serves: N3 N4
+  spread: A held page dismisses on its own
+  sib: none -- the names page with nothing held is a wanted case, not a failure
   touches: D30 D18
 # restates D30 in full with scrolling. The visionary accepted the conflict between "swipe down scrolls" and "swipe down turns to promises": the promises page moves to after the end of the names. Roads not taken: hold the most recent {20 names}; names beyond a cap go only to the phone.
 
@@ -370,8 +385,8 @@ D44 2026-10-15 [I>V]
 D45 2026-10-15 [I>V] amends D19
   pre: the wearer is in a conversation with Dev and the lens shows only the dot [I>V]
   trig: the wearer says "I'll send you the deck tonight" [I>V]
-  resp: within {2 seconds} the lens shows `promised · send Dev the deck tonight`, a short summary that keeps any stated time or condition, in dim text in the lower third, holds it for {1.5 seconds}, goes back to the dot, and the promise is held for this conversation; a promise with no stated time or condition shows the bare action [I>V]
-  why: the same {2 seconds} and {1.5 seconds} as D17 [I>V]
+  resp: within two seconds the lens shows `promised · send Dev the deck tonight`, a short summary that keeps any stated time or condition, in dim text in the lower third, holds it for a second and a half, goes back to the dot, and the promise is held for this conversation; a promise with no stated time or condition shows the bare action [I>V]
+  why: the same two seconds and a second and a half as D17 [I>V]
   serves: N4
   touches: D19 D28 D39
 # restates D19 in full; the summary now keeps "tonight", "after the demo" and the like. The notification and the phone list carry the same wording. Roads not taken: the bare action only.
@@ -379,8 +394,8 @@ D45 2026-10-15 [I>V] amends D19
 D46 2026-10-15 [I>V]
   pre: Dev has just said "can you send me the budget by Friday?" and the lens shows only the dot [I>V]
   trig: the wearer says "Yeah, I'll do it" [I>V]
-  resp: within {2 seconds} the lens shows `promised · send Dev the budget by Friday`, with the object and time filled in from what Dev just said, and the promise is held [I>V]
-  why: {2 seconds} carried from D17 [I>V]
+  resp: within two seconds the lens shows `promised · send Dev the budget by Friday`, with the object and time filled in from what Dev just said, and the promise is held [I>V]
+  why: two seconds carried from D17 [I>V]
   serves: N4
   sib: D47
   touches: D45
@@ -395,8 +410,10 @@ D47 2026-10-15 [I>V] !
 
 D48 2026-10-15 [I>V]
   resp: the thread is the wearer's most recent continuous run of speech, one in which nobody else took the floor; the lens shows the last {6 words} of that run; a run shorter than {6 words} is shown whole, and the thread never reaches back across someone else's turn [I>V]
+  why: {6 words} is carried from the dropped-thread ruling, the interviewer's estimate of enough context on one lens line [I>V]
   -> structural
   serves: N5
+  spread: Someone else takes the floor
   touches: D35
 # the visionary asked for padding to {6 words} ("more context is helpful"); the interviewer added the continuous-run guard so the padding never glues two unrelated thoughts; accepted.
 
@@ -406,6 +423,8 @@ D49 2026-10-15 [I>V]
   resp: the lens shows `…we chose it. Well, the`, the last {6 words} of the wearer's continuous run [I>V]
   why: {2 to 3 seconds} and {6 words} carried from D35 [I>V]
   serves: N5
+  spread: Someone else takes the floor
+  sib: D33
   touches: D48 D35
 
 D50 2026-10-15 [I>V]
@@ -414,41 +433,45 @@ D50 2026-10-15 [I>V]
   resp: the lens shows only `…Well, the`, because Dev's turn ended the earlier run [I>V]
   why: {2 to 3 seconds} carried from D35 [I>V]
   serves: N5
+  spread: Someone else takes the floor
+  sib: none -- its failure case is the same as the continuous run case, named there
   touches: D48 D35
 
 D51 2026-10-15 [I>V] !
-  pre: in a conversation Priya and Marcus introduced themselves and nobody promised anything in either direction, and nobody has talked for {10 minutes} [I>V]
+  pre: in a conversation Priya and Marcus introduced themselves and nobody promised anything in either direction, and nobody has talked for ten minutes [I>V]
   trig: the tenth minute passes [I>V]
   resp: nothing: the phone gets no notification, the names are gone with the conversation, and the next tap on the glasses shows `this conversation · nothing held` [I>V]
-  why: {10 minutes} is D21 [I>V]
+  why: ten minutes is D21 [I>V]
   serves: N4
   touches: D28 D21 D31 N10
 # the handoff's failure case: names never reach the phone; only promises and kept conversations survive a conversation (N10). Roads not taken: a notification listing the names met.
 
 D52 2026-10-15 [I>V]
-  pre: the wearer is {20 minutes} into a conversation with Dev in which the wearer promised to send the deck tonight, Priya introduced herself, and the wearer swiped up and tapped to keep it [I>V]
+  pre: the wearer is twenty minutes into a conversation with Dev in which the wearer promised to send the deck tonight, Priya introduced herself, and the wearer swiped up and tapped to keep it [I>V]
   trig: the wearer long-presses the glasses [I>V]
-  resp: the conversation ends now: the phone gets the promise notification and the kept-conversation notification within {30 seconds}, the next tap shows `this conversation · nothing held`, and the next thing anyone says starts a new conversation [I>V]
-  why: {20 minutes} is the interviewer's example of a conversation cut short; {30 seconds} is the interviewer's allowance for writing the jogger from a {20 minute} transcript, accepted by the visionary [I>V]
-  serves: N4
-  serves: N8
+  resp: the conversation ends now: the phone gets the promise notification and the kept-conversation notification within thirty seconds, the next tap shows `this conversation · nothing held`, and the next thing anyone says starts a new conversation [I>V]
+  why: twenty minutes is the interviewer's example of a conversation cut short; thirty seconds is the interviewer's allowance for writing the jogger from a twenty-minute transcript, accepted by the visionary [I>V]
+  serves: N4 N8
+  sib: none -- a long-press that does not end the conversation is this ruling failing
   touches: D21 D28 D24 D31
 
 D53 2026-10-15 [I>V]
-  pre: the wearer has marked a conversation to keep, and partway through it Catch could not hear for {4 minutes} [I>V]
+  pre: the wearer has marked a conversation to keep, and partway through it Catch could not hear for four minutes [I>V]
   trig: the conversation ends and the jogger is written [I>V]
   resp: the jogger covers what was heard and carries one line acknowledging that time was missed and for how long, `4 minutes not heard`, without saying when in the conversation it happened [V]
-  why: {4 minutes} is the interviewer's example of a mid-conversation outage [I>V]
+  why: four minutes is the interviewer's example of a mid-conversation outage [I>V]
   serves: N8
+  sib: none -- a jogger silent about missed time was the road not taken
   touches: D24 D37
 # the visionary: say how long was missed, not the specific time. Roads not taken: name the time of the gap ("around 2:40"); stay silent about the gap.
 
 D54 2026-10-15 [I>V]
   pre: the wearer has already kept the current conversation, and the lens shows only the dot [I>V]
   trig: the wearer swipes up again [I>V]
-  resp: the lens shows `already kept` in dim text for {1.5 seconds} and goes back to the dot; nothing changes, and there is no way to un-keep a conversation from the glasses [I>V]
-  why: {1.5 seconds} carried from D17 [I>V]
+  resp: the lens shows `already kept` in dim text for a second and a half and goes back to the dot; nothing changes, and there is no way to un-keep a conversation from the glasses [I>V]
+  why: a second and a half carried from D17 [I>V]
   serves: N8
+  sib: none -- un-keeping from the glasses does not exist, so nothing can go wrong here
   touches: D40
 # roads not taken: show the prompt again with swipe down meaning un-keep; ignore the swipe. The visionary: "show already kept".
 
@@ -459,6 +482,7 @@ D55 2026-10-15 [I>V]
   why: {9 minutes} sits just inside the {10 minutes} of D21 [I>V]
   serves: N3
   spread: Quiet ends a conversation at ten minutes
+  sib: none -- its failure case is the other side of the same edge, a wanted behaviour
   touches: D21 D51
 
 D56 2026-10-15 [I>V]
@@ -468,27 +492,29 @@ D56 2026-10-15 [I>V]
   why: {10 minutes and 1 second} sits just outside the {10 minutes} of D21 [I>V]
   serves: N3
   spread: Quiet ends a conversation at ten minutes
+  sib: none -- its failure case is the other side of the same edge, a wanted behaviour
   touches: D21 D55
 
 D57 2026-10-15 [I>V]
   pre: Priya introduced herself at the start of the conversation [I>V]
-  trig: {10 minutes} later Priya says "I'm Priya" again, to someone who just joined [I>V]
-  resp: the lens shows `Priya` for {1.5 seconds} as with any introduction, and the names page still lists `Priya` once, in her original position [I>V]
-  why: {10 minutes} is the interviewer's example of a later re-introduction; {1.5 seconds} carried from D17 [I>V]
+  trig: ten minutes later Priya says "I'm Priya" again, to someone who just joined [I>V]
+  resp: the lens shows `Priya` for a second and a half as with any introduction, and the names page still lists `Priya` once, in her original position [I>V]
+  why: ten minutes is the interviewer's example of a later re-introduction; a second and a half carried from D17 [I>V]
   serves: N3
+  sib: none -- a duplicate entry here is the window case, a wanted behaviour
   touches: D17 D43
 
 D58 2026-10-15 [I>V]
   pre: Priya introduced herself at the start of the conversation [I>V]
   trig: a second, different person says "Hi, I'm Priya" [I>V]
-  resp: the lens shows `Priya (2)` for {1.5 seconds}, and the names page lists `Priya` and `Priya (2)` in the order heard [I>V]
-  why: {1.5 seconds} carried from D17 [I>V]
+  resp: the lens shows `Priya (2)` for a second and a half, and the names page lists `Priya` and `Priya (2)` in the order heard [I>V]
+  why: a second and a half carried from D17 [I>V]
   serves: N3
   touches: D17 D43 D57
 # the visionary: "one Priya in (a), Priya and Priya (2) in (b)". How Catch tells a re-introduction from a second Priya is the builder's problem (the same voice re-introducing versus a different voice); if it cannot tell, two different voices is the safer reading, and a wrong `(2)` costs little.
 
 D59 2026-10-15 [I>V] reverses D57
-  resp: Catch has no voice identification, so it cannot tell a re-introduction from a second person with the same name; the visionary chose the safe rule: a repeated name is always a second person, so Priya saying "I'm Priya" again {10 minutes} later is shown as `Priya (2)` and listed as a second entry, accepting that a true re-introduction produces one odd entry [I>V]
+  resp: Catch has no voice identification, so it cannot tell a re-introduction from a second person with the same name; the visionary chose the safe rule: a repeated name is always a second person, so Priya saying "I'm Priya" again ten minutes later is shown as `Priya (2)` and listed as a second entry, accepting that a true re-introduction produces one odd entry [I>V]
   -> fence-assumption repeated-name-is-a-second-person
   serves: N3
   touches: D57 D58
@@ -497,8 +523,8 @@ D59 2026-10-15 [I>V] reverses D57
 D60 2026-10-15 [I>V] amends D58
   pre: Priya introduced herself at the start of the conversation [I>V]
   trig: anyone, whether Priya again or a different person, says "Hi, I'm Priya" [I>V]
-  resp: the lens shows `Priya (2)` for {1.5 seconds}, and the names page lists `Priya` and `Priya (2)` in the order heard; a third gets `Priya (3)` [I>V]
-  why: {1.5 seconds} carried from D17 [I>V]
+  resp: the lens shows `Priya (2)` for a second and a half, and the names page lists `Priya` and `Priya (2)` in the order heard; a third gets `Priya (3)` [I>V]
+  why: a second and a half carried from D17 [I>V]
   serves: N3
   touches: D58 D59 D43
 # restates D58 in full under the D59 rule.
@@ -517,6 +543,7 @@ D62 2026-10-15 [I>V]
   why: {2 minutes} sits at the short edge of the {25 minute} example in D24 [I>V]
   serves: N8
   spread: A kept conversation of any length gets a jogger
+  sib: none -- a minimum length to keep was the road not taken
   touches: D24
 
 D63 2026-10-15 [I>V]
@@ -594,11 +621,12 @@ N12 2026-10-15 [I>V] user 4
 # reliability sweep (a checklist category). Weight guessed 4: the visionary answered "everything" without hesitation.
 
 D73 2026-10-15 [I>V]
-  pre: the wearer is {15 minutes} into a kept conversation in which two promises and three names are held [I>V]
-  trig: the Even app or the phone restarts, and Catch comes back {1 minute} later [I>V]
+  pre: the wearer is fifteen minutes into a kept conversation in which two promises and three names are held [I>V]
+  trig: the Even app or the phone restarts, and Catch comes back one minute later [I>V]
   resp: everything is still there: the two promises, the three names in their order, the keep mark, and the transcript so far, so the jogger covers the whole conversation apart from the minute not heard; the conversation continues rather than starting fresh [I>V]
-  why: {15 minutes} and {1 minute} are the interviewer's example of a mid-conversation restart [I>V]
+  why: fifteen minutes and one minute are the interviewer's example of a mid-conversation restart [I>V]
   serves: N12
+  sib: none -- losing state on restart was the road not taken, the thing this entry forbids
   touches: D53 D37 D21
 # roads not taken: promises and the keep mark survive but not the names; nothing survives and the restart begins a new conversation.
 
@@ -609,6 +637,7 @@ D74 2026-10-15 [I>V] amends D63
   why: {3 hours} sits at the long edge of the {25 minute} example in D24; {a few minutes} is the visionary's allowance for a long transcript; {30 seconds} is D52 [I>V]
   serves: N8
   spread: A kept conversation of any length gets a jogger
+  sib: none -- a sectioned or compressed jogger was the road not taken
   touches: D63 D52 D24
 # restates D63 in full with the arrival allowance. Performance sweep (a checklist category).
 
@@ -623,7 +652,8 @@ D76 2026-10-15 [I>V]
   pre: a conversation that was not kept has ended, with or without promises [I>V]
   trig: the tenth minute of quiet passes, or the wearer long-presses [I>V]
   resp: the conversation's transcript and audio are deleted everywhere, the server included, so that nobody, the team included, can read it afterwards; only the promise summaries survive, and for a kept conversation only the jogger and the promise summaries [I>V]
-  serves: N10
+  serves: N10 N6
+  sib: none -- a transcript that survives deletion is this ruling failing, not a sibling behaviour
   touches: N10 D21 D28 D24
 # security sweep (a checklist category). The visionary: "Deleted everywhere".
 
@@ -654,18 +684,19 @@ D79 2026-10-15 [V]
 D80 2026-10-15 [I>V]
   pre: Catch is listening and the lens shows only the dot [I>V]
   trig: the wearer swipes down [I>V]
-  resp: Catch pauses: the lens shows `paused` in dim text for {1.5 seconds}, then nothing, no dot, and nothing said while paused is heard, held or transcribed; swipe down again shows `listening` for {1.5 seconds} and the dot returns; swipe down keeps its other meanings while a page or prompt is showing [I>V]
-  why: {1.5 seconds} carried from D17 [I>V]
+  resp: Catch pauses: the lens shows `paused` in dim text for a second and a half, then nothing, no dot, and nothing said while paused is heard, held or transcribed; swipe down again shows `listening` for a second and a half and the dot returns; swipe down keeps its other meanings while a page or prompt is showing [I>V]
+  why: a second and a half carried from D17 [I>V]
   serves: N13
   touches: D37 D14 D30 D40 D43
 # roads not taken: a Pause item in Even's contextual menu; long-press pausing as well as ending the conversation. Recommended and chosen.
 
 D81 2026-10-15 [I>V]
-  pre: the wearer is mid-conversation with Priya's name and one promise held, {4 minutes} into the quiet timer [I>V]
-  trig: the wearer swipes down to pause, stays paused for {12 minutes}, and swipes down again to resume [I>V]
-  resp: pausing freezes the conversation: on resume the wearer is still in it, Priya and the promise are still held, nothing went to the phone, and the quiet timer continues from {4 minutes}, not from zero and not expired [I>V]
-  why: {12 minutes} is the interviewer's example of a pause longer than the {10 minutes} of D21, to show the timer froze; {4 minutes} is an arbitrary point on the timer [I>V]
+  pre: the wearer is mid-conversation with Priya's name and one promise held, four minutes into the quiet timer [I>V]
+  trig: the wearer swipes down to pause, stays paused for twelve minutes, and swipes down again to resume [I>V]
+  resp: pausing freezes the conversation: on resume the wearer is still in it, Priya and the promise are still held, nothing went to the phone, and the quiet timer continues from four minutes, not from zero and not expired [I>V]
+  why: twelve minutes is the interviewer's example of a pause longer than the ten minutes of D21, to show the timer froze; four minutes is an arbitrary point on the timer [I>V]
   serves: N13
+  sib: none -- the timer running through a pause was the road not taken
   touches: D80 D21 D55
 # roads not taken: the quiet timer keeps running through a pause and the conversation ends at the tenth minute. The visionary: "Pausing freezes the conversation".
 
@@ -676,13 +707,13 @@ D82 2026-10-15 [V]
   touches: D64
 
 N14 2026-10-15 [I>V] team 4 amends N7
-  need: we need Catch finished and demoable at every hour mark after hour four, because it is the fallback if the main idea fails on Saturday night; when the {10 hours} run out, the build follows a ratified cut order, and whatever is unbuilt is deferred, not failed [I>V]
+  need: we need Catch finished and demoable at every hour mark after hour four, because it is the fallback if the main idea fails on Saturday night; when the ten hours run out, the build follows a ratified cut order, and whatever is unbuilt is deferred, not failed [I>V]
   tension: N5 -- the dropped thread is third in the order and the first catch that may be unbuilt at hour ten
   tension: N3 -- names must stand alone as a complete demo, which is why they are built first
 # amends N7 after the adversarial pass's first objection: the ruled scope had grown to fourteen to sixteen hours by the interviewer's count.
 
 D83 2026-10-15 [I>V]
-  resp: the cut order, earliest built first: staying dark, names, the held page and the conversation boundary; the wearer's own promises and the notification; the dropped thread; keep and the jogger; promises owed to the wearer; pause; tick-off on the phone; restart persistence; scrolling past {20 names}; anything unbuilt when the {10 hours} run out is deferred to the fence, not counted as a failure [I>V]
+  resp: the cut order, earliest built first: staying dark, names, the held page and the conversation boundary; the wearer's own promises and the notification; the dropped thread; keep and the jogger; promises owed to the wearer; pause; tick-off on the phone; restart persistence; scrolling past twenty names; anything unbuilt when the ten hours run out is deferred to the fence, not counted as a failure [I>V]
   -> structural
   serves: N14
   touches: N7 N14 D16 D17 D43 D21 D28 D35 D24 D25 D80 D39 D73
@@ -704,15 +735,16 @@ D85 2026-10-15 [I>V]
 D86 2026-10-15 [I>V] amends D80
   pre: Catch is listening and the lens shows only the dot [I>V]
   trig: the wearer swipes down [I>V]
-  resp: Catch pauses: the lens shows `paused` in dim text for {1.5 seconds}, then a dim dash `–` in the dot's place for as long as the pause lasts, so that paused never looks like can't-hear, which shows nothing; nothing said while paused is heard, held or transcribed; swipe down again shows `listening` for {1.5 seconds} and the dot returns; swipe down keeps its other meanings while a page or prompt is showing [I>V]
-  why: {1.5 seconds} carried from D17 [I>V]
+  resp: Catch pauses: the lens shows `paused` in dim text for a second and a half, then a dim dash `–` in the dot's place for as long as the pause lasts, so that paused never looks like can't-hear, which shows nothing; nothing said while paused is heard, held or transcribed; swipe down again shows `listening` for a second and a half and the dot returns; swipe down keeps its other meanings while a page or prompt is showing [I>V]
+  why: a second and a half carried from D17 [I>V]
   serves: N13
+  sib: none -- a pause that still hears is this ruling failing, not a sibling behaviour
   touches: D80 D37 D14 D81
 # restates D80 in full with the paused mark. Adversarial pass, objection 3: D37 (no dot = cannot hear) and D80 (no dot = paused) had made the two states identical. Roads not taken: accept it; a blinking dot for can't-hear.
 
 D87 2026-10-15 [I>V] reverses D59
-  resp: a repeated name within {2 minutes} of its first appearance is a second person and gets `(2)`, as in a round of introductions; a repeated name more than {2 minutes} later is the same person re-introducing to a newcomer and is listed once; Catch still cannot tell voices apart, so this is a rule about timing, not identity [I>V]
-  why: {2 minutes} is the interviewer's estimate of how long a round of introductions lasts; accepted by the visionary [I>V]
+  resp: a repeated name within two minutes of its first appearance is a second person and gets `(2)`, as in a round of introductions; a repeated name more than two minutes later is the same person re-introducing to a newcomer and is listed once; Catch still cannot tell voices apart, so this is a rule about timing, not identity [I>V]
+  why: two minutes is the interviewer's estimate of how long a round of introductions lasts; accepted by the visionary [I>V]
   -> fence-assumption repeated-name-rule-by-timing
   serves: N3
   touches: D59 D57 D60 D44 D43
@@ -724,6 +756,8 @@ D88 2026-10-15 [I>V] amends D60
   resp: the lens shows `Priya (2)` for {1.5 seconds}, and the names page lists `Priya` and `Priya (2)` in the order heard; a third within the window gets `Priya (3)`; the same words more than {2 minutes} after the first are a re-introduction and change nothing on the page [I>V]
   why: {2 minutes} is D87; {1.5 seconds} carried from D17 [I>V]
   serves: N3
+  spread: A repeated name inside the window
+  sib: none -- a re-introduction outside the window is a wanted behaviour of its own
   touches: D60 D87 D57
 # restates D60 in full under D87.
 
@@ -732,7 +766,9 @@ D89 2026-10-15 [I>V] amends D45
   trig: the wearer says "I'll send you the deck tonight" [I>V]
   resp: within {3 seconds} the lens shows `promised · send Dev the deck tonight`, a short summary that keeps any stated time or condition, in dim text in the lower third, holds it for {1.5 seconds}, goes back to the dot, and the promise is held for this conversation; a promise with no stated time or condition shows the bare action [I>V]
   why: {3 seconds} replaces the {2 seconds} of D17 for promise lines, because a promise line needs a model to judge, summarize and fill in, where a name is a pattern on the transcript; {1.5 seconds} carried from D17 [I>V]
-  serves: N4
+  serves: N4 N1
+  spread: A catch line appears and fades
+  sib: D47
   touches: D45 D46 D25 D26 D19
 # restates D45 in full with the promise-line latency. Adversarial pass, objection 5. The {3 seconds} applies equally to promises owed to the wearer (D25, D26) and filled-in promises (D46); names keep {2 seconds}. Roads not taken: mark the promise lines' {2 seconds} as TBR for Saturday; keep {2 seconds} everywhere.
 
@@ -743,6 +779,7 @@ D90 2026-10-15 [I>V] amends D46
   why: {3 seconds} is D89 [I>V]
   serves: N4
   sib: D47
+  spread: A catch line appears and fades
   touches: D46 D89
 
 D91 2026-10-15 [I>V] amends D25
@@ -751,6 +788,8 @@ D91 2026-10-15 [I>V] amends D25
   resp: within {3 seconds} the lens shows `Dev promised · send the deck tonight` in dim text in the lower third for {1.5 seconds}, and the promise is held in a second list, owed to the wearer, separate from the wearer's own promises [I>V]
   why: {3 seconds} is D89; {1.5 seconds} carried from D17 [I>V]
   serves: N4
+  spread: A catch line appears and fades
+  sib: none -- a non-commitment from another person is the non-commitment case heard from the other side
   touches: D25 D89 D45
 # restates D25 in full with the promise-line latency and the kept time word from D45.
 
@@ -758,8 +797,8 @@ D92 2026-10-15 [I>V] amends D21
   resp: a conversation ends after {10 minutes} in which the wearer does not speak, whatever anyone else says, or at once when the wearer long-presses; at either end the held names clear, the held promises go to the phone, and the wearer's next speech begins a new conversation [I>V]
   why: {10 minutes} carried from D21 [I>V]
   -> structural
-  serves: N3
-  serves: N4
+  serves: N3 N4
+  spread: Quiet ends a conversation at ten minutes
   touches: D21 D55 D56 D51 D44 D81
 # restates D21 in full: the quiet timer now runs on the wearer's own silence, not the room's. Adversarial pass, objection 6: under D21 and D44 a conversation in a busy hall might never end. Roads not taken: accept it with long-press as the escape; a ceiling of {3 hours}. D55, D56 and D51 read with "the wearer" in place of "everyone"; their numbers are unchanged.
 
@@ -811,8 +850,7 @@ D99 2026-10-15 [I>V]
 D100 2026-10-15 [I>V]
   resp: the phone's home screen is a history of conversations, newest first, grouped by day: each row shows the names caught (or "no name"), the time, the count of open promises or "all done", and a kept mark; a count of all open promises sits in the header; tapping a row opens that conversation's screen; conversations that produced neither a promise nor a keep never appear; nothing else is on the phone [I>V]
   -> structural
-  serves: N4
-  serves: N8
+  serves: N4 N8
   touches: D98 D99 D51 N10
 # chosen by option from rendered phone mockups at the crowded case (a week, {18 conversations}). Roads not taken: open promises only with joggers kept {7 days} then gone; no home at all, the notification tray as the only way back.
 
@@ -821,3 +859,49 @@ D101 2026-10-15 [V]
   -> boundary
   serves: N0
   touches: D82
+
+D102 2026-10-15 [V]
+  resp: the phone screens, the history, the conversation screen and the jogger, are a native SwiftUI iPhone app [V]
+  -> means N4
+  serves: N8
+  touches: D98 D99 D100 N14
+# Phase 5½ elective, alias E1. The visionary's stated preference; the About Time plan recorded the same request from a teammate. iPhone only by construction.
+
+D103 2026-10-15 [V]
+  resp: a website for computers is a full second surface for the phone's role: the same three screens, the history, the conversation screen with tick-off, and the jogger, built on the Preact web stack of the owner's `webdev_ref` reference; notifications stay on the phone [V]
+  -> means N4
+  serves: N8
+  touches: D1 D61 D98 D99 D100 D102 N14
+# Phase 5½ elective, alias E2. Entered as new scope at the collision check: D1 named the phone, not a computer. Roads not taken: a read-only mirror placed last in the cut order; deferred to the fence. Its place in D83's cut order is the next ruling.
+
+D104 2026-10-15 [I>V] amends D83
+  resp: the cut order, earliest built first: staying dark, names, the held page and the conversation boundary; the wearer's own promises and the notification, which opens the iPhone app's screens; the dropped thread; keep and the jogger; promises owed to the wearer; pause; tick-off on the phone; the website with the same three screens and tick-off; restart persistence; scrolling past twenty names; anything unbuilt when the ten hours run out is deferred to the fence, not counted as a failure [I>V]
+  -> structural
+  serves: N14
+  touches: D83 D102 D103
+# restates D83 in full with the website placed after tick-off on the phone, as the visionary ruled: "after 7".
+
+D105 2026-10-15 [V]
+  resp: the native SwiftUI iPhone app is a preference with no need under it: nothing concrete would be lost if it were swapped for the same screens built another way; recorded as the why of D102 so the build protects the choice as a ruling, not as a requirement it must reconstruct [V]
+  -> structural
+  serves: N14
+  touches: D102 D104
+# rule 5 laddering of E1: "It's a preference". The Preact website (D103) carries the same why by the owner's reference stack.
+
+D106 2026-10-15 [V]
+  resp: the build follows the aBDD workflow: feature files first, `gherkin-node-test` for linting and parsing them, unit tests under the step bindings, and each phase of the phase plan run through the build-pipeline once the plan exists; every other technology choice, the server language, the speech-to-text provider, the hosting and the model, is the build's to make within the ruled constraints: "make it so" [V]
+  -> means N14
+  touches: D102 D103 D104
+
+D107 2026-10-15 [V]
+  resp: the electives phase is closed; three electives were ruled (D102 the SwiftUI app, D103 the Preact website, D106 the aBDD workflow), one laddered to a preference (D105), and the rest left to the build [V]
+  -> boundary
+  serves: N0
+  touches: D101 D106
+
+D108 2026-10-15 [I>V]
+  resp: before drafting, a notation pass over the record: quantities that merely carried a constant ruled elsewhere (the second-and-a-half dwell, the ten-minute quiet, the five-second page) were rewritten in words so that only the ruling that owns each number keeps it braced and spread; sib lines, spread lines and serves lines were added to existing entries; no slot's meaning changed [I>V]
+  -> boundary
+  serves: N0
+  touches: D107
+# the pass is recorded so that the chain hash change between the readback (41aa8f970887) and drafting is explained by this entry, not by silent drift.
