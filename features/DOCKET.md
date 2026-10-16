@@ -977,3 +977,48 @@ D117 2026-10-15 [I>V] amends D28
   sib: D51
   touches: D28 D89 D92
 # restates D28 in full with the time words of D89; post-signature ruling 7 of 7.
+
+# 2026-10-16. The Even Realities challenge brief was read against the plan. Four entries below are drafted for the visionary's signature and tagged [I] until then: change a tag to [I>V] to ratify as written, [I+V] after a correction, or strike the entry. Nothing is bound yet, so no Sanctioned changes entry is needed.
+
+N15 2026-10-16 [I] team 4 amends N14
+  need: We need Catch finished and demoable at every hour mark after hour four, because it is the team's entry for the Even Realities challenge, built from the event's start; when the time runs out, the build follows a ratified cut order, and whatever is unbuilt is deferred, not failed [I]
+# amends N14: Catch is the entry, not the fallback, so the clock starts when the event starts, not when another idea fails. The brief's own words set the bar: "Can a judge put on G2 and experience the core idea right now?"
+
+D118 2026-10-16 [I] amends D104
+  resp: the cut order, earliest built first: staying dark, names, the held page and the conversation boundary with the Even Beta package uploaded; the dropped thread; the wearer's own promises and the notification; shipping, which is the hosted server, the Beta re-upload, the thresholds tuned on the real glasses, the demo video, the README a tester can follow, and the Devpost entry naming the Even Hub app; the iPhone app's screens; keep and the jogger; promises owed to the wearer; pause; tick-off on the phone; the website with the same three screens and tick-off; restart persistence; scrolling past twenty names; anything unbuilt at the last merge on Sunday morning is deferred to the fence, not counted as a failure [I]
+  -> structural
+  serves: N14 N15
+  touches: D104 D83 D102 D103 D35
+# restates D104 in full with three changes, each from the brief: the thread moves ahead of the promises because it is the one catch no other G2 app has and the brief judges originality; a shipping step sits before the iPhone app because the brief requires a Beta build, a video and a tester's README, and the phone screens earn nothing with Even's judges; the Beta upload joins the held-page step so a rejected upload is found on Saturday evening, not Sunday morning. Roads not taken: the order of D104; cutting the iPhone app and the website outright.
+
+D119 2026-10-16 [I] amends D95
+  resp: speaker identification is out of reach by construction: Catch knows the wearer's voice from everyone else's by loudness, the mic sitting at the wearer's mouth, or, where loudness does not separate them on the real glasses, by the speech-to-text provider's speaker labels used only to answer whether a word is the wearer's; it never knows which other person is speaking; every ruling that names another person (D26, D87, D91) rests on a name having been caught, not on a voice being recognized [I]
+  -> structural
+  serves: N3 N4 N5
+  touches: D95 D26 D87 D91 D94
+# restates D95 in full with a second way of telling the wearer from the rest. The glasses' firmware shapes the microphones toward the wearer's mouth and the hall will be loud, so the loudness split is the plan's largest unknown; the provider's labels are the fallback behind the same interface and give Catch no more than "the wearer or not". Roads not taken: loudness alone; a voiceprint of the wearer.
+
+D120 2026-10-16 [I]
+  pre: automatic cut-off detection is switched off because it did not hold up on the real glasses, the wearer has said "and the second reason is" and stopped mid-sentence, Dev has taken the floor, and the lens shows only the dot [I]
+  trig: the wearer taps the glasses [I]
+  resp: the held page opens with the thread line `…and the second reason is` as its first line, above the names, so the tap gives the sentence back; with automatic detection on, the held page is as D43 and the thread arrives on its own as D35 [I]
+  serves: N5
+  sib: none -- a tap that fails to show the thread is this ruling failing, not a sibling behaviour
+  touches: D43 D34 D35 D48 D31
+# the fallback that keeps the one original catch demoable if the cut-in trigger misfires in a loud hall: the wearer asks for the thread instead of being handed it. The switch is the operator's, set after the hour-one test or the shipping step's tuning, never the build's guess. Roads not taken: a new gesture (none is free); the thread line always at the head of the held page; no fallback.
+
+D121 2026-10-16 [V] ratifies N15
+  resp: the visionary read the four drafted entries and the revised plan and signed them as written: "all looks good"; Catch is the entry, built from the event's start [V]
+  touches: N14 N15
+
+D122 2026-10-16 [V] ratifies D118
+  resp: signed as drafted: the thread before the promises, the Beta uploaded early, shipping before the iPhone app [V]
+  touches: D104 D118
+
+D123 2026-10-16 [V] ratifies D119
+  resp: signed as drafted: the provider's speaker labels as the split's fallback, for "the wearer or not" only [V]
+  touches: D95 D119
+
+D124 2026-10-16 [V] ratifies D120
+  resp: signed as drafted: with detection off, a tap on the bare dot gives the thread back [V]
+  touches: D43 D120

@@ -43,3 +43,11 @@ Feature: The dropped thread
     When the wearer taps the glasses
     Then the wearer sees only the dot
     And the wearer does not see the held page
+
+  @D120
+  Scenario: With automatic detection off, a tap gives the thread back
+    Given automatic cut-off detection is switched off
+    And the wearer said "and the second reason is" and stopped mid-sentence, and Dev has taken the floor
+    And the lens shows only the dot
+    When the wearer taps the glasses
+    Then the wearer sees the held page with "…and the second reason is" as its first line, above the names

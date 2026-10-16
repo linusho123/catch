@@ -5,7 +5,7 @@ The orienting document for the agent that builds Catch, with the human as second
 ## Identity
 
 - Catch is an Even G2 app that stays dark while the wearer talks with people and, at the moment they would otherwise lose it, holds one thing on the lens: the name someone just told them, the promise they just made, or the sentence they were in the middle of when cut off. It exists so the wearer stays in the conversation instead of trying to remember. [ruled: D1, D2]
-- It is the team's fallback for LA Hacks AI 2026: finished and demoable at every hour mark after hour four, with a ratified cut order for when the ten hours run out. [ruled: D104]
+- It is the team's entry for the Even Realities challenge at LA Hacks AI 2026, built from the event's start: finished and demoable at every hour mark after hour four, with a ratified cut order for when the time runs out. [ruled: D118]
 - Quiet by design: nothing on the lens but a dim dot unless something has just slipped; one dim line, lower third, a second and a half, then dark. Every catch is shown at the lowest readable brightness, because brightness is the only lever Catch has over what others might glimpse. [ruled: D14]
 
 ## Shape
@@ -21,6 +21,7 @@ The orienting document for the agent that builds Catch, with the human as second
 - Idle: a single dim dot at the lowest brightness, top right. No dot means Catch cannot hear; a dim dash means the wearer paused it. [ruled: D14]
 - Gestures, with two meanings each depending on what is showing: tap opens the held page when only the dot shows and clears any line otherwise; long-press ends the conversation now; swipe up asks to keep the conversation when only the dot shows and scrolls back on a page; swipe down pauses or resumes when only the dot shows, declines the keep prompt, turns the names page to promises, and scrolls. Double-tap is Even's exit. [ruled: D34, D40, D43, D86, D92]
 - The held page: names in the order heard, scrolling past twenty, then the promises page, the wearer's own first, then those owed; the page dismisses on a tap or after five seconds. [ruled: D43]
+- With automatic cut-off detection switched off by the operator, a tap on the bare dot opens the held page with the wearer's last six words as its first line, so the thread can still be asked for. [ruled: D120]
 - The lens never shows two things at once: the newest wins; an unanswered keep prompt returns after the line that displaced it. [ruled: D32, D40]
 - The thread is the wearer's most recent continuous run of speech, last six words, never reaching back across someone else's turn. [ruled: D48]
 - Glyphs: the dot, the dash, the ellipsis, the middle dot and the down arrow must be confirmed on the real lens font before the demo; Even drops missing glyphs silently. [chosen]
@@ -28,8 +29,8 @@ The orienting document for the agent that builds Catch, with the human as second
 ## Conversations
 
 - A conversation ends after ten minutes in which the wearer does not speak, whatever anyone else says, or at once on a long-press; at either end the names clear and the promises go to the phone. A pause freezes the conversation and its timer. [ruled: D92]
-- Catch tells the wearer from everyone else by loudness alone: the mic sits by the wearer's mouth. It never knows which other person is speaking; every ruling that names another person rests on a name having been caught. [ruled: D95]
-- Wearer-versus-others is a near-field energy split, not voice identification; the dropped thread's "someone else takes the floor" is continuous other-speech of two to three seconds during the wearer's pause. [chosen]
+- Catch tells the wearer from everyone else by loudness, the mic sitting by the wearer's mouth, or, where loudness does not separate them on the real glasses, by the speech-to-text provider's speaker labels used only for "the wearer or not". It never knows which other person is speaking; every ruling that names another person rests on a name having been caught. [ruled: D119]
+- Wearer-versus-others is a near-field energy split by default, with the provider's speaker labels behind the same interface as the fallback, never voice identification; which one runs is the operator's call after the hour-one test on the real glasses, recorded here. The dropped thread's "someone else takes the floor" is continuous other-speech of two to three seconds during the wearer's pause. [chosen]
 - A repeated name is a second person only within two minutes; later it is a re-introduction. A timing rule, since identity is out of reach. [ruled: D87]
 
 ## The phone and the website
@@ -48,13 +49,13 @@ The orienting document for the agent that builds Catch, with the human as second
 
 ## Build order and process
 
-- The cut order, earliest built first: staying dark, names, the held page and the conversation boundary; the wearer's own promises and the notification, which opens the iPhone app's screens; the dropped thread; keep and the jogger; promises owed to the wearer; pause; tick-off on the phone; the website; restart persistence; scrolling past twenty names. Anything unbuilt when the ten hours run out is deferred to the fence, not counted as a failure. [ruled: D104]
+- The cut order, earliest built first: staying dark, names, the held page and the conversation boundary with the Even Beta uploaded; the dropped thread; the wearer's own promises and the notification; shipping (the hosted server, the Beta re-upload, thresholds tuned on the real glasses, the demo video, the tester's README, the Devpost entry naming the Even Hub app); the iPhone app's screens; keep and the jogger; promises owed to the wearer; pause; tick-off on the phone; the website; restart persistence; scrolling past twenty names. Anything unbuilt at the last merge is deferred to the fence, not counted as a failure. [ruled: D118]
 - The build follows the aBDD workflow: feature files first, `gherkin-node-test` for linting and parsing them, unit tests under the step bindings, and each phase of the phase plan run through the build-pipeline once the plan exists. Every other technology choice (server language, speech-to-text provider, hosting, the model that judges promises and writes joggers) is the build's, within these constraints. [ruled: D106]
 - A quick user guide for the touch vocabulary is a deliverable of the build, outside the glasses. [ruled: D72]
 - Streaming speech-to-text with word timings, chosen for the best handling of names on the team's own names Saturday morning; a name line within two seconds, a promise line within three. [chosen]
 - One model pass per catch for promises (judge, summarize, keep the time word, fill the object from the other person's last sentence) and one per kept conversation for the jogger; names by pattern on the transcript. [chosen]
-- The demo day is captured live; the loud-venue backup is a quiet corner, not a recording. [chosen]
-- The server is TypeScript on Node with SQLite as its one-file store, so lens, server, website and tests share one language, one typecheck and one set of types; it runs on the team's laptop for the event, reached over the shared hotspot, and a cloud deploy is never on the critical path. [chosen]
+- The demo day is captured live. The loud-venue backup, in order: a quieter corner; then, as the last resort, a committed fixture played through the real pipeline to the real glasses, said out loud to the judge as a recording and never passed off as live. [chosen]
+- The server is TypeScript on Node with SQLite as its one-file store, so lens, server, website and tests share one language, one typecheck and one set of types. During development it runs on the team's laptop, reached over the shared hotspot; the shipping step moves it to a hosted address with TLS, whitelisted in `app.json`, because the Even brief requires a README a tester can follow after the laptop is closed, and because a WebView served over HTTPS may refuse a plain LAN WebSocket. [chosen]
 - No live model call in any test: detectors and the jogger writer go through one client with record-and-replay cassettes committed beside the fixtures; a missing cassette fails loudly; re-recording is by hand behind an environment flag. [chosen]
 - Two test lanes: a fast lane (oxlint, one incremental typecheck, unit tests, the current phase's feature files) for every agent inside a phase, and a full lane (everything, including the iOS UI tests and the website's browser run) for the gate alone. The suite is never type-checked twice. [chosen]
 - Tests never call the real speech-to-text provider: fixtures are pre-transcribed word timings on a virtual clock, with timing bounds asserted on fixture time; the real provider runs only by hand behind an environment flag. The Even bridge stub is in-process and one server serves each test worker. [chosen]
@@ -65,3 +66,4 @@ The orienting document for the agent that builds Catch, with the human as second
 - 2026-10-15 — after the signed read (D110): the seven held candidates ruled as D111–D117; this doc gains the surface-outline constraint (D115). Nothing else changed.
 - 2026-10-15 — two `chosen` constraints on test speed (two lanes; pre-transcribed fixtures on a virtual clock), at the visionary's request after the plan was written. No ruled line touched.
 - 2026-10-15 — final pre-build review of the plan: TypeScript server with SQLite on the laptop, and model record-and-replay, added as `chosen`; the plan pre-splits P0, P1 and P2 and runs P3 before the iPhone app. No ruled line touched.
+- 2026-10-16 — read against the Even Realities challenge brief. N15 and D118–D120 drafted and signed the same day (D121–D124); four lines changed under them: the entry, not the fallback; the cut order; the split's fallback; the tap fallback for the thread. Two `chosen` lines changed after discussion: the server is hosted with TLS by the shipping step; the loud-venue backup gains a disclosed fixture-driven run as the last resort. One `chosen` line gains the split's fallback interface.
