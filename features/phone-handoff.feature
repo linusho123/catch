@@ -6,7 +6,7 @@ Feature: The phone handoff
   but promises and kept conversations survives a conversation. Serves N4
   and N10.
 
-  @D28
+  @D117
   Scenario: One notification carries both lines
     Given in a conversation with Dev the wearer said "I'll send you the deck tonight" and "I'll intro you to Sam"
     And Dev said "I'll send you the agenda"
@@ -29,31 +29,58 @@ Feature: The phone handoff
     Then the phone shows no notification
     And a tap on the glasses shows "this conversation · nothing held"
 
-  @D38
-  Scenario: Promises wait for an unreachable phone
-    Given a conversation with held promises has ended while the wearer's phone is off
+  @D114
+  Scenario: Notifications wait for an unreachable phone
+    Given a kept conversation with held promises has ended while the wearer's phone is off
     When the phone comes back on three hours later
-    Then the phone shows the same notification then, with every promise intact
+    Then the phone shows the promise notification then, with every promise intact
+    And the phone shows the kept-conversation notification then, with the jogger intact
 
-  @D39 @D98
-  Scenario: Ticking off a promise removes it from the conversation's screen
-    Given the wearer has opened a conversation's screen on the phone showing "Send Dev the deck tonight" and "Introduce Dev to Sam" under YOU
+  @D39 @D98 @D115
+  Scenario Outline: Ticking off a promise removes it from the conversation's screen on the <surface>
+    Given the wearer has opened a conversation's screen on the <surface> showing "Send Dev the deck tonight" and "Introduce Dev to Sam" under YOU
     When the wearer ticks off "Send Dev the deck tonight"
-    Then the wearer sees only "Introduce Dev to Sam" under YOU
+    Then the wearer sees only "Introduce Dev to Sam" under YOU on the <surface>
 
-  @D39 @D98
-  Scenario: An owed promise can be ticked off the same way
-    Given the wearer has opened a conversation's screen on the phone showing "Dev sends the agenda" under OWED TO YOU
+    Examples:
+      | surface    |
+      | iPhone app |
+      | website    |
+
+  @D39 @D98 @D115
+  Scenario Outline: An owed promise can be ticked off the same way on the <surface>
+    Given the wearer has opened a conversation's screen on the <surface> showing "Dev sends the agenda" under OWED TO YOU
     When the wearer ticks off "Dev sends the agenda"
-    Then the wearer sees nothing under OWED TO YOU
+    Then the wearer sees nothing under OWED TO YOU on the <surface>
 
-  @D100
-  Scenario: The phone's home lists conversations newest first
+    Examples:
+      | surface    |
+      | iPhone app |
+      | website    |
+
+  @D100 @D115
+  Scenario Outline: The home lists conversations newest first on the <surface>
     Given today two conversations produced promises, at 9:05 am and 2:10 pm, and yesterday one conversation was kept
-    When the wearer opens Catch on the phone
+    When the wearer opens Catch on the <surface>
     Then the wearer sees the 2:10 pm conversation above the 9:05 am one under TODAY
     And the wearer sees the kept conversation under YESTERDAY with a kept mark
     And the wearer sees, on each row, the names caught, the time, and the count of open promises
+
+    Examples:
+      | surface    |
+      | iPhone app |
+      | website    |
+
+  @D99 @D115
+  Scenario Outline: The jogger reads the same on the <surface>
+    Given a kept conversation with Ana has a jogger
+    When the wearer opens that jogger on the <surface>
+    Then the wearer sees one flat list of bullets in the order things came up, with the technical terms in bold
+
+    Examples:
+      | surface    |
+      | iPhone app |
+      | website    |
 
   @D100
   Scenario: A conversation with nothing to keep never appears on the phone

@@ -118,7 +118,7 @@ If T is Saturday 20:00, P0–P6 land by about 06:00 Sunday and P7 by 06:30; P8�
 - The server: the commitment detector on wearer-speech (a model call per candidate utterance: is it a commitment; summary as an imperative with any time or condition kept, "send Dev the deck tonight"; the object filled from the other person's last sentence when the wearer's words lack one, D90); "I'll think about it" is not a commitment (D47); the held promise list; at conversation end, one notification per conversation as commands, cut with an ellipsis when long, queued until the phone acknowledges (D38); deletion of transcript and audio everywhere at the boundary (D76), with the store reader proving it; one account per pair (D79).
 - The lens: `promised · …` lines within three seconds; the promises page after the names page on swipe down.
 - The iPhone app (SwiftUI): sign-in to the account; the history screen (D100); the conversation screen with YOU (D98; tick boxes drawn but inert until P7); notification handling that opens the conversation screen; the OpenAPI-generated client. Run on the team's iPhone with free provisioning.
-- The operator decides before this phase: held finding 7 (notification wording carries the time word; the draft already does).
+- Ruled: the notification carries the time word (D117) and the empty promises page reads `no promises yet` (D112): bind both here.
 
 **Far-side checks:** the notification capture holds the exact text; the store reader proves the transcript's absence; the iPhone screens are checked by UI test against the server's data, never against the app's view model.
 **Second reviewer's focus:** the detector's false positives and the deletion. "I'll think about it", "I would if I could", "I'll do it" after an unrelated sentence; a transcript that survives in a cache, a log, or the speech-to-text provider's retention setting (the reviewer reads the provider's docs and reports the setting).
@@ -152,7 +152,7 @@ If T is Saturday 20:00, P0–P6 land by about 06:00 Sunday and P7 by 06:30; P8�
 - The lens: swipe up → `keep this conversation?`; tap confirms, swipe down declines; the prompt survives any catch line and returns (D42); `already kept` (D54).
 - The server: the keep mark; the jogger at conversation end: one flat list of short bullets in order, technical terms in bold, the wearer's promises among them, no fixed count, a `N minutes not heard` line where a gap fell (D53); within thirty seconds for conversations under an hour, a few minutes for longer (D74); the kept notification, queued like promises.
 - The iPhone app: the jogger screen (D99) and the "Kept conversation ›" link on the conversation screen.
-- The operator decides before this phase: held findings 1 (what shows when a tap keeps), 4 (kept notification waits for an unreachable phone), 6 (the thirty-second bound under an hour).
+- Ruled: `kept` for a second and a half on a tap (D111); the kept notification waits for an unreachable phone (D114); thirty seconds under an hour (D116). Bind all three here.
 
 **Far-side checks:** the jogger is read from the notification capture and the store, and compared against the fixture transcript for the presence of the named terms; the gap line's text has no clock time in it.
 **Second reviewer's focus:** the jogger's honesty. Does it invent terms the transcript does not contain? Does it bold a term the transcript has? Is the missed-time line present when the fixture has a gap and absent when it does not?
@@ -167,7 +167,7 @@ If T is Saturday 20:00, P0–P6 land by about 06:00 Sunday and P7 by 06:30; P8�
 **Rulings:** D91, D26, D28, D43, D98.
 
 **Builds:** the commitment detector pointed at other-speech; the owed list named by the last caught name or "they"; renaming when a name arrives (D26); the second notification line "Owed to you: …"; the OWED TO YOU section.
-**The operator decides before this phase:** held finding 3 (two unnamed promisers).
+**Ruled:** unnamed promisers are numbered and a caught name attaches to the most recent (D113). Bind it here.
 **Far-side checks:** as P2, on the other-louder fixture as well.
 **Second reviewer's focus:** pronoun flipping ("I'll send you the deck" from Dev must become "Dev sends the deck", never "send Dev the deck") and attribution on the other-louder fixture.
 **Expected probes:** Dev's promise in the wearer's list; "they" never renamed; the owed line missing from the notification.
@@ -200,7 +200,7 @@ If T is Saturday 20:00, P0–P6 land by about 06:00 Sunday and P7 by 06:30; P8�
 
 ## P8 — The website
 
-**Contract:** the three screen scenarios of `phone-handoff.feature` (D98, D100, D39) run against the website as a second surface. **This needs an operator ruling first:** held finding 5 proposes turning those scenarios into an outline over `<surface>` with rows phone and website; until the operator rules, the website is bound by design-tier scenarios under `features/design/` and the reviewed scenarios keep naming the phone.
+**Contract:** the website rows of the four `<surface>` outlines in `phone-handoff.feature` (D115): tick-off on the conversation screen, owed tick-off, the history, the jogger.
 **Rulings:** D103, D104.
 
 **Builds:** `apps/web/` from `webdev_ref` Blueprint A (Preact 10.29.x, Vite 8, TypeScript 6.0.3, Zod 4, Tailwind 4, TanStack Query for the server state; pins from `reference/versions.md`, re-verified first); the three screens with tick-off against the same server; sign-in to the account.
@@ -234,17 +234,19 @@ If T is Saturday 20:00, P0–P6 land by about 06:00 Sunday and P7 by 06:30; P8�
 
 ---
 
-## Open questions for the visionary (from the post-draft pass; rule each before its phase)
+## Open questions from the post-draft pass — all ruled 2026-10-15 (D111–D117)
 
-1. Before P4: what the lens shows when a tap keeps the conversation (draft: only the dot; candidate: `kept` for a second and a half).
-2. Before P2: the promises page with nothing promised (candidate: `no promises yet`).
-3. Before P5: two unnamed promisers in one conversation (candidate: `they (1)`, `they (2)`; a later name attaches to the most recent).
-4. Before P4: does the kept-conversation notification wait for an unreachable phone like promises do (candidate: yes, extend D38).
-5. Before P8: website scenarios as an outline over `<surface>` (candidate: yes).
-6. Before P4: thirty seconds as the jogger bound for anything under an hour (candidate: yes).
-7. Before P2: the notification carries the time word, "Send Dev the deck tonight" (candidate: yes; the draft already does).
+The visionary accepted every candidate after the signed read; the rulings are in the docket and the feature files already carry them. Listed for the record:
 
-Each answer is a docket entry dated when it is made, and, where it changes a reviewed scenario, a Sanctioned changes entry in the fence before the build touches it.
+1. `kept` for a second and a half when a tap keeps the conversation (D111; P4).
+2. `no promises yet` on the promises page when nothing is promised (D112; P2).
+3. Unnamed promisers numbered `they (1)`, `they (2)`; a caught name attaches to the most recent (D113; P5).
+4. Every notification waits for an unreachable phone, kept ones included (D114; P4).
+5. The screen scenarios are outlines over `<surface>` with iPhone app and website rows (D115; the website rows stay scenario-scoped `wip` until P8).
+6. Thirty seconds is the jogger bound for anything under an hour; a few minutes beyond (D116; P4).
+7. The notification carries the time word (D117; P2).
+
+Nothing was bound when these were ruled, so no Sanctioned changes entry was needed.
 
 ## The demo (rehearsed 11:00 Sunday)
 

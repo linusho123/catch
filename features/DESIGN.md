@@ -36,7 +36,7 @@ The orienting document for the agent that builds Catch, with the human as second
 
 - Three screens and nothing else: a history of conversations newest first, grouped by day, each row with names, time, open count and a kept mark; one screen per conversation with YOU and OWED TO YOU lists, tick boxes, and a link to the jogger; the jogger as one flat list of bullets with the technical terms in bold and the missed-time line where it fell. [ruled: D98, D99, D100]
 - The phone receives one notification per conversation that produced promises, written as commands, with a second line for promises owed; a long list is cut off with an ellipsis and opens in full. Promises wait for an unreachable phone however long it takes. [ruled: D28, D38]
-- The website is a full second surface with the same three screens and tick-off, on the owner's `webdev_ref` Preact stack (Preact, Vite, TypeScript, Zod, Tailwind); notifications stay on the phone. [ruled: D103]
+- The website is a full second surface with the same three screens and tick-off, on the owner's `webdev_ref` Preact stack (Preact, Vite, TypeScript, Zod, Tailwind); notifications stay on the phone. The screen scenarios are outlines over a surface column, so the website is bound and tested, not assumed. [ruled: D103, D115]
 - The native app is a preference, protected as a ruling, not a requirement the build must reconstruct. [ruled: D105]
 
 ## What survives, and what is deleted
@@ -58,3 +58,4 @@ The orienting document for the agent that builds Catch, with the human as second
 ## Changelog
 
 - 2026-10-15 — initial draft (scope interview; docket D1–D108; electives D102, D103, D106, aliased E1–E3; D105 ladders E1 to a preference).
+- 2026-10-15 — after the signed read (D110): the seven held candidates ruled as D111–D117; this doc gains the surface-outline constraint (D115). Nothing else changed.

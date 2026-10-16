@@ -1,4 +1,4 @@
-# Catch scope — findings held for after the cold read
+# Catch scope — findings held for after the cold read (all seven ruled 2026-10-15 as D111–D117)
 
 Written 2026-10-15 by the interviewer's post-draft adversarial pass (scope SKILL.md, `layers.md`). The gate is cold (D109): drafting defects were fixed before the read; the items below are contract-level and are revealed only after the visionary's read closes. None is a ruling until the visionary makes it one. This file lives outside `features/` so no lint reads it as a deliverable.
 

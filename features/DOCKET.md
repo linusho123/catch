@@ -915,3 +915,65 @@ D109 2026-10-15 [V]
 D110 2026-10-15 [V] signs D109
   resp: the visionary read the contract under the cold gate and approved it without corrections: "all feature files and design choices are good"; every entry in effect as of this date is the signed state [V]
   touches: D109
+
+D111 2026-10-15 [I>V]
+  pre: the lens shows `keep this conversation?` [I>V]
+  trig: the wearer taps the glasses [I>V]
+  resp: the lens shows `kept` in dim text for a second and a half, then goes back to the dot; the conversation is marked kept [I>V]
+  serves: N8
+  sib: none -- a tap that fails to keep is this ruling failing, not a sibling behaviour
+  touches: D40 D54
+# post-signature ruling 1 of 7 from the held findings, accepted as drafted: "go with all 7 candidates".
+
+D112 2026-10-15 [I>V]
+  pre: names are held in this conversation and nothing has been promised in either direction, and the wearer has tapped so the names page is showing [I>V]
+  trig: the wearer swipes down past the end of the names [I>V]
+  resp: the wearer sees the promises page reading `no promises yet`, which dismisses like any held page [I>V]
+  serves: N4
+  sib: none -- an empty promises page has no failure case of its own
+  touches: D43 D31
+# post-signature ruling 2 of 7.
+
+D113 2026-10-15 [I>V] amends D26
+  pre: the wearer is in a conversation in which nobody has introduced themselves [I>V]
+  trig: another person says "I'll send you the deck tonight", and later a second unnamed person says "I'll send you the slides" [I>V]
+  resp: the lens shows `they promised · send the deck tonight` and then `they promised · send the slides`; the owed list numbers unnamed promisers in the order heard, `they (1)` and `they (2)`; when a name is caught it attaches to the most recent unnamed promiser only, so `they (2)` becomes `Dev` and `they (1)` stays `they (1)` [I>V]
+  serves: N4
+  sib: none -- an unnamed promise has no failure of its own beyond the non-commitment case
+  touches: D26 D91 D95
+# restates D26 in full; post-signature ruling 3 of 7.
+
+D114 2026-10-15 [I>V] amends D38
+  pre: a conversation has ended with held promises, or kept, while the wearer's phone is off or has no signal [I>V]
+  trig: the phone becomes reachable again, three hours later [I>V]
+  resp: every notification that was due arrives then, the promise notification and the kept-conversation notification alike, with every promise and the jogger intact; no notification is ever dropped for being late [I>V]
+  serves: N4 N8
+  sib: none -- a dropped notification was the road not taken, never a wanted behaviour
+  touches: D38 D24 D74
+# restates D38 in full with the kept notification; post-signature ruling 4 of 7.
+
+D115 2026-10-15 [I>V]
+  resp: the three phone-screen scenarios, the conversation screen with tick-off, the history, and the jogger, are written as scenario outlines over a surface column with one row for the iPhone app and one for the website, so the website is bound and tested rather than assumed [I>V]
+  -> structural
+  serves: N4 N8
+  touches: D103 D98 D99 D100 D39
+# post-signature ruling 5 of 7. Bound scenarios touched: none, so no Sanctioned changes entry is needed; the reviewed text changes under this ruling and the next read meets it.
+
+D116 2026-10-15 [I>V] amends D74
+  pre: the wearer kept a three-hour workshop from the start [I>V]
+  trig: the conversation ends and the jogger is written [I>V]
+  resp: the jogger stays one quick read with no sections, and grows naturally with the length, difficulty and technicality of what was said, never pressed to compress and never padded; its notification arrives within thirty seconds for any conversation under an hour and within a few minutes beyond that [I>V]
+  serves: N8
+  spread: A kept conversation of any length gets a jogger
+  sib: none -- a sectioned or compressed jogger was the road not taken
+  touches: D74 D62 D24 D52
+# restates D74 in full with the one-hour line; post-signature ruling 6 of 7.
+
+D117 2026-10-15 [I>V] amends D28
+  pre: in a conversation with Dev the wearer said "I'll send you the deck tonight" and "I'll intro you to Sam", Dev said "I'll send you the agenda", and then ten minutes have passed in which the wearer did not speak [I>V]
+  trig: the tenth minute passes [I>V]
+  resp: the phone shows one notification with the wearer's promises as commands with no "you" in them and any stated time or condition kept, "Send Dev the deck tonight and introduce Dev to Sam", then a second line for promises owed to the wearer, "Owed to you: Dev sends the agenda"; a list too long for the notification is cut off with an ellipsis, and opening the notification shows the full lists; and the next tap on the glasses shows no names from that conversation [I>V]
+  serves: N4
+  sib: D51
+  touches: D28 D89 D92
+# restates D28 in full with the time words of D89; post-signature ruling 7 of 7.

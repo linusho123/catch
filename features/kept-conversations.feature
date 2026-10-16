@@ -12,11 +12,12 @@ Feature: Kept conversations
     When the wearer swipes up
     Then the wearer sees "keep this conversation?" in dim text
 
-  @D40
+  @D40 @D111
   Scenario: A tap keeps the conversation
     Given the lens shows "keep this conversation?"
     When the wearer taps the glasses
-    Then the wearer sees only the dot
+    Then the wearer sees "kept" in dim text for a second and a half
+    And the wearer then sees only the dot
     And a further swipe up shows "already kept"
 
   @D40
@@ -58,7 +59,7 @@ Feature: Kept conversations
     And the wearer sees the technical terms Ana used set in bold inside the bullets
     And the wearer sees the questions raised and the wearer's own promises among the bullets
 
-  @D24 @D62 @D74
+  @D24 @D62 @D116
   Scenario Outline: A kept conversation of any length gets a jogger
     Given the wearer kept a conversation of <length>
     When the conversation ends

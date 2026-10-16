@@ -42,6 +42,13 @@ Feature: Holding
       | three names | 5 seconds | gone, with only the dot in its place   |
       | nothing     | 5 seconds | gone, with only the dot in its place   |
 
+  @D112
+  Scenario: The promises page with nothing promised
+    Given Priya and Marcus have introduced themselves and nothing has been promised in either direction
+    And the wearer has tapped and the names page is showing
+    When the wearer swipes down past the end of the names
+    Then the wearer sees the promises page reading "no promises yet"
+
   @D31
   Scenario: Nothing held shows an empty page
     Given the wearer is in a conversation in which nobody has introduced themselves and nothing has been promised

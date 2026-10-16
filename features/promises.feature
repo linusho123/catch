@@ -50,15 +50,21 @@ Feature: Promises
     Then within three seconds the wearer sees "Dev promised · send the agenda" in dim text for a second and a half
     And a tap and a swipe down show "send Dev the deck tonight" first and "owed: Dev sends the agenda" after it
 
-  @D26
+  @D113
   Scenario: A promise from someone unnamed is held as theirs
     Given the wearer is in a conversation in which nobody has introduced themselves
     When another person says "I'll send you the deck tonight"
     Then within three seconds the wearer sees "they promised · send the deck tonight"
-    And a tap and a swipe down show "owed: they send the deck tonight"
+    And a tap and a swipe down show "owed: they (1) sends the deck tonight"
 
-  @D26
+  @D113
   Scenario: An owed promise takes the name once it is caught
-    Given the owed list holds "they send the deck tonight"
+    Given the owed list holds "they (1) sends the deck tonight"
     When that person says "By the way, I'm Dev"
     Then a tap and a swipe down show "owed: Dev sends the deck tonight"
+
+  @D113
+  Scenario: Two unnamed promisers are numbered, and a name attaches to the most recent
+    Given nobody has introduced themselves, one person has said "I'll send you the deck tonight", and a second person has said "I'll send you the slides"
+    When the second person says "By the way, I'm Dev"
+    Then a tap and a swipe down show "owed: they (1) sends the deck tonight" and "owed: Dev sends the slides"
