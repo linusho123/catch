@@ -69,6 +69,7 @@ async function start(): Promise<Harness> {
     model,
     notifier: notifications,
   })
+  stt.attach(server.events)
   const lenses: Lens[] = []
   host.reset(clock)
   const h: Harness = {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findIntroductions } from './introductions.ts'
+import { findIntroductions, findSelfIntroductions } from './introductions.ts'
 import { HeldNames, REPEATED_NAME_WINDOW_MS } from './held-names.ts'
 import { SCRIPTS } from '../../../test/fixtures/scripts.ts'
 
@@ -14,6 +14,7 @@ describe('the introduction detector', () => {
     ['Dana, nice to meet you.', ['Dana']],
     ["Hi, I'm Priya. My name is Marcus.", ['Priya', 'Marcus']],
     ["I'm Priya's sister.", ['Priya']],
+    ["My name's Marcus.", ['Marcus']],
   ])('finds the name in %j', (text, expected) => {
     expect(names(text)).toEqual(expected)
   })
@@ -29,6 +30,18 @@ describe('the introduction detector', () => {
     'Morning!',
   ])('finds no name in %j', (text) => {
     expect(names(text)).toEqual([])
+  })
+
+  it('tells the speaker\'s own name from a name given to someone else (M2)', () => {
+    const self = (text: string) => findSelfIntroductions(text.split(/\s+/)).map((d) => d.name)
+    expect(self("Hi, I'm Linus.")).toEqual(['Linus'])
+    expect(self('I am Linus.')).toEqual(['Linus'])
+    expect(self('My name is Linus.')).toEqual(['Linus'])
+    expect(self("My name's Linus.")).toEqual(['Linus'])
+    expect(self('Meet Dev.')).toEqual([])
+    expect(self('This is Dana.')).toEqual([])
+    expect(self('Priya, nice to meet you.')).toEqual([])
+    expect(self("Meet Dev. I'm Linus.")).toEqual(['Linus'])
   })
 
   it('points at the word that carries each name, so a growing run is not caught twice', () => {

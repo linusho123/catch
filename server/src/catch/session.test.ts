@@ -12,10 +12,10 @@ import { FRAME_WAIT_MS, LINE_MS, Session } from './session.ts'
 const WEARER = -12
 const OTHER = -28
 
-function setup() {
+function setup(opts: { wearerName?: string } = {}) {
   const clock = new VirtualClock(1)
   const views: { at: number; view: LensView }[] = []
-  const session = new Session({ clock, split: loudnessSplit(), show: (view) => views.push({ at: clock.now(), view }) })
+  const session = new Session({ clock, split: loudnessSplit(), show: (view) => views.push({ at: clock.now(), view }), ...opts })
   let seq = 0
   /** One 100 ms frame ending at stream second `end`, at `dbfs`. */
   const frame = (end: number, dbfs: number) =>
@@ -38,13 +38,17 @@ describe('a session', () => {
     expect(views.map((v) => v.view)).toEqual([{ kind: 'dot' }])
   })
 
-  it('catches no introduction before the conversation begins on the wearer\'s first speech', () => {
+  it('begins the first conversation on anyone\'s speech, so an introduction before the wearer has spoken is caught (D129)', () => {
     const { session, views, say } = setup()
     session.setHearing(true)
     say("Hi, I'm Priya.", 0, OTHER)
     say('Hello there.', 2, WEARER)
     say("Hi, I'm Marcus.", 4, OTHER)
-    expect(views.map((v) => v.view).filter((v) => v.kind === 'line')).toEqual([{ kind: 'line', text: 'Marcus' }])
+    expect(views.map((v) => v.view).filter((v) => v.kind === 'line')).toEqual([
+      { kind: 'line', text: 'Priya' },
+      { kind: 'line', text: 'Marcus' },
+    ])
+    expect(session.names.list()).toEqual(['Priya', 'Marcus'])
   })
 
   it('holds a name line for a second and a half on its clock, then the dot', () => {
@@ -79,6 +83,40 @@ describe('a session', () => {
     say('Everyone, this is Linus.', 2, OTHER)
     expect(views.filter((v) => v.view.kind === 'line')).toEqual([])
     expect(session.names.list()).toEqual([])
+  })
+
+  it.each([
+    ['Priya, nice to meet you.', "Hi, I'm Priya."],
+    ['Meet Dev.', "Hi, I'm Dev."],
+    ['This is Dana.', "Hi, I'm Dana."],
+  ])('takes only the wearer\'s self-introduction as their own name, not %j naming someone else (M2, D29)', (wearerSays, otherSays) => {
+    const { session, say } = setup()
+    session.setHearing(true)
+    say(wearerSays, 0, WEARER)
+    say(otherSays, 3, OTHER)
+    expect(session.names.list()).toEqual([otherSays.replace(/^Hi, I'm |\.$/g, '')])
+  })
+
+  it.each([["Hi, I'm Linus."], ["I am Linus."], ['My name is Linus.'], ["My name's Linus."]])(
+    'takes %j from the wearer as their own name (D29)',
+    (wearerSays) => {
+      const { session, say } = setup()
+      session.setHearing(true)
+      say(wearerSays, 0, WEARER)
+      say('Everyone, this is Linus.', 3, OTHER)
+      expect(session.names.list()).toEqual([])
+    },
+  )
+
+  it('never catches the configured wearer name, even when the split hears the wearer as someone else (CATCH_WEARER_NAME)', () => {
+    const { session, views, say } = setup({ wearerName: 'Linus' })
+    session.setHearing(true)
+    say('Morning, everyone.', 0, WEARER)
+    // The wearer's own introduction, heard quiet: the split calls it someone else's.
+    say("Hi, I'm Linus.", 2, OTHER)
+    say("Hi, I'm Priya.", 4, OTHER)
+    expect(views.filter((v) => v.view.kind === 'line').map((v) => v.view)).toEqual([{ kind: 'line', text: 'Priya' }])
+    expect(session.names.list()).toEqual(['Priya'])
   })
 
   it('opens the names page on a tap at the dot, and goes back to the dot on the next', () => {

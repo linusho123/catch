@@ -4,7 +4,7 @@ import type { AudioFrame } from '../../../shared/wire.ts'
 import { pcmLoudnessDbfs, type FrameSignal, type Side, type SplitWord, type WearerSplit } from '../split/split.ts'
 import type { SttWord } from '../stt/types.ts'
 import { HeldNames } from './held-names.ts'
-import { findIntroductions } from './introductions.ts'
+import { findIntroductions, findSelfIntroductions } from './introductions.ts'
 
 // One /audio session: what the server makes of one pair of glasses. It lines
 // the provider's words up with the lens's frames, asks the split (D125) whose
@@ -13,9 +13,10 @@ import { findIntroductions } from './introductions.ts'
 // Every duration is read from the injected clock (the fixture clock under
 // test), never from when a frame or a word happened to arrive.
 //
-// P1a: the conversation begins on the wearer's first speech and does not end
-// yet (the end rules are P1b's); the names page is minimal (P1b gives it its
-// header, dismissal and promises page).
+// P1a: the first conversation begins on anyone's speech (D129; every later
+// one will begin on the wearer's) and does not end yet (the end rules are
+// P1b's); the names page is minimal (P1b gives it its header, dismissal and
+// promises page).
 
 /** D17: a catch line holds for a second and a half. A ruling, not a tuning value. */
 export const LINE_MS = 1500
@@ -35,6 +36,8 @@ export interface SessionOptions {
   split: WearerSplit
   /** Sends a view to the lens. Called only when the view changes. */
   show: (view: LensView) => void
+  /** The wearer's name (CATCH_WEARER_NAME): never caught, whatever the split decides, beside D29's own-name exclusion. */
+  wearerName?: string
 }
 
 export class Session {
@@ -42,7 +45,7 @@ export class Session {
   private readonly split: WearerSplit
   private readonly send: (view: LensView) => void
 
-  // The lens frames on the stream's timeline (seconds), and how far they reach.
+  // The lens frames on the session's timeline (seconds from the first frame's start), and how far they reach.
   private epochMs: number | undefined
   private frames: FrameSignal[] = []
   private coveredUntil = 0
@@ -54,11 +57,15 @@ export class Session {
 
   // The conversation.
   private inConversation = false
+  /** Whether any conversation has begun since Catch started: until one has, anyone's speech begins it (D129). */
+  private begun = false
   private otherRun: string[] = []
   private otherCaught = new Set<number>()
   private wearerRun: string[] = []
   /** Names the wearer gave as their own in this conversation (D29): never caught from anyone. */
   private ownNames = new Set<string>()
+  /** The configured wearer name, case-folded, if any. */
+  private readonly wearerName: string | undefined
   readonly names = new HeldNames()
 
   // What the lens shows.
@@ -73,6 +80,7 @@ export class Session {
     this.clock = opts.clock
     this.split = opts.split
     this.send = opts.show
+    this.wearerName = opts.wearerName?.trim().toLowerCase() || undefined
   }
 
   /** What the lens is showing now. */
@@ -80,17 +88,23 @@ export class Session {
     return this.view
   }
 
-  /** One lens frame: its span on the stream's timeline comes from its capture time, its loudness from its PCM. */
-  frame(frame: AudioFrame): void {
+  /**
+   * One lens frame: its span on the session's timeline comes from its capture
+   * time, its loudness from its PCM. Returns where the frame starts on that
+   * timeline (seconds), so a speech-to-text stream fed from this frame on can
+   * have its words placed there.
+   */
+  frame(frame: AudioFrame): number {
     const seconds = frame.pcm.byteLength / (16000 * 2)
     this.epochMs ??= frame.captureMs - seconds * 1000
     const end = (frame.captureMs - this.epochMs) / 1000
     this.frames.push({ start: end - seconds, end, role: frame.speakerRole, loudness: pcmLoudnessDbfs(frame.pcm) })
     if (end > this.coveredUntil) this.coveredUntil = end
     this.drain(false)
+    return end - seconds
   }
 
-  /** Words from the provider; only final ones are judged. */
+  /** Words from the provider, timed on the session's timeline (app.ts places each stream's); only final ones are judged. */
   words(words: readonly SttWord[]): void {
     for (const w of words) if (w.isFinal) this.pending.push(w)
     this.drain(false)
@@ -151,13 +165,18 @@ export class Session {
   }
 
   private hear(text: string, side: Side): void {
-    if (side === 'wearer') {
-      // The conversation begins on the wearer's first speech.
+    // D129: the first conversation after Catch starts begins on anyone's
+    // speech; every later one begins on the wearer's.
+    if (!this.inConversation && (side === 'wearer' || !this.begun)) {
       this.inConversation = true
+      this.begun = true
+    }
+    if (side === 'wearer') {
       this.otherRun = []
       this.otherCaught.clear()
       this.wearerRun.push(text)
-      for (const { name } of findIntroductions(this.wearerRun)) this.ownNames.add(name.toLowerCase())
+      // D29: only the wearer giving their own name ("I'm X", "my name is X"), never "meet X" or "X, nice to meet you" (M2).
+      for (const { name } of findSelfIntroductions(this.wearerRun)) this.ownNames.add(name.toLowerCase())
       return
     }
     this.wearerRun = []
@@ -166,7 +185,7 @@ export class Session {
     for (const { name, index } of findIntroductions(this.otherRun)) {
       if (this.otherCaught.has(index)) continue
       this.otherCaught.add(index)
-      if (this.ownNames.has(name.toLowerCase())) continue
+      if (this.ownNames.has(name.toLowerCase()) || name.toLowerCase() === this.wearerName) continue
       const heard = this.names.hear(name, this.clock.now())
       this.showLine(heard.line)
     }

@@ -1,0 +1,240 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "linus-after-outage",
+  "variant": "other-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "Morning, everyone."
+    },
+    {
+      "at": 2,
+      "who": "Dev",
+      "text": "Morning! Sorry, I have to step out."
+    },
+    {
+      "at": 5,
+      "who": "wearer",
+      "text": "Sure, see you at lunch then."
+    },
+    {
+      "at": 14.5,
+      "who": "wearer",
+      "text": "Hi, I'm Linus."
+    },
+    {
+      "at": 17,
+      "who": "Priya",
+      "text": "Hi, I'm Priya."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Nice to meet you."
+    }
+  ],
+  "words": [
+    {
+      "text": "Morning,",
+      "start": 0,
+      "end": 0.495,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "everyone.",
+      "start": 0.555,
+      "end": 1.095,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "Morning!",
+      "start": 2,
+      "end": 2.495,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "Sorry,",
+      "start": 2.555,
+      "end": 2.96,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "I",
+      "start": 3.02,
+      "end": 3.245,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 1
+    },
+    {
+      "text": "have",
+      "start": 3.305,
+      "end": 3.665,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 1
+    },
+    {
+      "text": "to",
+      "start": 3.725,
+      "end": 3.995,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "step",
+      "start": 4.055,
+      "end": 4.415,
+      "role": "other",
+      "loudness": -14,
+      "speaker": 1
+    },
+    {
+      "text": "out.",
+      "start": 4.475,
+      "end": 4.79,
+      "role": "other",
+      "loudness": -15,
+      "speaker": 1
+    },
+    {
+      "text": "Sure,",
+      "start": 5,
+      "end": 5.36,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "see",
+      "start": 5.42,
+      "end": 5.735,
+      "role": "wearer",
+      "loudness": -25.1,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 5.795,
+      "end": 6.11,
+      "role": "wearer",
+      "loudness": -26.6,
+      "speaker": 0
+    },
+    {
+      "text": "at",
+      "start": 6.17,
+      "end": 6.44,
+      "role": "wearer",
+      "loudness": -24.7,
+      "speaker": 0
+    },
+    {
+      "text": "lunch",
+      "start": 6.5,
+      "end": 6.905,
+      "role": "wearer",
+      "loudness": -26.3,
+      "speaker": 0
+    },
+    {
+      "text": "then.",
+      "start": 6.965,
+      "end": 7.325,
+      "role": "wearer",
+      "loudness": -25.9,
+      "speaker": 0
+    },
+    {
+      "text": "Hi,",
+      "start": 14.5,
+      "end": 14.77,
+      "role": "wearer",
+      "loudness": -26.2,
+      "speaker": 0
+    },
+    {
+      "text": "I'm",
+      "start": 14.83,
+      "end": 15.1,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "Linus.",
+      "start": 15.16,
+      "end": 15.565,
+      "role": "wearer",
+      "loudness": -26.5,
+      "speaker": 0
+    },
+    {
+      "text": "Hi,",
+      "start": 17,
+      "end": 17.27,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 2
+    },
+    {
+      "text": "I'm",
+      "start": 17.33,
+      "end": 17.6,
+      "role": "other",
+      "loudness": -13.8,
+      "speaker": 2
+    },
+    {
+      "text": "Priya.",
+      "start": 17.66,
+      "end": 18.065,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 2
+    },
+    {
+      "text": "Nice",
+      "start": 19.065,
+      "end": 19.425,
+      "role": "wearer",
+      "loudness": -25.3,
+      "speaker": 0
+    },
+    {
+      "text": "to",
+      "start": 19.485,
+      "end": 19.755,
+      "role": "wearer",
+      "loudness": -24.8,
+      "speaker": 0
+    },
+    {
+      "text": "meet",
+      "start": 19.815,
+      "end": 20.175,
+      "role": "wearer",
+      "loudness": -27.4,
+      "speaker": 0
+    },
+    {
+      "text": "you.",
+      "start": 20.235,
+      "end": 20.55,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    }
+  ]
+}

@@ -20,7 +20,12 @@ import type { SpeechToText, SttStream, SttWord } from './stt/types.ts'
 // the wearer from everyone else, catches names, and sends the lens what to
 // show (shared/lens-protocol.ts); the lens sends its taps back. A lost
 // speech-to-text stream hides the dot and is reopened every STT_RETRY_MS until
-// the provider answers again (D37). Each session's frames and words are also
+// the provider answers again (D37). A provider times its words from the start
+// of its own stream (Deepgram: seconds from the first audio it was sent), so
+// each stream's words are moved onto the session's timeline by where that
+// stream's first audio sits on it before the session judges them (M1); after a
+// reopen they would otherwise start again near 0, against the wrong frames.
+// Each session's frames and words (on the session's timeline) are also
 // emitted on `events`. The clock, the speech-to-text provider, the split, the
 // model client and the notifier are injected, so the test harness
 // (test/harness/) can stand in for the glasses, the provider, the model and
@@ -43,6 +48,8 @@ export interface ServerOptions {
   stt?: SpeechToText
   /** The wearer-versus-others split (D125); loudness by default (D126). main.ts passes CATCH_SPLIT's. */
   split?: WearerSplit
+  /** The wearer's name (CATCH_WEARER_NAME, optional): never caught, whatever the split decides, beside D29's exclusion. */
+  wearerName?: string
   /** The model client the detectors and the jogger writer call (P1a on). */
   model?: ModelClient
   /** Where phone notifications go (P2a on). */
@@ -78,6 +85,12 @@ export interface RunningServer {
   clock: Clock
   events: EventEmitter<ServerEvents>
   close(): Promise<void>
+}
+
+/** One speech-to-text stream as a session feeds it: the stream, and where its first audio starts on the session's timeline (seconds). */
+interface Feed {
+  stt?: SttStream
+  zero?: number
 }
 
 const CORS = {
@@ -119,24 +132,28 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     const send = (msg: ServerMessage) => {
       if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(msg))
     }
-    const lens = new Session({ clock, split, show: (view: LensView) => send({ type: 'show', view }) })
+    const lens = new Session({ clock, split, wearerName: opts.wearerName, show: (view: LensView) => send({ type: 'show', view }) })
 
     // One speech-to-text stream at a time; a lost one is reopened on the clock.
-    let stream: SttStream | undefined
+    // `zero` is where the stream's first audio starts on the session's
+    // timeline, set as that audio is sent; its words are moved by it (M1).
+    let stream: Feed | undefined
     let attempt: object | undefined
     let retry: TimerHandle | undefined
     let closed = false
     const openStream = () => {
       retry = undefined
       if (!opts.stt || closed) return
-      const mine = {}
+      const mine: Feed = {}
       attempt = mine
       let lost = false
       const live = () => attempt === mine && !lost
       let opened: SttStream | undefined = undefined
       opened = opts.stt.open(
-        (words) => {
+        (raw) => {
           if (!live()) return
+          const zero = mine.zero ?? 0
+          const words = raw.map((w) => ({ ...w, start: w.start + zero, end: w.end + zero }))
           events.emit('words', { session, at: clock.now(), words })
           lens.words(words)
         },
@@ -145,7 +162,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
           lost = true
           events.emit('sttError', { session, at: clock.now(), error })
           lens.setHearing(false)
-          if (stream === opened) stream = undefined
+          if (stream === mine) stream = undefined
           opened?.close()
           if (!closed) retry = clock.setTimeout(openStream, STT_RETRY_MS)
         },
@@ -153,7 +170,8 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
           if (live()) lens.setHearing(true)
         },
       )
-      if (live()) stream = opened
+      mine.stt = opened
+      if (live()) stream = mine
       else opened.close()
     }
     openStream()
@@ -161,7 +179,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     socket.on('close', () => {
       closed = true
       if (retry) clock.clearTimeout(retry)
-      stream?.close()
+      stream?.stt?.close()
       lens.close()
     })
     // An oversized message makes ws emit 'error' and close the socket with 1009;
@@ -177,8 +195,11 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       try {
         const frame = decodeFrame(bytes)
         events.emit('frame', { session, at: clock.now(), frame })
-        lens.frame(frame)
-        stream?.sendPcm(frame.pcm)
+        const startsAt = lens.frame(frame)
+        if (stream) {
+          stream.zero ??= startsAt
+          stream.stt?.sendPcm(frame.pcm)
+        }
         send({ type: 'ack', seq: frame.seq, bytes: frame.pcm.byteLength })
       } catch (err) {
         send({ type: 'error', message: (err as Error).message })

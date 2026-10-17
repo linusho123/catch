@@ -42,26 +42,45 @@ function nameAt(words: readonly string[], i: number): string | null {
 const lower = (w: string | undefined) => (w === undefined ? '' : bare(w).toLowerCase())
 const endsSentence = (w: string | undefined) => w !== undefined && /[.!?]$/.test(w)
 
+/** A word lowercased with its trailing punctuation gone but its "'s" kept: "name's" stays "name's". */
+const lowerKeepingS = (w: string | undefined) => (w === undefined ? '' : w.toLowerCase().replace(/[^\p{L}']+$/u, ''))
+
 /** Every introduction in one run of another person's words, in order. */
 export function findIntroductions(words: readonly string[]): DetectedName[] {
-  const found: DetectedName[] = []
-  const add = (index: number) => {
+  return detect(words).map(({ name, index }) => ({ name, index }))
+}
+
+/**
+ * Only the introductions in which the speaker gives their own name: "I'm X",
+ * "I am X", "my name is X", "my name's X". The wearer's own name (D29) is
+ * read from these alone; "meet X", "this is X" and "X, nice to meet you" name
+ * someone else (M2).
+ */
+export function findSelfIntroductions(words: readonly string[]): DetectedName[] {
+  return detect(words)
+    .filter((d) => d.self)
+    .map(({ name, index }) => ({ name, index }))
+}
+
+function detect(words: readonly string[]): (DetectedName & { self: boolean })[] {
+  const found: (DetectedName & { self: boolean })[] = []
+  const add = (index: number, self: boolean) => {
     const name = nameAt(words, index)
-    if (name !== null && !found.some((f) => f.index === index)) found.push({ name, index })
+    if (name !== null && !found.some((f) => f.index === index)) found.push({ name, index, self })
   }
   for (let i = 0; i < words.length; i++) {
     const w = lower(words[i])
     // "I'm X"
-    if (w === "i'm" || w === 'im') add(i + 1)
+    if (w === "i'm" || w === 'im') add(i + 1, true)
     // "I am X" is too often "I am going"; only a capitalized non-word after it counts, as with every trigger.
-    if (w === 'i' && lower(words[i + 1]) === 'am') add(i + 2)
+    if (w === 'i' && lower(words[i + 1]) === 'am') add(i + 2, true)
     // "my name is X", "my name's X"
-    if (w === 'my' && lower(words[i + 1]) === 'name' && lower(words[i + 2]) === 'is') add(i + 3)
-    if (w === 'my' && lower(words[i + 1]) === "name's") add(i + 2)
+    if (w === 'my' && lower(words[i + 1]) === 'name' && lower(words[i + 2]) === 'is') add(i + 3, true)
+    if (w === 'my' && lowerKeepingS(words[i + 1]) === "name's") add(i + 2, true)
     // "this is X"
-    if (w === 'this' && lower(words[i + 1]) === 'is') add(i + 2)
+    if (w === 'this' && lower(words[i + 1]) === 'is') add(i + 2, false)
     // "meet X" (not "meet you")
-    if (w === 'meet') add(i + 1)
+    if (w === 'meet') add(i + 1, false)
     // "X, nice to meet you": X opens the run or a sentence, and carries the comma.
     const opens = i === 0 || endsSentence(words[i - 1])
     if (
@@ -72,7 +91,7 @@ export function findIntroductions(words: readonly string[]): DetectedName[] {
       lower(words[i + 3]) === 'meet' &&
       lower(words[i + 4]) === 'you'
     ) {
-      add(i)
+      add(i, false)
     }
   }
   return found.sort((a, b) => a.index - b.index)

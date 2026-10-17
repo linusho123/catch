@@ -18,15 +18,19 @@ beforeAll(async () => {
   h = await harness()
 })
 afterAll(() => h.close())
+/** The listeners this file added; the harness's own (the fixture provider hears every frame, M1) stay. */
+const added: [event: 'frame' | 'words', fn: never][] = []
 beforeEach(async () => {
   await h.reset()
-  h.server.events.removeAllListeners()
+  for (const [event, fn] of added.splice(0)) h.server.events.off(event, fn)
 })
 
 /** Everything the server emits as `event` from now until the end of the test. */
 function listen<K extends 'frame' | 'words'>(event: K): ServerEvents[K][0][] {
   const heard: ServerEvents[K][0][] = []
-  h.server.events.on(event, ((e: ServerEvents[K][0]) => heard.push(e)) as never)
+  const fn = ((e: ServerEvents[K][0]) => heard.push(e)) as never
+  h.server.events.on(event, fn)
+  added.push([event, fn])
   return heard
 }
 

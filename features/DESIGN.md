@@ -25,7 +25,7 @@ The orienting document for the agent that builds Catch, with the human as second
 - With automatic cut-off detection switched off by the operator, a tap on the bare dot opens the held page with the wearer's last six words as its first line, so the thread can still be asked for. [ruled: D120]
 - The lens never shows two things at once: the newest wins; an unanswered keep prompt returns after the line that displaced it. [ruled: D32, D40]
 - The thread is the wearer's most recent continuous run of speech, last six words, never reaching back across someone else's turn. [ruled: D48]
-- Glyphs: the dot (•), the middle dot (·), the down arrow (↓), the ellipsis (…) and the dash (– and —) all render, so Catch uses them as they are, with no ASCII substitute. Checked in the Even Hub simulator 0.9.5, not on a real lens (no loaner, D126): the simulator draws missing glyphs the way the firmware does, and every one drew at full brightness and at the dim level Catch uses (P1a, 2026-10-17, `apps/lens/glyphs.html`). Even drops missing glyphs silently, so the check is repeated on real glasses if a G2 arrives. [chosen]
+- Glyphs: the dot (•), the middle dot (·), the down arrow (↓), the ellipsis (…) and the dash (– and —) all render in the Even Hub simulator 0.9.5, so Catch uses them as they are, with no ASCII substitute. The check was done in the simulator, not on a real lens (no loaner, D126): every one drew there at full brightness and at the dim level Catch uses (P1a, 2026-10-17, `apps/lens/glyphs.html`). Whether the firmware draws them the same is not known; Even drops missing glyphs silently, so the check is repeated on real glasses if a G2 arrives. [chosen]
 
 ## Conversations
 
@@ -77,3 +77,4 @@ The orienting document for the agent that builds Catch, with the human as second
 - 2026-10-17 — D128: the local server is a first-class path and nothing requires reaching Fly; one ruled line added.
 - 2026-10-17 — P1a: two `chosen` lines: the glyphs as checked in the Even Hub simulator (no loaner, D126), replacing the line that left them to be confirmed; and the views the server sends the lens, each timed on the server's clock. No ruled line touched.
 - 2026-10-17 — D129 at the P1a questions: the first conversation after Catch starts begins on anyone's speech, so the demo opener's introduction is caught; one ruled line changed.
+- 2026-10-17 — P1a fix round: the glyphs `chosen` line now says only that the check was done in the simulator (M4). No ruled line touched.

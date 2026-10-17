@@ -100,8 +100,8 @@ export const SCRIPTS: Record<string, ScriptLine[]> = {
     { gap: 0.8, who: 'Priya', text: 'Nice to meet you.' },
   ],
 
-  // P1a. The scenarios below need a conversation already under way (it begins
-  // on the wearer's first speech) before the moment they are about.
+  // P1a. The scenarios below need a conversation already under way, the
+  // wearer having spoken, before the moment they are about.
 
   // D29 mid-conversation: the wearer gives their own name after the conversation has begun.
   'own-name-midway': [
@@ -141,6 +141,25 @@ export const SCRIPTS: Record<string, ScriptLine[]> = {
     { at: 590, who: 'wearer', text: 'Oh, here comes someone new.' },
     { at: 603, who: 'Priya', text: "I'm Priya." },
     { gap: 1, who: 'wearer', text: 'And this is where we sit.' },
+  ],
+  // D129, the demo opener: the teammate introduces herself before the wearer has said anything.
+  'demo-opener': [
+    { at: 0.5, who: 'Priya', text: "Hi, I'm Priya." },
+    { gap: 1.5, who: 'wearer', text: 'Nice to meet you.' },
+  ],
+  // M1: the speech-to-text stream drops at 1.5 s and comes back at about
+  // 11.5 s (the test plays the outage); Dev and the wearer speak meanwhile,
+  // untranscribed. Then the wearer gives their own name and Priya introduces
+  // herself. The reopened stream times its words from about 11.5 s: left
+  // there, the wearer's name would land on Dev's quiet words and Priya's on
+  // the wearer's loud ones.
+  'linus-after-outage': [
+    { at: 0, who: 'wearer', text: 'Morning, everyone.' },
+    { at: 2, who: 'Dev', text: 'Morning! Sorry, I have to step out.' },
+    { at: 5, who: 'wearer', text: 'Sure, see you at lunch then.' },
+    { at: 14.5, who: 'wearer', text: "Hi, I'm Linus." },
+    { at: 17, who: 'Priya', text: "Hi, I'm Priya." },
+    { gap: 1, who: 'wearer', text: 'Nice to meet you.' },
   ],
   // D14, D16, D37: three minutes of talk with Dev in which nobody introduces
   // themselves, the wearer makes no promise, and nobody cuts the wearer off.

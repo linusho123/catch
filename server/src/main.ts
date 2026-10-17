@@ -7,7 +7,8 @@ import { deepgram } from './stt/deepgram.ts'
 // types). PORT and CATCH_DB come from fly.toml there; DEEPGRAM_API_KEY and
 // CATCH_AUDIO_TOKEN are Fly secrets, and locally come from the untracked
 // catch/.env (`node --env-file-if-exists=.env`, see README.md) or the shell.
-// CATCH_SPLIT and CATCH_LOUDNESS_THRESHOLD_DBFS choose and tune the split.
+// CATCH_SPLIT and CATCH_LOUDNESS_THRESHOLD_DBFS choose and tune the split;
+// CATCH_WEARER_NAME (optional) is the wearer's name, never caught.
 const port = Number(process.env.PORT ?? 8080)
 const host = process.env.HOST
 const dbPath = process.env.CATCH_DB ?? 'data/catch.db'
@@ -19,7 +20,8 @@ if (!deepgramKey) {
 }
 
 const split = splitFromEnv()
-const server = await startServer({ port, host, dbPath, audioToken, split, stt: deepgram(deepgramKey) })
+const wearerName = process.env.CATCH_WEARER_NAME?.trim() || undefined
+const server = await startServer({ port, host, dbPath, audioToken, split, wearerName, stt: deepgram(deepgramKey) })
 console.log(`catch server listening on :${port} (/audio, /health), split ${split.name}, store at ${dbPath}`)
 // A lost speech-to-text stream is retried every second; say why, once per outage.
 let deaf = false

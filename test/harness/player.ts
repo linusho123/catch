@@ -1,6 +1,9 @@
+import type { EventEmitter } from 'node:events'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Clock } from '../../shared/clock.ts'
+import type { AudioFrame } from '../../shared/wire.ts'
+import type { ServerEvents } from '../../server/src/app.ts'
 import type { SpeechToText, SttStream, SttWord } from '../../server/src/stt/types.ts'
 import { FIXTURE_DIR, FRAME_SECONDS, framesFor, loadFixture, type Fixture } from '../fixtures/fixture.ts'
 import type { VirtualClock } from './clock.ts'
@@ -62,10 +65,30 @@ export function readWavPcm(path: string): Uint8Array {
  * words, never a network call. `loseConnection()` and `restore()` play the
  * provider going away and coming back (D37): while it is down every stream
  * the server opens fails, and the words said meanwhile are never transcribed.
+ *
+ * Like Deepgram, each stream times its words from its own first audio, not
+ * from the fixture's start (M1): once `attach`ed to the server's events it
+ * knows when the first PCM fed to each stream was captured, and `deliver`
+ * moves the fixture's words onto that stream's clock. A reopened stream's
+ * words therefore start again near 0, and the server must place them.
  */
 export class FixtureStt implements SpeechToText {
   readonly name = 'fixture'
-  private stream: { onWords: (words: SttWord[]) => void; onError: (err: unknown) => void; open: boolean; pcm: Uint8Array[] } | undefined
+  private stream:
+    | {
+        onWords: (words: SttWord[]) => void
+        onError: (err: unknown) => void
+        open: boolean
+        pcm: Uint8Array[]
+        /** When the first audio this stream heard was captured (its frame's capture stamp); words are timed from that frame's start. */
+        firstCaptureMs: number | undefined
+        /** Words said before this stream heard any audio, with their run's epoch: given once it hears some. */
+        early: { words: SttWord[]; epoch: number }[]
+      }
+    | undefined
+  /** The frame the server is handling now (its 'frame' event comes just before it feeds that frame's PCM to the stream). */
+  private lastFrame: AudioFrame | undefined
+  private attached = false
   private down = false
   /** Between a dropped stream and the server's next one: words said then are never transcribed. */
   private lost = false
@@ -82,6 +105,17 @@ export class FixtureStt implements SpeechToText {
     return this.stream?.pcm ?? []
   }
 
+  /**
+   * Hears the server's frames, so each stream knows when its first audio was
+   * captured. Without it (a bare unit test) words are delivered on fixture time.
+   */
+  attach(events: EventEmitter<ServerEvents>): void {
+    this.attached = true
+    events.on('frame', ({ frame }) => {
+      this.lastFrame = frame
+    })
+  }
+
   /** Whether the provider is reachable. */
   get reachable(): boolean {
     return !this.down
@@ -93,7 +127,7 @@ export class FixtureStt implements SpeechToText {
       queueMicrotask(() => onError(new Error('the speech-to-text provider is unreachable')))
       return { sendPcm() {}, close() {} }
     }
-    const stream = { onWords, onError, open: true, pcm: [] as Uint8Array[] }
+    const stream = { onWords, onError, open: true, pcm: [] as Uint8Array[], firstCaptureMs: undefined as number | undefined, early: [] as { words: SttWord[]; epoch: number }[] }
     this.stream = stream
     this.lost = false
     this.opened.push(this.clock?.now() ?? Number.NaN)
@@ -101,8 +135,13 @@ export class FixtureStt implements SpeechToText {
       if (stream.open) onOpen?.()
     })
     return {
-      sendPcm(pcm) {
+      sendPcm: (pcm) => {
         stream.pcm.push(new Uint8Array(pcm))
+        // Where this stream's audio begins: the first PCM it is fed, whose frame the server is handling now.
+        if (stream.firstCaptureMs === undefined && this.lastFrame) {
+          stream.firstCaptureMs = this.lastFrame.captureMs
+          for (const { words, epoch } of stream.early.splice(0)) if (stream.open) this.give(stream, words, epoch)
+        }
       },
       close: () => {
         stream.open = false
@@ -131,10 +170,34 @@ export class FixtureStt implements SpeechToText {
     this.lost = false
   }
 
-  deliver(words: SttWord[]): void {
+  /**
+   * Words the fixture says, timed in fixture seconds from the run's `epoch`
+   * (a clock reading); the open stream gives them timed from its own first audio.
+   */
+  deliver(words: SttWord[], epoch?: number): void {
     if (this.down || this.lost) return
-    if (!this.stream?.open) throw new Error('no /audio session is open on the server: start the lens before playing a fixture')
-    this.stream.onWords(words)
+    const stream = this.stream
+    if (!stream?.open) throw new Error('no /audio session is open on the server: start the lens before playing a fixture')
+    if (!this.attached || epoch === undefined) {
+      stream.onWords(words)
+      return
+    }
+    // A provider answers only after it hears the audio: a frame still on its way holds the word back.
+    if (stream.firstCaptureMs === undefined) stream.early.push({ words, epoch })
+    else this.give(stream, words, epoch)
+  }
+
+  private give(stream: NonNullable<FixtureStt['stream']>, words: SttWord[], epoch: number): void {
+    // The first audio is one of the run's 100 ms frames, so it starts on the
+    // fixture's frame grid. The player pushes a frame when the fixture clock
+    // reaches the frame's end, and the lens stamps its capture time in that
+    // push, a moment later and well before the next frame is due; that moment
+    // is not part of the audio, so it is dropped here.
+    const frameMs = FRAME_SECONDS * 1000
+    const firstEnd = Math.floor((stream.firstCaptureMs! - epoch) / frameMs + 1e-6) * frameMs
+    const zero = (firstEnd - frameMs) / 1000
+    const onStream = (t: number) => Math.round((t - zero) * 1e6) / 1e6
+    stream.onWords(words.map((w) => ({ ...w, start: onStream(w.start), end: onStream(w.end) })))
   }
 }
 
@@ -204,7 +267,7 @@ export class FixtureRun {
       : this.fixture.words.map(({ text, start, end, speaker }) => ({
           t: end,
           kind: 1,
-          play: () => deps.stt.deliver([{ text, start, end, speaker, confidence: 1, isFinal: true }]),
+          play: () => deps.stt.deliver([{ text, start, end, speaker, confidence: 1, isFinal: true }], this.epoch),
         }))
     this.items = [...frames, ...words].sort((a, b) => a.t - b.t || a.kind - b.kind)
   }

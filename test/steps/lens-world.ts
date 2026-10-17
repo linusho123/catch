@@ -225,7 +225,7 @@ export async function startRun(w: LensWorld, fixture: string, upTo: number): Pro
   await run.playTo(upTo)
   for (const pre of (w.pending ?? []).splice(0)) {
     if (pre === 'in-conversation, dot only') {
-      // The conversation begins on the wearer's first speech: the wearer has spoken ...
+      // The conversation is under way: the wearer has spoken (D129 would begin it on anyone's speech) ...
       expect(run.fixture.words.some((wd) => wd.role === 'wearer' && wd.end < upTo), `${fixture}: the wearer has not spoken by ${upTo}s`).toBe(true)
       // ... and the lens has shown only the dot.
       for (const s of screensDuring(h, w.dotSince, h.clock.now())) expectDotOnly(s, 'before the moment the scenario is about')
