@@ -13,6 +13,7 @@ The orienting document for the agent that builds Catch, with the human as second
 - Four parts: the lens app (an Even Hub plugin running in the Even app's WebView on the phone, driving the glasses' containers and receiving their mic and touch events); and a screenless server that hears, judges and writes. There is no iPhone app and no website (D126); the phone's screens and the website are deferred. [ruled: D102, D103, D126]
 - The lens is the only surface during a conversation; the phone and the website are the surfaces after it. Nothing done on the phone shows on the lens. [ruled: D61]
 - The server is where speech-to-text, the wearer/other split, the catch detectors, the joggers and the stores live; the lens app streams audio up and draws what comes down. [chosen]
+- What comes down is a view (the dot, no mark, one line, the names page), each timed on the server's clock; the lens keeps no timer of its own but its reconnect, sends its taps up, and decides alone only that with no server Catch cannot hear. [chosen]
 - One wearer per account: a pair of glasses delivers to exactly one phone. [ruled: D79]
 - Catch hears English only. [ruled: D78]
 
@@ -24,7 +25,7 @@ The orienting document for the agent that builds Catch, with the human as second
 - With automatic cut-off detection switched off by the operator, a tap on the bare dot opens the held page with the wearer's last six words as its first line, so the thread can still be asked for. [ruled: D120]
 - The lens never shows two things at once: the newest wins; an unanswered keep prompt returns after the line that displaced it. [ruled: D32, D40]
 - The thread is the wearer's most recent continuous run of speech, last six words, never reaching back across someone else's turn. [ruled: D48]
-- Glyphs: the dot, the dash, the ellipsis, the middle dot and the down arrow must be confirmed on the real lens font before the demo; Even drops missing glyphs silently. [chosen]
+- Glyphs: the dot (•), the middle dot (·), the down arrow (↓), the ellipsis (…) and the dash (– and —) all render, so Catch uses them as they are, with no ASCII substitute. Checked in the Even Hub simulator 0.9.5, not on a real lens (no loaner, D126): the simulator draws missing glyphs the way the firmware does, and every one drew at full brightness and at the dim level Catch uses (P1a, 2026-10-17, `apps/lens/glyphs.html`). Even drops missing glyphs silently, so the check is repeated on real glasses if a G2 arrives. [chosen]
 
 ## Conversations
 
@@ -74,3 +75,4 @@ The orienting document for the agent that builds Catch, with the human as second
 - 2026-10-17 — P0a, under D126: three `chosen` lines added (Deepgram as the speech-to-text provider; loudness as the split in use, with the other two implementations built behind it; the server run from its TypeScript sources on `node:sqlite`, and the audio frame's header). No ruled line touched.
 - 2026-10-17 — at the P0a block, by the operator: D126 cuts the iPhone app, tick-off on the phone and the website; three ruled lines changed under it (the four parts, the website line, the cut order) and the two-lane `chosen` line loses the iOS and browser runs. D125 signed as D127.
 - 2026-10-17 — D128: the local server is a first-class path and nothing requires reaching Fly; one ruled line added.
+- 2026-10-17 — P1a: two `chosen` lines: the glyphs as checked in the Even Hub simulator (no loaner, D126), replacing the line that left them to be confirmed; and the views the server sends the lens, each timed on the server's clock. No ruled line touched.

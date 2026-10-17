@@ -1,0 +1,182 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "priya",
+  "variant": "other-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "Hi, good to see you."
+    },
+    {
+      "at": 3,
+      "who": "Priya",
+      "text": "Hi, I'm Priya."
+    },
+    {
+      "gap": 2.5,
+      "who": "wearer",
+      "text": "Nice to meet you."
+    },
+    {
+      "at": 10,
+      "who": "wearer",
+      "text": "So how do you know the hosts?"
+    }
+  ],
+  "words": [
+    {
+      "text": "Hi,",
+      "start": 0,
+      "end": 0.27,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "good",
+      "start": 0.33,
+      "end": 0.69,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "to",
+      "start": 0.75,
+      "end": 1.02,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "see",
+      "start": 1.08,
+      "end": 1.395,
+      "role": "wearer",
+      "loudness": -27.4,
+      "speaker": 0
+    },
+    {
+      "text": "you.",
+      "start": 1.455,
+      "end": 1.77,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "Hi,",
+      "start": 3,
+      "end": 3.27,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "I'm",
+      "start": 3.33,
+      "end": 3.6,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "Priya.",
+      "start": 3.66,
+      "end": 4.065,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 1
+    },
+    {
+      "text": "Nice",
+      "start": 6.565,
+      "end": 6.925,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "to",
+      "start": 6.985,
+      "end": 7.255,
+      "role": "wearer",
+      "loudness": -25.1,
+      "speaker": 0
+    },
+    {
+      "text": "meet",
+      "start": 7.315,
+      "end": 7.675,
+      "role": "wearer",
+      "loudness": -26.6,
+      "speaker": 0
+    },
+    {
+      "text": "you.",
+      "start": 7.735,
+      "end": 8.05,
+      "role": "wearer",
+      "loudness": -24.7,
+      "speaker": 0
+    },
+    {
+      "text": "So",
+      "start": 10,
+      "end": 10.27,
+      "role": "wearer",
+      "loudness": -26.2,
+      "speaker": 0
+    },
+    {
+      "text": "how",
+      "start": 10.33,
+      "end": 10.645,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "do",
+      "start": 10.705,
+      "end": 10.975,
+      "role": "wearer",
+      "loudness": -26.5,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 11.035,
+      "end": 11.35,
+      "role": "wearer",
+      "loudness": -25.5,
+      "speaker": 0
+    },
+    {
+      "text": "know",
+      "start": 11.41,
+      "end": 11.77,
+      "role": "wearer",
+      "loudness": -26.7,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 11.83,
+      "end": 12.145,
+      "role": "wearer",
+      "loudness": -25.7,
+      "speaker": 0
+    },
+    {
+      "text": "hosts?",
+      "start": 12.205,
+      "end": 12.61,
+      "role": "wearer",
+      "loudness": -26.5,
+      "speaker": 0
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import type { Clock } from '../../shared/clock.ts'
 import type { SpeechToText, SttStream, SttWord } from '../../server/src/stt/types.ts'
 import { FIXTURE_DIR, FRAME_SECONDS, framesFor, loadFixture, type Fixture } from '../fixtures/fixture.ts'
 import type { VirtualClock } from './clock.ts'
@@ -56,19 +57,49 @@ export function readWavPcm(path: string): Uint8Array {
   throw new Error(`${path} has no data chunk`)
 }
 
-/** The speech-to-text provider the server is given under test: the player's words, never a network call. */
+/**
+ * The speech-to-text provider the server is given under test: the player's
+ * words, never a network call. `loseConnection()` and `restore()` play the
+ * provider going away and coming back (D37): while it is down every stream
+ * the server opens fails, and the words said meanwhile are never transcribed.
+ */
 export class FixtureStt implements SpeechToText {
   readonly name = 'fixture'
-  private stream: { onWords: (words: SttWord[]) => void; open: boolean; pcm: Uint8Array[] } | undefined
+  private stream: { onWords: (words: SttWord[]) => void; onError: (err: unknown) => void; open: boolean; pcm: Uint8Array[] } | undefined
+  private down = false
+  /** Between a dropped stream and the server's next one: words said then are never transcribed. */
+  private lost = false
+  private readonly clock: Clock | undefined
+  /** The clock reading at each stream the server opened that the provider accepted. */
+  readonly opened: number[] = []
+
+  constructor(clock?: Clock) {
+    this.clock = clock
+  }
 
   /** Every PCM chunk the server fed the latest stream, in order (copies): what the real provider would have heard (M1). */
   get pcm(): readonly Uint8Array[] {
     return this.stream?.pcm ?? []
   }
 
-  open(onWords: (words: SttWord[]) => void): SttStream {
-    const stream = { onWords, open: true, pcm: [] as Uint8Array[] }
+  /** Whether the provider is reachable. */
+  get reachable(): boolean {
+    return !this.down
+  }
+
+  open(onWords: (words: SttWord[]) => void, onError: (err: unknown) => void = () => {}, onOpen?: () => void): SttStream {
+    if (this.down) {
+      // Like a socket that cannot connect: the failure comes back after open() returns.
+      queueMicrotask(() => onError(new Error('the speech-to-text provider is unreachable')))
+      return { sendPcm() {}, close() {} }
+    }
+    const stream = { onWords, onError, open: true, pcm: [] as Uint8Array[] }
     this.stream = stream
+    this.lost = false
+    this.opened.push(this.clock?.now() ?? Number.NaN)
+    queueMicrotask(() => {
+      if (stream.open) onOpen?.()
+    })
     return {
       sendPcm(pcm) {
         stream.pcm.push(new Uint8Array(pcm))
@@ -79,7 +110,29 @@ export class FixtureStt implements SpeechToText {
     }
   }
 
+  /** The provider drops the open stream and refuses new ones until restore(). */
+  loseConnection(): void {
+    this.down = true
+    const stream = this.stream
+    if (stream?.open) {
+      this.lost = true
+      stream.open = false
+      stream.onError(new Error('the speech-to-text provider dropped the stream'))
+    }
+  }
+
+  restore(): void {
+    this.down = false
+  }
+
+  /** Back to a provider that is up, for the next scenario. */
+  reset(): void {
+    this.down = false
+    this.lost = false
+  }
+
   deliver(words: SttWord[]): void {
+    if (this.down || this.lost) return
     if (!this.stream?.open) throw new Error('no /audio session is open on the server: start the lens before playing a fixture')
     this.stream.onWords(words)
   }

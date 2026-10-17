@@ -1,0 +1,3035 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "small-talk",
+  "variant": "other-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "So how was the drive in this morning?"
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "Not bad, the traffic was light for once."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Lucky. The freeway was a parking lot for me."
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "It always is on Fridays, people leave early."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Fair enough. Did you catch the game last night?"
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "Only the second half, but it was a good one."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "The last few minutes were wild."
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "I could not believe that final shot."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Me neither, the whole room was shouting."
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "We watched it at a bar downtown, it was packed."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Which one, the place on Fourth Street?"
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "That one, they have the big screens now."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "I keep meaning to go there."
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "The food is better than it used to be."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Good to know, the old menu was rough."
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "They changed the cook last spring."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "That explains the tacos."
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "Right, the tacos are the best thing there now."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "So how was the drive in this morning?"
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "Not bad, the traffic was light for once."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Lucky. The freeway was a parking lot for me."
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "It always is on Fridays, people leave early."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Fair enough. Did you catch the game last night?"
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "Only the second half, but it was a good one."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "The last few minutes were wild."
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "I could not believe that final shot."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Me neither, the whole room was shouting."
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "We watched it at a bar downtown, it was packed."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Which one, the place on Fourth Street?"
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "That one, they have the big screens now."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "I keep meaning to go there."
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "The food is better than it used to be."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Good to know, the old menu was rough."
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "They changed the cook last spring."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "That explains the tacos."
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "Right, the tacos are the best thing there now."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "So how was the drive in this morning?"
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "Not bad, the traffic was light for once."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Lucky. The freeway was a parking lot for me."
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "It always is on Fridays, people leave early."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Fair enough. Did you catch the game last night?"
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "Only the second half, but it was a good one."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "The last few minutes were wild."
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "I could not believe that final shot."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Me neither, the whole room was shouting."
+    }
+  ],
+  "words": [
+    {
+      "text": "So",
+      "start": 0,
+      "end": 0.27,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "how",
+      "start": 0.33,
+      "end": 0.645,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "was",
+      "start": 0.705,
+      "end": 1.02,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 1.08,
+      "end": 1.395,
+      "role": "wearer",
+      "loudness": -27.4,
+      "speaker": 0
+    },
+    {
+      "text": "drive",
+      "start": 1.455,
+      "end": 1.86,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "in",
+      "start": 1.92,
+      "end": 2.19,
+      "role": "wearer",
+      "loudness": -24.5,
+      "speaker": 0
+    },
+    {
+      "text": "this",
+      "start": 2.25,
+      "end": 2.61,
+      "role": "wearer",
+      "loudness": -25.9,
+      "speaker": 0
+    },
+    {
+      "text": "morning?",
+      "start": 2.67,
+      "end": 3.165,
+      "role": "wearer",
+      "loudness": -26.2,
+      "speaker": 0
+    },
+    {
+      "text": "Not",
+      "start": 4.165,
+      "end": 4.48,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "bad,",
+      "start": 4.54,
+      "end": 4.855,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 4.915,
+      "end": 5.23,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 1
+    },
+    {
+      "text": "traffic",
+      "start": 5.29,
+      "end": 5.785,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 1
+    },
+    {
+      "text": "was",
+      "start": 5.845,
+      "end": 6.16,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "light",
+      "start": 6.22,
+      "end": 6.625,
+      "role": "other",
+      "loudness": -14,
+      "speaker": 1
+    },
+    {
+      "text": "for",
+      "start": 6.685,
+      "end": 7,
+      "role": "other",
+      "loudness": -15,
+      "speaker": 1
+    },
+    {
+      "text": "once.",
+      "start": 7.06,
+      "end": 7.42,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 1
+    },
+    {
+      "text": "Lucky.",
+      "start": 8.42,
+      "end": 8.825,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "The",
+      "start": 8.885,
+      "end": 9.2,
+      "role": "wearer",
+      "loudness": -25.1,
+      "speaker": 0
+    },
+    {
+      "text": "freeway",
+      "start": 9.26,
+      "end": 9.755,
+      "role": "wearer",
+      "loudness": -26.6,
+      "speaker": 0
+    },
+    {
+      "text": "was",
+      "start": 9.815,
+      "end": 10.13,
+      "role": "wearer",
+      "loudness": -24.7,
+      "speaker": 0
+    },
+    {
+      "text": "a",
+      "start": 10.19,
+      "end": 10.415,
+      "role": "wearer",
+      "loudness": -26.3,
+      "speaker": 0
+    },
+    {
+      "text": "parking",
+      "start": 10.475,
+      "end": 10.97,
+      "role": "wearer",
+      "loudness": -25.9,
+      "speaker": 0
+    },
+    {
+      "text": "lot",
+      "start": 11.03,
+      "end": 11.345,
+      "role": "wearer",
+      "loudness": -27,
+      "speaker": 0
+    },
+    {
+      "text": "for",
+      "start": 11.405,
+      "end": 11.72,
+      "role": "wearer",
+      "loudness": -24.6,
+      "speaker": 0
+    },
+    {
+      "text": "me.",
+      "start": 11.78,
+      "end": 12.05,
+      "role": "wearer",
+      "loudness": -24.9,
+      "speaker": 0
+    },
+    {
+      "text": "It",
+      "start": 13.05,
+      "end": 13.32,
+      "role": "other",
+      "loudness": -14.2,
+      "speaker": 1
+    },
+    {
+      "text": "always",
+      "start": 13.38,
+      "end": 13.83,
+      "role": "other",
+      "loudness": -13.6,
+      "speaker": 1
+    },
+    {
+      "text": "is",
+      "start": 13.89,
+      "end": 14.16,
+      "role": "other",
+      "loudness": -14.5,
+      "speaker": 1
+    },
+    {
+      "text": "on",
+      "start": 14.22,
+      "end": 14.49,
+      "role": "other",
+      "loudness": -13.5,
+      "speaker": 1
+    },
+    {
+      "text": "Fridays,",
+      "start": 14.55,
+      "end": 15.045,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 1
+    },
+    {
+      "text": "people",
+      "start": 15.105,
+      "end": 15.555,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 1
+    },
+    {
+      "text": "leave",
+      "start": 15.615,
+      "end": 16.02,
+      "role": "other",
+      "loudness": -14.5,
+      "speaker": 1
+    },
+    {
+      "text": "early.",
+      "start": 16.08,
+      "end": 16.485,
+      "role": "other",
+      "loudness": -13.6,
+      "speaker": 1
+    },
+    {
+      "text": "Fair",
+      "start": 17.485,
+      "end": 17.845,
+      "role": "wearer",
+      "loudness": -26.7,
+      "speaker": 0
+    },
+    {
+      "text": "enough.",
+      "start": 17.905,
+      "end": 18.355,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "Did",
+      "start": 18.415,
+      "end": 18.73,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 18.79,
+      "end": 19.105,
+      "role": "wearer",
+      "loudness": -26.6,
+      "speaker": 0
+    },
+    {
+      "text": "catch",
+      "start": 19.165,
+      "end": 19.57,
+      "role": "wearer",
+      "loudness": -26.3,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 19.63,
+      "end": 19.945,
+      "role": "wearer",
+      "loudness": -26.7,
+      "speaker": 0
+    },
+    {
+      "text": "game",
+      "start": 20.005,
+      "end": 20.365,
+      "role": "wearer",
+      "loudness": -27.2,
+      "speaker": 0
+    },
+    {
+      "text": "last",
+      "start": 20.425,
+      "end": 20.785,
+      "role": "wearer",
+      "loudness": -27.2,
+      "speaker": 0
+    },
+    {
+      "text": "night?",
+      "start": 20.845,
+      "end": 21.25,
+      "role": "wearer",
+      "loudness": -26.7,
+      "speaker": 0
+    },
+    {
+      "text": "Only",
+      "start": 22.25,
+      "end": 22.61,
+      "role": "other",
+      "loudness": -13.3,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 22.67,
+      "end": 22.985,
+      "role": "other",
+      "loudness": -12.8,
+      "speaker": 1
+    },
+    {
+      "text": "second",
+      "start": 23.045,
+      "end": 23.495,
+      "role": "other",
+      "loudness": -15.4,
+      "speaker": 1
+    },
+    {
+      "text": "half,",
+      "start": 23.555,
+      "end": 23.915,
+      "role": "other",
+      "loudness": -13.6,
+      "speaker": 1
+    },
+    {
+      "text": "but",
+      "start": 23.975,
+      "end": 24.29,
+      "role": "other",
+      "loudness": -14.4,
+      "speaker": 1
+    },
+    {
+      "text": "it",
+      "start": 24.35,
+      "end": 24.62,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "was",
+      "start": 24.68,
+      "end": 24.995,
+      "role": "other",
+      "loudness": -14,
+      "speaker": 1
+    },
+    {
+      "text": "a",
+      "start": 25.055,
+      "end": 25.28,
+      "role": "other",
+      "loudness": -14.8,
+      "speaker": 1
+    },
+    {
+      "text": "good",
+      "start": 25.34,
+      "end": 25.7,
+      "role": "other",
+      "loudness": -13.9,
+      "speaker": 1
+    },
+    {
+      "text": "one.",
+      "start": 25.76,
+      "end": 26.075,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 1
+    },
+    {
+      "text": "The",
+      "start": 27.075,
+      "end": 27.39,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "last",
+      "start": 27.45,
+      "end": 27.81,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "few",
+      "start": 27.87,
+      "end": 28.185,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "minutes",
+      "start": 28.245,
+      "end": 28.74,
+      "role": "wearer",
+      "loudness": -26,
+      "speaker": 0
+    },
+    {
+      "text": "were",
+      "start": 28.8,
+      "end": 29.16,
+      "role": "wearer",
+      "loudness": -24.8,
+      "speaker": 0
+    },
+    {
+      "text": "wild.",
+      "start": 29.22,
+      "end": 29.58,
+      "role": "wearer",
+      "loudness": -24.9,
+      "speaker": 0
+    },
+    {
+      "text": "I",
+      "start": 30.58,
+      "end": 30.805,
+      "role": "other",
+      "loudness": -13.2,
+      "speaker": 1
+    },
+    {
+      "text": "could",
+      "start": 30.865,
+      "end": 31.27,
+      "role": "other",
+      "loudness": -12.9,
+      "speaker": 1
+    },
+    {
+      "text": "not",
+      "start": 31.33,
+      "end": 31.645,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "believe",
+      "start": 31.705,
+      "end": 32.2,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 1
+    },
+    {
+      "text": "that",
+      "start": 32.26,
+      "end": 32.62,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 1
+    },
+    {
+      "text": "final",
+      "start": 32.68,
+      "end": 33.085,
+      "role": "other",
+      "loudness": -15.1,
+      "speaker": 1
+    },
+    {
+      "text": "shot.",
+      "start": 33.145,
+      "end": 33.505,
+      "role": "other",
+      "loudness": -14.8,
+      "speaker": 1
+    },
+    {
+      "text": "Me",
+      "start": 34.505,
+      "end": 34.775,
+      "role": "wearer",
+      "loudness": -25.3,
+      "speaker": 0
+    },
+    {
+      "text": "neither,",
+      "start": 34.835,
+      "end": 35.33,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 35.39,
+      "end": 35.705,
+      "role": "wearer",
+      "loudness": -24.9,
+      "speaker": 0
+    },
+    {
+      "text": "whole",
+      "start": 35.765,
+      "end": 36.17,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "room",
+      "start": 36.23,
+      "end": 36.59,
+      "role": "wearer",
+      "loudness": -27.4,
+      "speaker": 0
+    },
+    {
+      "text": "was",
+      "start": 36.65,
+      "end": 36.965,
+      "role": "wearer",
+      "loudness": -26.8,
+      "speaker": 0
+    },
+    {
+      "text": "shouting.",
+      "start": 37.025,
+      "end": 37.565,
+      "role": "wearer",
+      "loudness": -25,
+      "speaker": 0
+    },
+    {
+      "text": "We",
+      "start": 38.565,
+      "end": 38.835,
+      "role": "other",
+      "loudness": -14.2,
+      "speaker": 1
+    },
+    {
+      "text": "watched",
+      "start": 38.895,
+      "end": 39.39,
+      "role": "other",
+      "loudness": -15.2,
+      "speaker": 1
+    },
+    {
+      "text": "it",
+      "start": 39.45,
+      "end": 39.72,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 1
+    },
+    {
+      "text": "at",
+      "start": 39.78,
+      "end": 40.05,
+      "role": "other",
+      "loudness": -14.4,
+      "speaker": 1
+    },
+    {
+      "text": "a",
+      "start": 40.11,
+      "end": 40.335,
+      "role": "other",
+      "loudness": -14.4,
+      "speaker": 1
+    },
+    {
+      "text": "bar",
+      "start": 40.395,
+      "end": 40.71,
+      "role": "other",
+      "loudness": -12.8,
+      "speaker": 1
+    },
+    {
+      "text": "downtown,",
+      "start": 40.77,
+      "end": 41.31,
+      "role": "other",
+      "loudness": -15.3,
+      "speaker": 1
+    },
+    {
+      "text": "it",
+      "start": 41.37,
+      "end": 41.64,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 1
+    },
+    {
+      "text": "was",
+      "start": 41.7,
+      "end": 42.015,
+      "role": "other",
+      "loudness": -15.4,
+      "speaker": 1
+    },
+    {
+      "text": "packed.",
+      "start": 42.075,
+      "end": 42.525,
+      "role": "other",
+      "loudness": -14.2,
+      "speaker": 1
+    },
+    {
+      "text": "Which",
+      "start": 43.525,
+      "end": 43.93,
+      "role": "wearer",
+      "loudness": -27,
+      "speaker": 0
+    },
+    {
+      "text": "one,",
+      "start": 43.99,
+      "end": 44.305,
+      "role": "wearer",
+      "loudness": -26.4,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 44.365,
+      "end": 44.68,
+      "role": "wearer",
+      "loudness": -25.2,
+      "speaker": 0
+    },
+    {
+      "text": "place",
+      "start": 44.74,
+      "end": 45.145,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "on",
+      "start": 45.205,
+      "end": 45.475,
+      "role": "wearer",
+      "loudness": -25.4,
+      "speaker": 0
+    },
+    {
+      "text": "Fourth",
+      "start": 45.535,
+      "end": 45.985,
+      "role": "wearer",
+      "loudness": -25.3,
+      "speaker": 0
+    },
+    {
+      "text": "Street?",
+      "start": 46.045,
+      "end": 46.495,
+      "role": "wearer",
+      "loudness": -27.3,
+      "speaker": 0
+    },
+    {
+      "text": "That",
+      "start": 47.495,
+      "end": 47.855,
+      "role": "other",
+      "loudness": -12.6,
+      "speaker": 1
+    },
+    {
+      "text": "one,",
+      "start": 47.915,
+      "end": 48.23,
+      "role": "other",
+      "loudness": -12.6,
+      "speaker": 1
+    },
+    {
+      "text": "they",
+      "start": 48.29,
+      "end": 48.65,
+      "role": "other",
+      "loudness": -12.7,
+      "speaker": 1
+    },
+    {
+      "text": "have",
+      "start": 48.71,
+      "end": 49.07,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 49.13,
+      "end": 49.445,
+      "role": "other",
+      "loudness": -13.3,
+      "speaker": 1
+    },
+    {
+      "text": "big",
+      "start": 49.505,
+      "end": 49.82,
+      "role": "other",
+      "loudness": -15.2,
+      "speaker": 1
+    },
+    {
+      "text": "screens",
+      "start": 49.88,
+      "end": 50.375,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 1
+    },
+    {
+      "text": "now.",
+      "start": 50.435,
+      "end": 50.75,
+      "role": "other",
+      "loudness": -12.6,
+      "speaker": 1
+    },
+    {
+      "text": "I",
+      "start": 51.75,
+      "end": 51.975,
+      "role": "wearer",
+      "loudness": -27.4,
+      "speaker": 0
+    },
+    {
+      "text": "keep",
+      "start": 52.035,
+      "end": 52.395,
+      "role": "wearer",
+      "loudness": -26.7,
+      "speaker": 0
+    },
+    {
+      "text": "meaning",
+      "start": 52.455,
+      "end": 52.95,
+      "role": "wearer",
+      "loudness": -24.9,
+      "speaker": 0
+    },
+    {
+      "text": "to",
+      "start": 53.01,
+      "end": 53.28,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "go",
+      "start": 53.34,
+      "end": 53.61,
+      "role": "wearer",
+      "loudness": -25.2,
+      "speaker": 0
+    },
+    {
+      "text": "there.",
+      "start": 53.67,
+      "end": 54.075,
+      "role": "wearer",
+      "loudness": -27.4,
+      "speaker": 0
+    },
+    {
+      "text": "The",
+      "start": 55.075,
+      "end": 55.39,
+      "role": "other",
+      "loudness": -12.5,
+      "speaker": 1
+    },
+    {
+      "text": "food",
+      "start": 55.45,
+      "end": 55.81,
+      "role": "other",
+      "loudness": -12.8,
+      "speaker": 1
+    },
+    {
+      "text": "is",
+      "start": 55.87,
+      "end": 56.14,
+      "role": "other",
+      "loudness": -12.5,
+      "speaker": 1
+    },
+    {
+      "text": "better",
+      "start": 56.2,
+      "end": 56.65,
+      "role": "other",
+      "loudness": -14.8,
+      "speaker": 1
+    },
+    {
+      "text": "than",
+      "start": 56.71,
+      "end": 57.07,
+      "role": "other",
+      "loudness": -14.2,
+      "speaker": 1
+    },
+    {
+      "text": "it",
+      "start": 57.13,
+      "end": 57.4,
+      "role": "other",
+      "loudness": -13.9,
+      "speaker": 1
+    },
+    {
+      "text": "used",
+      "start": 57.46,
+      "end": 57.82,
+      "role": "other",
+      "loudness": -13.8,
+      "speaker": 1
+    },
+    {
+      "text": "to",
+      "start": 57.88,
+      "end": 58.15,
+      "role": "other",
+      "loudness": -13.3,
+      "speaker": 1
+    },
+    {
+      "text": "be.",
+      "start": 58.21,
+      "end": 58.48,
+      "role": "other",
+      "loudness": -12.6,
+      "speaker": 1
+    },
+    {
+      "text": "Good",
+      "start": 59.48,
+      "end": 59.84,
+      "role": "wearer",
+      "loudness": -27,
+      "speaker": 0
+    },
+    {
+      "text": "to",
+      "start": 59.9,
+      "end": 60.17,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "know,",
+      "start": 60.23,
+      "end": 60.59,
+      "role": "wearer",
+      "loudness": -27,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 60.65,
+      "end": 60.965,
+      "role": "wearer",
+      "loudness": -27.3,
+      "speaker": 0
+    },
+    {
+      "text": "old",
+      "start": 61.025,
+      "end": 61.34,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "menu",
+      "start": 61.4,
+      "end": 61.76,
+      "role": "wearer",
+      "loudness": -26.5,
+      "speaker": 0
+    },
+    {
+      "text": "was",
+      "start": 61.82,
+      "end": 62.135,
+      "role": "wearer",
+      "loudness": -26.9,
+      "speaker": 0
+    },
+    {
+      "text": "rough.",
+      "start": 62.195,
+      "end": 62.6,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "They",
+      "start": 63.6,
+      "end": 63.96,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 1
+    },
+    {
+      "text": "changed",
+      "start": 64.02,
+      "end": 64.515,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 64.575,
+      "end": 64.89,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "cook",
+      "start": 64.95,
+      "end": 65.31,
+      "role": "other",
+      "loudness": -13.8,
+      "speaker": 1
+    },
+    {
+      "text": "last",
+      "start": 65.37,
+      "end": 65.73,
+      "role": "other",
+      "loudness": -12.6,
+      "speaker": 1
+    },
+    {
+      "text": "spring.",
+      "start": 65.79,
+      "end": 66.24,
+      "role": "other",
+      "loudness": -14.6,
+      "speaker": 1
+    },
+    {
+      "text": "That",
+      "start": 67.24,
+      "end": 67.6,
+      "role": "wearer",
+      "loudness": -25,
+      "speaker": 0
+    },
+    {
+      "text": "explains",
+      "start": 67.66,
+      "end": 68.2,
+      "role": "wearer",
+      "loudness": -24.8,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 68.26,
+      "end": 68.575,
+      "role": "wearer",
+      "loudness": -25,
+      "speaker": 0
+    },
+    {
+      "text": "tacos.",
+      "start": 68.635,
+      "end": 69.04,
+      "role": "wearer",
+      "loudness": -25.5,
+      "speaker": 0
+    },
+    {
+      "text": "Right,",
+      "start": 70.04,
+      "end": 70.445,
+      "role": "other",
+      "loudness": -12.6,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 70.505,
+      "end": 70.82,
+      "role": "other",
+      "loudness": -14,
+      "speaker": 1
+    },
+    {
+      "text": "tacos",
+      "start": 70.88,
+      "end": 71.285,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 1
+    },
+    {
+      "text": "are",
+      "start": 71.345,
+      "end": 71.66,
+      "role": "other",
+      "loudness": -15.2,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 71.72,
+      "end": 72.035,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 1
+    },
+    {
+      "text": "best",
+      "start": 72.095,
+      "end": 72.455,
+      "role": "other",
+      "loudness": -13.6,
+      "speaker": 1
+    },
+    {
+      "text": "thing",
+      "start": 72.515,
+      "end": 72.92,
+      "role": "other",
+      "loudness": -12.8,
+      "speaker": 1
+    },
+    {
+      "text": "there",
+      "start": 72.98,
+      "end": 73.385,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "now.",
+      "start": 73.445,
+      "end": 73.76,
+      "role": "other",
+      "loudness": -13.3,
+      "speaker": 1
+    },
+    {
+      "text": "So",
+      "start": 74.76,
+      "end": 75.03,
+      "role": "wearer",
+      "loudness": -26.2,
+      "speaker": 0
+    },
+    {
+      "text": "how",
+      "start": 75.09,
+      "end": 75.405,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "was",
+      "start": 75.465,
+      "end": 75.78,
+      "role": "wearer",
+      "loudness": -25.3,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 75.84,
+      "end": 76.155,
+      "role": "wearer",
+      "loudness": -24.8,
+      "speaker": 0
+    },
+    {
+      "text": "drive",
+      "start": 76.215,
+      "end": 76.62,
+      "role": "wearer",
+      "loudness": -25.5,
+      "speaker": 0
+    },
+    {
+      "text": "in",
+      "start": 76.68,
+      "end": 76.95,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "this",
+      "start": 77.01,
+      "end": 77.37,
+      "role": "wearer",
+      "loudness": -26,
+      "speaker": 0
+    },
+    {
+      "text": "morning?",
+      "start": 77.43,
+      "end": 77.925,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "Not",
+      "start": 78.925,
+      "end": 79.24,
+      "role": "other",
+      "loudness": -13.2,
+      "speaker": 1
+    },
+    {
+      "text": "bad,",
+      "start": 79.3,
+      "end": 79.615,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 79.675,
+      "end": 79.99,
+      "role": "other",
+      "loudness": -13,
+      "speaker": 1
+    },
+    {
+      "text": "traffic",
+      "start": 80.05,
+      "end": 80.545,
+      "role": "other",
+      "loudness": -13,
+      "speaker": 1
+    },
+    {
+      "text": "was",
+      "start": 80.605,
+      "end": 80.92,
+      "role": "other",
+      "loudness": -12.7,
+      "speaker": 1
+    },
+    {
+      "text": "light",
+      "start": 80.98,
+      "end": 81.385,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 1
+    },
+    {
+      "text": "for",
+      "start": 81.445,
+      "end": 81.76,
+      "role": "other",
+      "loudness": -14,
+      "speaker": 1
+    },
+    {
+      "text": "once.",
+      "start": 81.82,
+      "end": 82.18,
+      "role": "other",
+      "loudness": -14,
+      "speaker": 1
+    },
+    {
+      "text": "Lucky.",
+      "start": 83.18,
+      "end": 83.585,
+      "role": "wearer",
+      "loudness": -26.6,
+      "speaker": 0
+    },
+    {
+      "text": "The",
+      "start": 83.645,
+      "end": 83.96,
+      "role": "wearer",
+      "loudness": -25.2,
+      "speaker": 0
+    },
+    {
+      "text": "freeway",
+      "start": 84.02,
+      "end": 84.515,
+      "role": "wearer",
+      "loudness": -24.9,
+      "speaker": 0
+    },
+    {
+      "text": "was",
+      "start": 84.575,
+      "end": 84.89,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "a",
+      "start": 84.95,
+      "end": 85.175,
+      "role": "wearer",
+      "loudness": -27,
+      "speaker": 0
+    },
+    {
+      "text": "parking",
+      "start": 85.235,
+      "end": 85.73,
+      "role": "wearer",
+      "loudness": -25,
+      "speaker": 0
+    },
+    {
+      "text": "lot",
+      "start": 85.79,
+      "end": 86.105,
+      "role": "wearer",
+      "loudness": -26.9,
+      "speaker": 0
+    },
+    {
+      "text": "for",
+      "start": 86.165,
+      "end": 86.48,
+      "role": "wearer",
+      "loudness": -25.1,
+      "speaker": 0
+    },
+    {
+      "text": "me.",
+      "start": 86.54,
+      "end": 86.81,
+      "role": "wearer",
+      "loudness": -25.9,
+      "speaker": 0
+    },
+    {
+      "text": "It",
+      "start": 87.81,
+      "end": 88.08,
+      "role": "other",
+      "loudness": -15.4,
+      "speaker": 1
+    },
+    {
+      "text": "always",
+      "start": 88.14,
+      "end": 88.59,
+      "role": "other",
+      "loudness": -15.3,
+      "speaker": 1
+    },
+    {
+      "text": "is",
+      "start": 88.65,
+      "end": 88.92,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 1
+    },
+    {
+      "text": "on",
+      "start": 88.98,
+      "end": 89.25,
+      "role": "other",
+      "loudness": -15.3,
+      "speaker": 1
+    },
+    {
+      "text": "Fridays,",
+      "start": 89.31,
+      "end": 89.805,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 1
+    },
+    {
+      "text": "people",
+      "start": 89.865,
+      "end": 90.315,
+      "role": "other",
+      "loudness": -14.4,
+      "speaker": 1
+    },
+    {
+      "text": "leave",
+      "start": 90.375,
+      "end": 90.78,
+      "role": "other",
+      "loudness": -15.5,
+      "speaker": 1
+    },
+    {
+      "text": "early.",
+      "start": 90.84,
+      "end": 91.245,
+      "role": "other",
+      "loudness": -13.9,
+      "speaker": 1
+    },
+    {
+      "text": "Fair",
+      "start": 92.245,
+      "end": 92.605,
+      "role": "wearer",
+      "loudness": -26.6,
+      "speaker": 0
+    },
+    {
+      "text": "enough.",
+      "start": 92.665,
+      "end": 93.115,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "Did",
+      "start": 93.175,
+      "end": 93.49,
+      "role": "wearer",
+      "loudness": -24.5,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 93.55,
+      "end": 93.865,
+      "role": "wearer",
+      "loudness": -25.7,
+      "speaker": 0
+    },
+    {
+      "text": "catch",
+      "start": 93.925,
+      "end": 94.33,
+      "role": "wearer",
+      "loudness": -27,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 94.39,
+      "end": 94.705,
+      "role": "wearer",
+      "loudness": -26.3,
+      "speaker": 0
+    },
+    {
+      "text": "game",
+      "start": 94.765,
+      "end": 95.125,
+      "role": "wearer",
+      "loudness": -24.6,
+      "speaker": 0
+    },
+    {
+      "text": "last",
+      "start": 95.185,
+      "end": 95.545,
+      "role": "wearer",
+      "loudness": -26.3,
+      "speaker": 0
+    },
+    {
+      "text": "night?",
+      "start": 95.605,
+      "end": 96.01,
+      "role": "wearer",
+      "loudness": -25.4,
+      "speaker": 0
+    },
+    {
+      "text": "Only",
+      "start": 97.01,
+      "end": 97.37,
+      "role": "other",
+      "loudness": -14.4,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 97.43,
+      "end": 97.745,
+      "role": "other",
+      "loudness": -15,
+      "speaker": 1
+    },
+    {
+      "text": "second",
+      "start": 97.805,
+      "end": 98.255,
+      "role": "other",
+      "loudness": -14.5,
+      "speaker": 1
+    },
+    {
+      "text": "half,",
+      "start": 98.315,
+      "end": 98.675,
+      "role": "other",
+      "loudness": -13.8,
+      "speaker": 1
+    },
+    {
+      "text": "but",
+      "start": 98.735,
+      "end": 99.05,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 1
+    },
+    {
+      "text": "it",
+      "start": 99.11,
+      "end": 99.38,
+      "role": "other",
+      "loudness": -14,
+      "speaker": 1
+    },
+    {
+      "text": "was",
+      "start": 99.44,
+      "end": 99.755,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "a",
+      "start": 99.815,
+      "end": 100.04,
+      "role": "other",
+      "loudness": -12.6,
+      "speaker": 1
+    },
+    {
+      "text": "good",
+      "start": 100.1,
+      "end": 100.46,
+      "role": "other",
+      "loudness": -13.2,
+      "speaker": 1
+    },
+    {
+      "text": "one.",
+      "start": 100.52,
+      "end": 100.835,
+      "role": "other",
+      "loudness": -13.9,
+      "speaker": 1
+    },
+    {
+      "text": "The",
+      "start": 101.835,
+      "end": 102.15,
+      "role": "wearer",
+      "loudness": -26.7,
+      "speaker": 0
+    },
+    {
+      "text": "last",
+      "start": 102.21,
+      "end": 102.57,
+      "role": "wearer",
+      "loudness": -27.3,
+      "speaker": 0
+    },
+    {
+      "text": "few",
+      "start": 102.63,
+      "end": 102.945,
+      "role": "wearer",
+      "loudness": -25.7,
+      "speaker": 0
+    },
+    {
+      "text": "minutes",
+      "start": 103.005,
+      "end": 103.5,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "were",
+      "start": 103.56,
+      "end": 103.92,
+      "role": "wearer",
+      "loudness": -24.7,
+      "speaker": 0
+    },
+    {
+      "text": "wild.",
+      "start": 103.98,
+      "end": 104.34,
+      "role": "wearer",
+      "loudness": -25.4,
+      "speaker": 0
+    },
+    {
+      "text": "I",
+      "start": 105.34,
+      "end": 105.565,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "could",
+      "start": 105.625,
+      "end": 106.03,
+      "role": "other",
+      "loudness": -13.5,
+      "speaker": 1
+    },
+    {
+      "text": "not",
+      "start": 106.09,
+      "end": 106.405,
+      "role": "other",
+      "loudness": -13.3,
+      "speaker": 1
+    },
+    {
+      "text": "believe",
+      "start": 106.465,
+      "end": 106.96,
+      "role": "other",
+      "loudness": -15.4,
+      "speaker": 1
+    },
+    {
+      "text": "that",
+      "start": 107.02,
+      "end": 107.38,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "final",
+      "start": 107.44,
+      "end": 107.845,
+      "role": "other",
+      "loudness": -12.9,
+      "speaker": 1
+    },
+    {
+      "text": "shot.",
+      "start": 107.905,
+      "end": 108.265,
+      "role": "other",
+      "loudness": -13.2,
+      "speaker": 1
+    },
+    {
+      "text": "Me",
+      "start": 109.265,
+      "end": 109.535,
+      "role": "wearer",
+      "loudness": -25.1,
+      "speaker": 0
+    },
+    {
+      "text": "neither,",
+      "start": 109.595,
+      "end": 110.09,
+      "role": "wearer",
+      "loudness": -25.7,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 110.15,
+      "end": 110.465,
+      "role": "wearer",
+      "loudness": -27.3,
+      "speaker": 0
+    },
+    {
+      "text": "whole",
+      "start": 110.525,
+      "end": 110.93,
+      "role": "wearer",
+      "loudness": -24.5,
+      "speaker": 0
+    },
+    {
+      "text": "room",
+      "start": 110.99,
+      "end": 111.35,
+      "role": "wearer",
+      "loudness": -26.4,
+      "speaker": 0
+    },
+    {
+      "text": "was",
+      "start": 111.41,
+      "end": 111.725,
+      "role": "wearer",
+      "loudness": -26.2,
+      "speaker": 0
+    },
+    {
+      "text": "shouting.",
+      "start": 111.785,
+      "end": 112.325,
+      "role": "wearer",
+      "loudness": -25.1,
+      "speaker": 0
+    },
+    {
+      "text": "We",
+      "start": 113.325,
+      "end": 113.595,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 1
+    },
+    {
+      "text": "watched",
+      "start": 113.655,
+      "end": 114.15,
+      "role": "other",
+      "loudness": -13.8,
+      "speaker": 1
+    },
+    {
+      "text": "it",
+      "start": 114.21,
+      "end": 114.48,
+      "role": "other",
+      "loudness": -14.2,
+      "speaker": 1
+    },
+    {
+      "text": "at",
+      "start": 114.54,
+      "end": 114.81,
+      "role": "other",
+      "loudness": -15.2,
+      "speaker": 1
+    },
+    {
+      "text": "a",
+      "start": 114.87,
+      "end": 115.095,
+      "role": "other",
+      "loudness": -14.5,
+      "speaker": 1
+    },
+    {
+      "text": "bar",
+      "start": 115.155,
+      "end": 115.47,
+      "role": "other",
+      "loudness": -13.9,
+      "speaker": 1
+    },
+    {
+      "text": "downtown,",
+      "start": 115.53,
+      "end": 116.07,
+      "role": "other",
+      "loudness": -12.7,
+      "speaker": 1
+    },
+    {
+      "text": "it",
+      "start": 116.13,
+      "end": 116.4,
+      "role": "other",
+      "loudness": -15,
+      "speaker": 1
+    },
+    {
+      "text": "was",
+      "start": 116.46,
+      "end": 116.775,
+      "role": "other",
+      "loudness": -13.9,
+      "speaker": 1
+    },
+    {
+      "text": "packed.",
+      "start": 116.835,
+      "end": 117.285,
+      "role": "other",
+      "loudness": -14.6,
+      "speaker": 1
+    },
+    {
+      "text": "Which",
+      "start": 118.285,
+      "end": 118.69,
+      "role": "wearer",
+      "loudness": -24.9,
+      "speaker": 0
+    },
+    {
+      "text": "one,",
+      "start": 118.75,
+      "end": 119.065,
+      "role": "wearer",
+      "loudness": -25.4,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 119.125,
+      "end": 119.44,
+      "role": "wearer",
+      "loudness": -26.4,
+      "speaker": 0
+    },
+    {
+      "text": "place",
+      "start": 119.5,
+      "end": 119.905,
+      "role": "wearer",
+      "loudness": -27,
+      "speaker": 0
+    },
+    {
+      "text": "on",
+      "start": 119.965,
+      "end": 120.235,
+      "role": "wearer",
+      "loudness": -26.3,
+      "speaker": 0
+    },
+    {
+      "text": "Fourth",
+      "start": 120.295,
+      "end": 120.745,
+      "role": "wearer",
+      "loudness": -25.3,
+      "speaker": 0
+    },
+    {
+      "text": "Street?",
+      "start": 120.805,
+      "end": 121.255,
+      "role": "wearer",
+      "loudness": -25,
+      "speaker": 0
+    },
+    {
+      "text": "That",
+      "start": 122.255,
+      "end": 122.615,
+      "role": "other",
+      "loudness": -15.5,
+      "speaker": 1
+    },
+    {
+      "text": "one,",
+      "start": 122.675,
+      "end": 122.99,
+      "role": "other",
+      "loudness": -13.9,
+      "speaker": 1
+    },
+    {
+      "text": "they",
+      "start": 123.05,
+      "end": 123.41,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 1
+    },
+    {
+      "text": "have",
+      "start": 123.47,
+      "end": 123.83,
+      "role": "other",
+      "loudness": -14,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 123.89,
+      "end": 124.205,
+      "role": "other",
+      "loudness": -14.5,
+      "speaker": 1
+    },
+    {
+      "text": "big",
+      "start": 124.265,
+      "end": 124.58,
+      "role": "other",
+      "loudness": -13.3,
+      "speaker": 1
+    },
+    {
+      "text": "screens",
+      "start": 124.64,
+      "end": 125.135,
+      "role": "other",
+      "loudness": -13.6,
+      "speaker": 1
+    },
+    {
+      "text": "now.",
+      "start": 125.195,
+      "end": 125.51,
+      "role": "other",
+      "loudness": -15.3,
+      "speaker": 1
+    },
+    {
+      "text": "I",
+      "start": 126.51,
+      "end": 126.735,
+      "role": "wearer",
+      "loudness": -25,
+      "speaker": 0
+    },
+    {
+      "text": "keep",
+      "start": 126.795,
+      "end": 127.155,
+      "role": "wearer",
+      "loudness": -25.5,
+      "speaker": 0
+    },
+    {
+      "text": "meaning",
+      "start": 127.215,
+      "end": 127.71,
+      "role": "wearer",
+      "loudness": -25.1,
+      "speaker": 0
+    },
+    {
+      "text": "to",
+      "start": 127.77,
+      "end": 128.04,
+      "role": "wearer",
+      "loudness": -25.9,
+      "speaker": 0
+    },
+    {
+      "text": "go",
+      "start": 128.1,
+      "end": 128.37,
+      "role": "wearer",
+      "loudness": -26.9,
+      "speaker": 0
+    },
+    {
+      "text": "there.",
+      "start": 128.43,
+      "end": 128.835,
+      "role": "wearer",
+      "loudness": -26.5,
+      "speaker": 0
+    },
+    {
+      "text": "The",
+      "start": 129.835,
+      "end": 130.15,
+      "role": "other",
+      "loudness": -13,
+      "speaker": 1
+    },
+    {
+      "text": "food",
+      "start": 130.21,
+      "end": 130.57,
+      "role": "other",
+      "loudness": -13.6,
+      "speaker": 1
+    },
+    {
+      "text": "is",
+      "start": 130.63,
+      "end": 130.9,
+      "role": "other",
+      "loudness": -15,
+      "speaker": 1
+    },
+    {
+      "text": "better",
+      "start": 130.96,
+      "end": 131.41,
+      "role": "other",
+      "loudness": -15.4,
+      "speaker": 1
+    },
+    {
+      "text": "than",
+      "start": 131.47,
+      "end": 131.83,
+      "role": "other",
+      "loudness": -12.7,
+      "speaker": 1
+    },
+    {
+      "text": "it",
+      "start": 131.89,
+      "end": 132.16,
+      "role": "other",
+      "loudness": -14.2,
+      "speaker": 1
+    },
+    {
+      "text": "used",
+      "start": 132.22,
+      "end": 132.58,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 1
+    },
+    {
+      "text": "to",
+      "start": 132.64,
+      "end": 132.91,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 1
+    },
+    {
+      "text": "be.",
+      "start": 132.97,
+      "end": 133.24,
+      "role": "other",
+      "loudness": -15.1,
+      "speaker": 1
+    },
+    {
+      "text": "Good",
+      "start": 134.24,
+      "end": 134.6,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "to",
+      "start": 134.66,
+      "end": 134.93,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "know,",
+      "start": 134.99,
+      "end": 135.35,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 135.41,
+      "end": 135.725,
+      "role": "wearer",
+      "loudness": -25.5,
+      "speaker": 0
+    },
+    {
+      "text": "old",
+      "start": 135.785,
+      "end": 136.1,
+      "role": "wearer",
+      "loudness": -25.7,
+      "speaker": 0
+    },
+    {
+      "text": "menu",
+      "start": 136.16,
+      "end": 136.52,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "was",
+      "start": 136.58,
+      "end": 136.895,
+      "role": "wearer",
+      "loudness": -25.2,
+      "speaker": 0
+    },
+    {
+      "text": "rough.",
+      "start": 136.955,
+      "end": 137.36,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "They",
+      "start": 138.36,
+      "end": 138.72,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 1
+    },
+    {
+      "text": "changed",
+      "start": 138.78,
+      "end": 139.275,
+      "role": "other",
+      "loudness": -12.9,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 139.335,
+      "end": 139.65,
+      "role": "other",
+      "loudness": -13.2,
+      "speaker": 1
+    },
+    {
+      "text": "cook",
+      "start": 139.71,
+      "end": 140.07,
+      "role": "other",
+      "loudness": -13.9,
+      "speaker": 1
+    },
+    {
+      "text": "last",
+      "start": 140.13,
+      "end": 140.49,
+      "role": "other",
+      "loudness": -15.3,
+      "speaker": 1
+    },
+    {
+      "text": "spring.",
+      "start": 140.55,
+      "end": 141,
+      "role": "other",
+      "loudness": -14.6,
+      "speaker": 1
+    },
+    {
+      "text": "That",
+      "start": 142,
+      "end": 142.36,
+      "role": "wearer",
+      "loudness": -26.5,
+      "speaker": 0
+    },
+    {
+      "text": "explains",
+      "start": 142.42,
+      "end": 142.96,
+      "role": "wearer",
+      "loudness": -27,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 143.02,
+      "end": 143.335,
+      "role": "wearer",
+      "loudness": -24.8,
+      "speaker": 0
+    },
+    {
+      "text": "tacos.",
+      "start": 143.395,
+      "end": 143.8,
+      "role": "wearer",
+      "loudness": -25.9,
+      "speaker": 0
+    },
+    {
+      "text": "Right,",
+      "start": 144.8,
+      "end": 145.205,
+      "role": "other",
+      "loudness": -15.2,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 145.265,
+      "end": 145.58,
+      "role": "other",
+      "loudness": -14.6,
+      "speaker": 1
+    },
+    {
+      "text": "tacos",
+      "start": 145.64,
+      "end": 146.045,
+      "role": "other",
+      "loudness": -13.9,
+      "speaker": 1
+    },
+    {
+      "text": "are",
+      "start": 146.105,
+      "end": 146.42,
+      "role": "other",
+      "loudness": -13.2,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 146.48,
+      "end": 146.795,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 1
+    },
+    {
+      "text": "best",
+      "start": 146.855,
+      "end": 147.215,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "thing",
+      "start": 147.275,
+      "end": 147.68,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 1
+    },
+    {
+      "text": "there",
+      "start": 147.74,
+      "end": 148.145,
+      "role": "other",
+      "loudness": -15.1,
+      "speaker": 1
+    },
+    {
+      "text": "now.",
+      "start": 148.205,
+      "end": 148.52,
+      "role": "other",
+      "loudness": -12.9,
+      "speaker": 1
+    },
+    {
+      "text": "So",
+      "start": 149.52,
+      "end": 149.79,
+      "role": "wearer",
+      "loudness": -26.3,
+      "speaker": 0
+    },
+    {
+      "text": "how",
+      "start": 149.85,
+      "end": 150.165,
+      "role": "wearer",
+      "loudness": -27.4,
+      "speaker": 0
+    },
+    {
+      "text": "was",
+      "start": 150.225,
+      "end": 150.54,
+      "role": "wearer",
+      "loudness": -26.7,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 150.6,
+      "end": 150.915,
+      "role": "wearer",
+      "loudness": -24.8,
+      "speaker": 0
+    },
+    {
+      "text": "drive",
+      "start": 150.975,
+      "end": 151.38,
+      "role": "wearer",
+      "loudness": -26.3,
+      "speaker": 0
+    },
+    {
+      "text": "in",
+      "start": 151.44,
+      "end": 151.71,
+      "role": "wearer",
+      "loudness": -24.9,
+      "speaker": 0
+    },
+    {
+      "text": "this",
+      "start": 151.77,
+      "end": 152.13,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "morning?",
+      "start": 152.19,
+      "end": 152.685,
+      "role": "wearer",
+      "loudness": -26.4,
+      "speaker": 0
+    },
+    {
+      "text": "Not",
+      "start": 153.685,
+      "end": 154,
+      "role": "other",
+      "loudness": -13.2,
+      "speaker": 1
+    },
+    {
+      "text": "bad,",
+      "start": 154.06,
+      "end": 154.375,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 154.435,
+      "end": 154.75,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 1
+    },
+    {
+      "text": "traffic",
+      "start": 154.81,
+      "end": 155.305,
+      "role": "other",
+      "loudness": -15.3,
+      "speaker": 1
+    },
+    {
+      "text": "was",
+      "start": 155.365,
+      "end": 155.68,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 1
+    },
+    {
+      "text": "light",
+      "start": 155.74,
+      "end": 156.145,
+      "role": "other",
+      "loudness": -14.8,
+      "speaker": 1
+    },
+    {
+      "text": "for",
+      "start": 156.205,
+      "end": 156.52,
+      "role": "other",
+      "loudness": -12.9,
+      "speaker": 1
+    },
+    {
+      "text": "once.",
+      "start": 156.58,
+      "end": 156.94,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 1
+    },
+    {
+      "text": "Lucky.",
+      "start": 157.94,
+      "end": 158.345,
+      "role": "wearer",
+      "loudness": -24.7,
+      "speaker": 0
+    },
+    {
+      "text": "The",
+      "start": 158.405,
+      "end": 158.72,
+      "role": "wearer",
+      "loudness": -25.3,
+      "speaker": 0
+    },
+    {
+      "text": "freeway",
+      "start": 158.78,
+      "end": 159.275,
+      "role": "wearer",
+      "loudness": -25.1,
+      "speaker": 0
+    },
+    {
+      "text": "was",
+      "start": 159.335,
+      "end": 159.65,
+      "role": "wearer",
+      "loudness": -25.1,
+      "speaker": 0
+    },
+    {
+      "text": "a",
+      "start": 159.71,
+      "end": 159.935,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "parking",
+      "start": 159.995,
+      "end": 160.49,
+      "role": "wearer",
+      "loudness": -24.9,
+      "speaker": 0
+    },
+    {
+      "text": "lot",
+      "start": 160.55,
+      "end": 160.865,
+      "role": "wearer",
+      "loudness": -24.9,
+      "speaker": 0
+    },
+    {
+      "text": "for",
+      "start": 160.925,
+      "end": 161.24,
+      "role": "wearer",
+      "loudness": -25.5,
+      "speaker": 0
+    },
+    {
+      "text": "me.",
+      "start": 161.3,
+      "end": 161.57,
+      "role": "wearer",
+      "loudness": -27.3,
+      "speaker": 0
+    },
+    {
+      "text": "It",
+      "start": 162.57,
+      "end": 162.84,
+      "role": "other",
+      "loudness": -14.4,
+      "speaker": 1
+    },
+    {
+      "text": "always",
+      "start": 162.9,
+      "end": 163.35,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 1
+    },
+    {
+      "text": "is",
+      "start": 163.41,
+      "end": 163.68,
+      "role": "other",
+      "loudness": -12.9,
+      "speaker": 1
+    },
+    {
+      "text": "on",
+      "start": 163.74,
+      "end": 164.01,
+      "role": "other",
+      "loudness": -15.2,
+      "speaker": 1
+    },
+    {
+      "text": "Fridays,",
+      "start": 164.07,
+      "end": 164.565,
+      "role": "other",
+      "loudness": -15.2,
+      "speaker": 1
+    },
+    {
+      "text": "people",
+      "start": 164.625,
+      "end": 165.075,
+      "role": "other",
+      "loudness": -14,
+      "speaker": 1
+    },
+    {
+      "text": "leave",
+      "start": 165.135,
+      "end": 165.54,
+      "role": "other",
+      "loudness": -13.6,
+      "speaker": 1
+    },
+    {
+      "text": "early.",
+      "start": 165.6,
+      "end": 166.005,
+      "role": "other",
+      "loudness": -12.9,
+      "speaker": 1
+    },
+    {
+      "text": "Fair",
+      "start": 167.005,
+      "end": 167.365,
+      "role": "wearer",
+      "loudness": -27.3,
+      "speaker": 0
+    },
+    {
+      "text": "enough.",
+      "start": 167.425,
+      "end": 167.875,
+      "role": "wearer",
+      "loudness": -25.9,
+      "speaker": 0
+    },
+    {
+      "text": "Did",
+      "start": 167.935,
+      "end": 168.25,
+      "role": "wearer",
+      "loudness": -24.7,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 168.31,
+      "end": 168.625,
+      "role": "wearer",
+      "loudness": -25.2,
+      "speaker": 0
+    },
+    {
+      "text": "catch",
+      "start": 168.685,
+      "end": 169.09,
+      "role": "wearer",
+      "loudness": -27.3,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 169.15,
+      "end": 169.465,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "game",
+      "start": 169.525,
+      "end": 169.885,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "last",
+      "start": 169.945,
+      "end": 170.305,
+      "role": "wearer",
+      "loudness": -27.4,
+      "speaker": 0
+    },
+    {
+      "text": "night?",
+      "start": 170.365,
+      "end": 170.77,
+      "role": "wearer",
+      "loudness": -26.8,
+      "speaker": 0
+    },
+    {
+      "text": "Only",
+      "start": 171.77,
+      "end": 172.13,
+      "role": "other",
+      "loudness": -14.6,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 172.19,
+      "end": 172.505,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "second",
+      "start": 172.565,
+      "end": 173.015,
+      "role": "other",
+      "loudness": -13.5,
+      "speaker": 1
+    },
+    {
+      "text": "half,",
+      "start": 173.075,
+      "end": 173.435,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 1
+    },
+    {
+      "text": "but",
+      "start": 173.495,
+      "end": 173.81,
+      "role": "other",
+      "loudness": -12.7,
+      "speaker": 1
+    },
+    {
+      "text": "it",
+      "start": 173.87,
+      "end": 174.14,
+      "role": "other",
+      "loudness": -15.4,
+      "speaker": 1
+    },
+    {
+      "text": "was",
+      "start": 174.2,
+      "end": 174.515,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 1
+    },
+    {
+      "text": "a",
+      "start": 174.575,
+      "end": 174.8,
+      "role": "other",
+      "loudness": -14.5,
+      "speaker": 1
+    },
+    {
+      "text": "good",
+      "start": 174.86,
+      "end": 175.22,
+      "role": "other",
+      "loudness": -14.4,
+      "speaker": 1
+    },
+    {
+      "text": "one.",
+      "start": 175.28,
+      "end": 175.595,
+      "role": "other",
+      "loudness": -14.6,
+      "speaker": 1
+    },
+    {
+      "text": "The",
+      "start": 176.595,
+      "end": 176.91,
+      "role": "wearer",
+      "loudness": -25.9,
+      "speaker": 0
+    },
+    {
+      "text": "last",
+      "start": 176.97,
+      "end": 177.33,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "few",
+      "start": 177.39,
+      "end": 177.705,
+      "role": "wearer",
+      "loudness": -26.5,
+      "speaker": 0
+    },
+    {
+      "text": "minutes",
+      "start": 177.765,
+      "end": 178.26,
+      "role": "wearer",
+      "loudness": -25.5,
+      "speaker": 0
+    },
+    {
+      "text": "were",
+      "start": 178.32,
+      "end": 178.68,
+      "role": "wearer",
+      "loudness": -25.1,
+      "speaker": 0
+    },
+    {
+      "text": "wild.",
+      "start": 178.74,
+      "end": 179.1,
+      "role": "wearer",
+      "loudness": -25.5,
+      "speaker": 0
+    },
+    {
+      "text": "I",
+      "start": 180.1,
+      "end": 180.325,
+      "role": "other",
+      "loudness": -13.2,
+      "speaker": 1
+    },
+    {
+      "text": "could",
+      "start": 180.385,
+      "end": 180.79,
+      "role": "other",
+      "loudness": -14.6,
+      "speaker": 1
+    },
+    {
+      "text": "not",
+      "start": 180.85,
+      "end": 181.165,
+      "role": "other",
+      "loudness": -13.8,
+      "speaker": 1
+    },
+    {
+      "text": "believe",
+      "start": 181.225,
+      "end": 181.72,
+      "role": "other",
+      "loudness": -14,
+      "speaker": 1
+    },
+    {
+      "text": "that",
+      "start": 181.78,
+      "end": 182.14,
+      "role": "other",
+      "loudness": -15.1,
+      "speaker": 1
+    },
+    {
+      "text": "final",
+      "start": 182.2,
+      "end": 182.605,
+      "role": "other",
+      "loudness": -14.2,
+      "speaker": 1
+    },
+    {
+      "text": "shot.",
+      "start": 182.665,
+      "end": 183.025,
+      "role": "other",
+      "loudness": -13.6,
+      "speaker": 1
+    },
+    {
+      "text": "Me",
+      "start": 184.025,
+      "end": 184.295,
+      "role": "wearer",
+      "loudness": -26.5,
+      "speaker": 0
+    },
+    {
+      "text": "neither,",
+      "start": 184.355,
+      "end": 184.85,
+      "role": "wearer",
+      "loudness": -25.4,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 184.91,
+      "end": 185.225,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "whole",
+      "start": 185.285,
+      "end": 185.69,
+      "role": "wearer",
+      "loudness": -25.5,
+      "speaker": 0
+    },
+    {
+      "text": "room",
+      "start": 185.75,
+      "end": 186.11,
+      "role": "wearer",
+      "loudness": -24.9,
+      "speaker": 0
+    },
+    {
+      "text": "was",
+      "start": 186.17,
+      "end": 186.485,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "shouting.",
+      "start": 186.545,
+      "end": 187.085,
+      "role": "wearer",
+      "loudness": -27.5,
+      "speaker": 0
+    }
+  ]
+}

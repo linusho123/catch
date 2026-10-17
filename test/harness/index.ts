@@ -54,7 +54,7 @@ export function harness(): Promise<Harness> {
 
 async function start(): Promise<Harness> {
   const clock = new VirtualClock(speedFromEnv())
-  const stt = new FixtureStt()
+  const stt = new FixtureStt(clock)
   const notifications = new NotificationCapture(clock)
   const model = modelForTests()
   const dbPath = join(mkdtempSync(join(tmpdir(), 'catch-harness-')), 'catch.db')
@@ -81,6 +81,7 @@ async function start(): Promise<Harness> {
     model,
     async reset() {
       await Promise.all(lenses.splice(0).map((lens) => lens.stop()))
+      stt.reset()
       clock.reset()
       host.reset(clock)
       notifications.reset(clock)

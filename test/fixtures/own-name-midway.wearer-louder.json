@@ -1,0 +1,110 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "own-name-midway",
+  "variant": "wearer-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "Morning, everyone."
+    },
+    {
+      "gap": 0.8,
+      "who": "Priya",
+      "text": "Morning!"
+    },
+    {
+      "at": 4,
+      "who": "wearer",
+      "text": "Hi, I'm Linus."
+    },
+    {
+      "gap": 0.8,
+      "who": "Priya",
+      "text": "Nice to meet you."
+    }
+  ],
+  "words": [
+    {
+      "text": "Morning,",
+      "start": 0,
+      "end": 0.495,
+      "role": "wearer",
+      "loudness": -13,
+      "speaker": 0
+    },
+    {
+      "text": "everyone.",
+      "start": 0.555,
+      "end": 1.095,
+      "role": "wearer",
+      "loudness": -10.8,
+      "speaker": 0
+    },
+    {
+      "text": "Morning!",
+      "start": 1.895,
+      "end": 2.39,
+      "role": "other",
+      "loudness": -27.2,
+      "speaker": 1
+    },
+    {
+      "text": "Hi,",
+      "start": 4,
+      "end": 4.27,
+      "role": "wearer",
+      "loudness": -12.9,
+      "speaker": 0
+    },
+    {
+      "text": "I'm",
+      "start": 4.33,
+      "end": 4.6,
+      "role": "wearer",
+      "loudness": -12.7,
+      "speaker": 0
+    },
+    {
+      "text": "Linus.",
+      "start": 4.66,
+      "end": 5.065,
+      "role": "wearer",
+      "loudness": -10.6,
+      "speaker": 0
+    },
+    {
+      "text": "Nice",
+      "start": 5.865,
+      "end": 6.225,
+      "role": "other",
+      "loudness": -28,
+      "speaker": 1
+    },
+    {
+      "text": "to",
+      "start": 6.285,
+      "end": 6.555,
+      "role": "other",
+      "loudness": -29.4,
+      "speaker": 1
+    },
+    {
+      "text": "meet",
+      "start": 6.615,
+      "end": 6.975,
+      "role": "other",
+      "loudness": -29.2,
+      "speaker": 1
+    },
+    {
+      "text": "you.",
+      "start": 7.035,
+      "end": 7.35,
+      "role": "other",
+      "loudness": -26.7,
+      "speaker": 1
+    }
+  ]
+}

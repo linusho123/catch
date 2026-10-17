@@ -20,5 +20,10 @@ export interface SttStream {
 
 export interface SpeechToText {
   readonly name: string
-  open(onWords: (words: SttWord[]) => void, onError: (err: unknown) => void): SttStream
+  /**
+   * Opens one stream. `onOpen` fires once the provider is ready to hear (the
+   * server shows the dot only then, D37); `onError` means the stream is lost,
+   * and the server opens a new one.
+   */
+  open(onWords: (words: SttWord[]) => void, onError: (err: unknown) => void, onOpen?: () => void): SttStream
 }

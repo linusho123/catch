@@ -39,6 +39,17 @@ function errors() {
 }
 
 describe('the Deepgram adapter, against a loopback stand-in', () => {
+  it('says when the stream is open, so the server shows the dot only once Catch can hear (D37)', async () => {
+    let peer: import('ws').WebSocket | undefined
+    const url = await standIn((ws) => (peer = ws))
+    let opened: () => void = () => {}
+    const open = new Promise<void>((resolve) => (opened = resolve))
+    const stream = deepgram('key', { url }).open(() => {}, () => {}, opened)
+    cleanups.push(() => stream.close())
+    cleanups.push(() => peer?.terminate())
+    await open
+  })
+
   it('reports through onError when Deepgram closes the stream unexpectedly (M7)', async () => {
     const url = await standIn((ws) => setTimeout(() => ws.close(1011, 'idle timeout'), 10))
     const e = errors()

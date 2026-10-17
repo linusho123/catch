@@ -1,0 +1,208 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "priya-thrice",
+  "variant": "other-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "Hi, good to see you."
+    },
+    {
+      "at": 3,
+      "who": "Priya",
+      "text": "Hi, I'm Priya."
+    },
+    {
+      "gap": 2.5,
+      "who": "wearer",
+      "text": "Nice to meet you."
+    },
+    {
+      "at": 63,
+      "who": "Priya-2",
+      "text": "Hi, I'm Priya."
+    },
+    {
+      "at": 93,
+      "who": "Priya-3",
+      "text": "Hi, I'm Priya."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Three of you!"
+    }
+  ],
+  "words": [
+    {
+      "text": "Hi,",
+      "start": 0,
+      "end": 0.27,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "good",
+      "start": 0.33,
+      "end": 0.69,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "to",
+      "start": 0.75,
+      "end": 1.02,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "see",
+      "start": 1.08,
+      "end": 1.395,
+      "role": "wearer",
+      "loudness": -27.4,
+      "speaker": 0
+    },
+    {
+      "text": "you.",
+      "start": 1.455,
+      "end": 1.77,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "Hi,",
+      "start": 3,
+      "end": 3.27,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "I'm",
+      "start": 3.33,
+      "end": 3.6,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "Priya.",
+      "start": 3.66,
+      "end": 4.065,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 1
+    },
+    {
+      "text": "Nice",
+      "start": 6.565,
+      "end": 6.925,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "to",
+      "start": 6.985,
+      "end": 7.255,
+      "role": "wearer",
+      "loudness": -25.1,
+      "speaker": 0
+    },
+    {
+      "text": "meet",
+      "start": 7.315,
+      "end": 7.675,
+      "role": "wearer",
+      "loudness": -26.6,
+      "speaker": 0
+    },
+    {
+      "text": "you.",
+      "start": 7.735,
+      "end": 8.05,
+      "role": "wearer",
+      "loudness": -24.7,
+      "speaker": 0
+    },
+    {
+      "text": "Hi,",
+      "start": 63,
+      "end": 63.27,
+      "role": "other",
+      "loudness": -14.2,
+      "speaker": 2
+    },
+    {
+      "text": "I'm",
+      "start": 63.33,
+      "end": 63.6,
+      "role": "other",
+      "loudness": -13.6,
+      "speaker": 2
+    },
+    {
+      "text": "Priya.",
+      "start": 63.66,
+      "end": 64.065,
+      "role": "other",
+      "loudness": -14.5,
+      "speaker": 2
+    },
+    {
+      "text": "Hi,",
+      "start": 93,
+      "end": 93.27,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 3
+    },
+    {
+      "text": "I'm",
+      "start": 93.33,
+      "end": 93.6,
+      "role": "other",
+      "loudness": -13.8,
+      "speaker": 3
+    },
+    {
+      "text": "Priya.",
+      "start": 93.66,
+      "end": 94.065,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 3
+    },
+    {
+      "text": "Three",
+      "start": 95.065,
+      "end": 95.47,
+      "role": "wearer",
+      "loudness": -25.3,
+      "speaker": 0
+    },
+    {
+      "text": "of",
+      "start": 95.53,
+      "end": 95.8,
+      "role": "wearer",
+      "loudness": -24.8,
+      "speaker": 0
+    },
+    {
+      "text": "you!",
+      "start": 95.86,
+      "end": 96.175,
+      "role": "wearer",
+      "loudness": -27.4,
+      "speaker": 0
+    }
+  ]
+}

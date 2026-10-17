@@ -72,6 +72,28 @@ describe('the fixture audio', () => {
     expect(stt.pcm.map((p) => Math.round(dbfsOf(p)))).toEqual([-11])
   })
 
+  it('plays the provider going away and coming back: streams fail while it is down, and words said meanwhile are lost (D37)', async () => {
+    const stt = new FixtureStt()
+    const seen: string[] = []
+    const words: string[] = []
+    stt.open((w) => words.push(...w.map((x) => x.text)), (e) => seen.push(`error: ${(e as Error).message}`), () => seen.push('open'))
+    await Promise.resolve()
+    expect(seen).toEqual(['open'])
+    stt.loseConnection()
+    expect(seen.at(-1)).toMatch(/dropped the stream/)
+    expect(stt.reachable).toBe(false)
+    stt.deliver([{ text: 'lost', start: 0, end: 0.2, confidence: 1, speaker: 0, isFinal: true }])
+    stt.open(() => {}, (e) => seen.push(`error: ${(e as Error).message}`), () => seen.push('open'))
+    await Promise.resolve()
+    expect(seen.at(-1)).toMatch(/unreachable/)
+    stt.restore()
+    stt.open((w) => words.push(...w.map((x) => x.text)), () => {}, () => seen.push('open'))
+    await Promise.resolve()
+    expect(seen.at(-1)).toBe('open')
+    stt.deliver([{ text: 'heard', start: 1, end: 1.2, confidence: 1, speaker: 0, isFinal: true }])
+    expect(words).toEqual(['heard'])
+  })
+
   it('refuses, on the real-provider path, a WAV whose length is not the fixture\'s frame count (M7)', () => {
     const name = 'own-name.wearer-louder'
     const dir = mkdtempSync(join(tmpdir(), 'catch-fixtures-'))

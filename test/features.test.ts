@@ -1,10 +1,15 @@
 import { copyFileSync, mkdtempSync, readdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, join, resolve } from 'node:path'
+import { afterAll } from 'vitest'
 import { runFeatures, type Definer, type WipEntry } from 'gherkin-node-test/vitest'
+import { closeHarness } from './steps/lens-world.ts'
+import names from './steps/names.steps.ts'
+import stayingDark from './steps/staying-dark.steps.ts'
 
 // gherkin-node-test over features/. One definer per feature file joins here as
-// its phase binds it (test/steps/<feature>.steps.ts).
+// its phase binds it (test/steps/<feature>.steps.ts). The bound scenarios run
+// on the worker's one test harness (test/harness/), closed after the run.
 //
 // FEATURES (fast lane only) names the feature files to run, by basename or
 // path, separated by commas or spaces; unset runs them all. The full lane
@@ -19,14 +24,25 @@ const WIP: WipEntry[] = [
   'dropped-thread',
   'holding',
   'kept-conversations',
-  'names',
   'phone-handoff',
   'promises',
-  'staying-dark',
+  // P1a binds D14, D16 and D37; these wait for P3 (D32, the promise line), P6 (pause).
+  {
+    feature: 'staying-dark',
+    scenarios: [
+      'The newest catch replaces a page that is showing',
+      'A swipe down pauses Catch and shows the dash',
+      'A second swipe down resumes listening',
+      'A pause freezes the conversation',
+    ],
+  },
 ]
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- each feature's world type is its own
-const definers: Record<string, Definer<any>> = {}
+const definers: Record<string, Definer<any>> = {
+  names,
+  'staying-dark': stayingDark,
+}
 
 const all = readdirSync(FEATURE_DIR).filter((f) => f.endsWith('.feature')).map((f) => basename(f, '.feature'))
 const requested = (process.env.FEATURES ?? '')
@@ -52,6 +68,8 @@ if (filtered) {
 const featureOf = (entry: WipEntry) => (typeof entry === 'string' ? entry : entry.feature)
 const pick = <T>(entries: Record<string, T>) =>
   Object.fromEntries(Object.entries(entries).filter(([name]) => selected.includes(name)))
+
+afterAll(closeHarness)
 
 const manifest = join(ROOT, 'run-manifest.ndjson')
 runFeatures(dir, pick(definers), {

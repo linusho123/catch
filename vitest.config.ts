@@ -19,7 +19,8 @@ export default defineConfig({
       // One file at a time: the lane-timing test spawns a whole fast lane, and the
       // harness smoke tests measure fixture time against wall time.
       { extends: true, test: { name: 'integration', include: ['test/integration/**/*.test.ts'], fileParallelism: false } },
-      { extends: true, test: { name: 'features', include: ['test/features.test.ts'] } },
+      // A bound scenario plays a fixture on the fixture clock (20x): three minutes of talk is nine seconds of wall time.
+      { extends: true, test: { name: 'features', include: ['test/features.test.ts'], testTimeout: 30_000, hookTimeout: 30_000 } },
     ],
   },
 })

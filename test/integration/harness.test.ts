@@ -33,11 +33,17 @@ function listen<K extends 'frame' | 'words'>(event: K): ServerEvents[K][0][] {
 describe('the Even bridge stub', () => {
   it("records the lens's start-up page as the SDK sends it, with brightness and the fixture clock", async () => {
     await h.startLens()
+    // P1a: the lens starts with no dot, because it cannot hear until the server says so (D37) ...
     const [first] = h.host.payloads()
     expect(first?.method).toBe('createStartUpPageContainer')
-    expect(textLines(first!)).toEqual([{ containerID: 1, containerName: 'dot', content: '•', brightness: 1 }])
+    expect(textLines(first!)).toEqual([{ containerID: 1, containerName: 'blank', content: '', brightness: 1 }])
     expect(first!.at).toBeGreaterThanOrEqual(0)
     expect(first!.at).toBeLessThan(5000)
+    // ... and draws the dot when the server, its speech-to-text stream open, says it can.
+    for (let i = 0; i < 100 && h.host.payloads().length < 2; i++) await h.clock.sleepUntil(h.clock.now() + 50)
+    const second = h.host.payloads()[1]
+    expect(second?.method).toBe('rebuildPageContainer')
+    expect(textLines(second!)).toEqual([{ containerID: 1, containerName: 'dot', content: '•', brightness: 1 }])
     // The microphone is opened through the same boundary, and is not a payload for the lens.
     expect(h.host.calls.map((c) => c.method)).toContain('audioControl')
   })

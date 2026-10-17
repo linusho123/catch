@@ -16,6 +16,45 @@ export interface ScriptLine {
   span?: number
 }
 
+/** The wearer opens, Priya introduces herself at second 3, the wearer answers. */
+const PRIYA_OPENING: ScriptLine[] = [
+  { at: 0, who: 'wearer', text: 'Hi, good to see you.' },
+  { at: 3, who: 'Priya', text: "Hi, I'm Priya." },
+  { gap: 2.5, who: 'wearer', text: 'Nice to meet you.' },
+]
+
+/** Turns with Dev, about a second apart, until three minutes have passed. */
+const SMALL_TALK_TURNS: [who: string, text: string][] = [
+  ['wearer', 'So how was the drive in this morning?'],
+  ['Dev', 'Not bad, the traffic was light for once.'],
+  ['wearer', 'Lucky. The freeway was a parking lot for me.'],
+  ['Dev', 'It always is on Fridays, people leave early.'],
+  ['wearer', 'Fair enough. Did you catch the game last night?'],
+  ['Dev', 'Only the second half, but it was a good one.'],
+  ['wearer', 'The last few minutes were wild.'],
+  ['Dev', 'I could not believe that final shot.'],
+  ['wearer', 'Me neither, the whole room was shouting.'],
+  ['Dev', 'We watched it at a bar downtown, it was packed.'],
+  ['wearer', 'Which one, the place on Fourth Street?'],
+  ['Dev', 'That one, they have the big screens now.'],
+  ['wearer', 'I keep meaning to go there.'],
+  ['Dev', 'The food is better than it used to be.'],
+  ['wearer', 'Good to know, the old menu was rough.'],
+  ['Dev', 'They changed the cook last spring.'],
+  ['wearer', 'That explains the tacos.'],
+  ['Dev', 'Right, the tacos are the best thing there now.'],
+]
+
+const SMALL_TALK: ScriptLine[] = (() => {
+  const lines: ScriptLine[] = []
+  // The turns run in order, round and round: 45 of them run just past three minutes.
+  for (let i = 0; i < 45; i++) {
+    const [who, text] = SMALL_TALK_TURNS[i % SMALL_TALK_TURNS.length]!
+    lines.push(i === 0 ? { at: 0, who, text } : { gap: 1, who, text })
+  }
+  return lines
+})()
+
 export const SCRIPTS: Record<string, ScriptLine[]> = {
   // Priya, Marcus, Dana; a second Priya inside two minutes; a late re-introduction.
   // The wearer speaks at least every ten minutes, so the conversation never ends (D92).
@@ -60,6 +99,52 @@ export const SCRIPTS: Record<string, ScriptLine[]> = {
     { at: 0, who: 'wearer', text: "Hi, I'm Linus." },
     { gap: 0.8, who: 'Priya', text: 'Nice to meet you.' },
   ],
+
+  // P1a. The scenarios below need a conversation already under way (it begins
+  // on the wearer's first speech) before the moment they are about.
+
+  // D29 mid-conversation: the wearer gives their own name after the conversation has begun.
+  'own-name-midway': [
+    { at: 0, who: 'wearer', text: 'Morning, everyone.' },
+    { gap: 0.8, who: 'Priya', text: 'Morning!' },
+    { at: 4, who: 'wearer', text: "Hi, I'm Linus." },
+    { gap: 0.8, who: 'Priya', text: 'Nice to meet you.' },
+  ],
+  // D17: one introduction, then the wearer answers after the line has faded.
+  priya: [
+    ...PRIYA_OPENING,
+    { at: 10, who: 'wearer', text: 'So how do you know the hosts?' },
+  ],
+  // D88: the same words from someone else 90 seconds after Priya's.
+  'priya-again-90s': [...PRIYA_OPENING, { at: 93, who: 'Priya-2', text: "Hi, I'm Priya." }, { gap: 1, who: 'wearer', text: 'Oh, two of you.' }],
+  // D88: the same words three minutes after Priya's, outside the two-minute window.
+  'priya-again-3min': [
+    ...PRIYA_OPENING,
+    { at: 100, who: 'wearer', text: 'Anyway, where were we?' },
+    { at: 183, who: 'Priya-2', text: "Hi, I'm Priya." },
+    { gap: 1, who: 'wearer', text: 'Welcome back.' },
+  ],
+  // D88: a second Priya 60 seconds after the first, a third 30 seconds after that.
+  'priya-thrice': [
+    ...PRIYA_OPENING,
+    { at: 63, who: 'Priya-2', text: "Hi, I'm Priya." },
+    { at: 93, who: 'Priya-3', text: "Hi, I'm Priya." },
+    { gap: 1, who: 'wearer', text: 'Three of you!' },
+  ],
+  // D57: Priya re-introduces herself ten minutes later to someone who just joined; Marcus keeps her first in the order heard.
+  'priya-reintroduced': [
+    { at: 0, who: 'wearer', text: 'Hi everyone, good to see you all.' },
+    { at: 3, who: 'Priya', text: "Hi, I'm Priya." },
+    { gap: 0.8, who: 'Marcus', text: 'My name is Marcus.' },
+    { gap: 0.8, who: 'wearer', text: 'Nice to meet you both.' },
+    { at: 300, who: 'wearer', text: 'So what brings everyone here today?' },
+    { at: 590, who: 'wearer', text: 'Oh, here comes someone new.' },
+    { at: 603, who: 'Priya', text: "I'm Priya." },
+    { gap: 1, who: 'wearer', text: 'And this is where we sit.' },
+  ],
+  // D14, D16, D37: three minutes of talk with Dev in which nobody introduces
+  // themselves, the wearer makes no promise, and nobody cuts the wearer off.
+  'small-talk': SMALL_TALK,
 }
 
 export const VARIANTS = ['wearer-louder', 'other-louder'] as const

@@ -68,7 +68,7 @@ export function deepgram(apiKey: string, opts: DeepgramOptions = {}): SpeechToTe
   const url = opts.url ?? deepgramUrl()
   return {
     name: 'deepgram',
-    open(onWords, onError): SttStream {
+    open(onWords, onError, onOpen): SttStream {
       const socket = new WebSocket(url, { headers: { authorization: `Token ${apiKey}` } })
       const pending: Uint8Array[] = []
       let pendingBytes = 0
@@ -77,6 +77,7 @@ export function deepgram(apiKey: string, opts: DeepgramOptions = {}): SpeechToTe
       socket.on('open', () => {
         for (const chunk of pending.splice(0)) socket.send(chunk)
         pendingBytes = 0
+        onOpen?.()
       })
       // Deepgram drops idle or failed streams; audio after that would vanish
       // without a sound, so an unexpected close is an error (M7).

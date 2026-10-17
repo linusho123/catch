@@ -1,0 +1,354 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "priya-reintroduced",
+  "variant": "wearer-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "Hi everyone, good to see you all."
+    },
+    {
+      "at": 3,
+      "who": "Priya",
+      "text": "Hi, I'm Priya."
+    },
+    {
+      "gap": 0.8,
+      "who": "Marcus",
+      "text": "My name is Marcus."
+    },
+    {
+      "gap": 0.8,
+      "who": "wearer",
+      "text": "Nice to meet you both."
+    },
+    {
+      "at": 300,
+      "who": "wearer",
+      "text": "So what brings everyone here today?"
+    },
+    {
+      "at": 590,
+      "who": "wearer",
+      "text": "Oh, here comes someone new."
+    },
+    {
+      "at": 603,
+      "who": "Priya",
+      "text": "I'm Priya."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "And this is where we sit."
+    }
+  ],
+  "words": [
+    {
+      "text": "Hi",
+      "start": 0,
+      "end": 0.27,
+      "role": "wearer",
+      "loudness": -13,
+      "speaker": 0
+    },
+    {
+      "text": "everyone,",
+      "start": 0.33,
+      "end": 0.87,
+      "role": "wearer",
+      "loudness": -10.8,
+      "speaker": 0
+    },
+    {
+      "text": "good",
+      "start": 0.93,
+      "end": 1.29,
+      "role": "wearer",
+      "loudness": -11,
+      "speaker": 0
+    },
+    {
+      "text": "to",
+      "start": 1.35,
+      "end": 1.62,
+      "role": "wearer",
+      "loudness": -11.7,
+      "speaker": 0
+    },
+    {
+      "text": "see",
+      "start": 1.68,
+      "end": 1.995,
+      "role": "wearer",
+      "loudness": -10.6,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 2.055,
+      "end": 2.37,
+      "role": "wearer",
+      "loudness": -11.3,
+      "speaker": 0
+    },
+    {
+      "text": "all.",
+      "start": 2.43,
+      "end": 2.745,
+      "role": "wearer",
+      "loudness": -10.9,
+      "speaker": 0
+    },
+    {
+      "text": "Hi,",
+      "start": 3,
+      "end": 3.27,
+      "role": "other",
+      "loudness": -27.2,
+      "speaker": 1
+    },
+    {
+      "text": "I'm",
+      "start": 3.33,
+      "end": 3.6,
+      "role": "other",
+      "loudness": -27.2,
+      "speaker": 1
+    },
+    {
+      "text": "Priya.",
+      "start": 3.66,
+      "end": 4.065,
+      "role": "other",
+      "loudness": -28.9,
+      "speaker": 1
+    },
+    {
+      "text": "My",
+      "start": 4.865,
+      "end": 5.135,
+      "role": "other",
+      "loudness": -28.9,
+      "speaker": 2
+    },
+    {
+      "text": "name",
+      "start": 5.195,
+      "end": 5.555,
+      "role": "other",
+      "loudness": -28.7,
+      "speaker": 2
+    },
+    {
+      "text": "is",
+      "start": 5.615,
+      "end": 5.885,
+      "role": "other",
+      "loudness": -26.6,
+      "speaker": 2
+    },
+    {
+      "text": "Marcus.",
+      "start": 5.945,
+      "end": 6.395,
+      "role": "other",
+      "loudness": -29.1,
+      "speaker": 2
+    },
+    {
+      "text": "Nice",
+      "start": 7.195,
+      "end": 7.555,
+      "role": "wearer",
+      "loudness": -12,
+      "speaker": 0
+    },
+    {
+      "text": "to",
+      "start": 7.615,
+      "end": 7.885,
+      "role": "wearer",
+      "loudness": -13.4,
+      "speaker": 0
+    },
+    {
+      "text": "meet",
+      "start": 7.945,
+      "end": 8.305,
+      "role": "wearer",
+      "loudness": -13.2,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 8.365,
+      "end": 8.68,
+      "role": "wearer",
+      "loudness": -10.7,
+      "speaker": 0
+    },
+    {
+      "text": "both.",
+      "start": 8.74,
+      "end": 9.1,
+      "role": "wearer",
+      "loudness": -12,
+      "speaker": 0
+    },
+    {
+      "text": "So",
+      "start": 300,
+      "end": 300.27,
+      "role": "wearer",
+      "loudness": -11.9,
+      "speaker": 0
+    },
+    {
+      "text": "what",
+      "start": 300.33,
+      "end": 300.69,
+      "role": "wearer",
+      "loudness": -10.9,
+      "speaker": 0
+    },
+    {
+      "text": "brings",
+      "start": 300.75,
+      "end": 301.2,
+      "role": "wearer",
+      "loudness": -12.3,
+      "speaker": 0
+    },
+    {
+      "text": "everyone",
+      "start": 301.26,
+      "end": 301.8,
+      "role": "wearer",
+      "loudness": -13.3,
+      "speaker": 0
+    },
+    {
+      "text": "here",
+      "start": 301.86,
+      "end": 302.22,
+      "role": "wearer",
+      "loudness": -12.8,
+      "speaker": 0
+    },
+    {
+      "text": "today?",
+      "start": 302.28,
+      "end": 302.685,
+      "role": "wearer",
+      "loudness": -10.9,
+      "speaker": 0
+    },
+    {
+      "text": "Oh,",
+      "start": 590,
+      "end": 590.27,
+      "role": "wearer",
+      "loudness": -12,
+      "speaker": 0
+    },
+    {
+      "text": "here",
+      "start": 590.33,
+      "end": 590.69,
+      "role": "wearer",
+      "loudness": -10.9,
+      "speaker": 0
+    },
+    {
+      "text": "comes",
+      "start": 590.75,
+      "end": 591.155,
+      "role": "wearer",
+      "loudness": -13,
+      "speaker": 0
+    },
+    {
+      "text": "someone",
+      "start": 591.215,
+      "end": 591.71,
+      "role": "wearer",
+      "loudness": -11.2,
+      "speaker": 0
+    },
+    {
+      "text": "new.",
+      "start": 591.77,
+      "end": 592.085,
+      "role": "wearer",
+      "loudness": -11.8,
+      "speaker": 0
+    },
+    {
+      "text": "I'm",
+      "start": 603,
+      "end": 603.27,
+      "role": "other",
+      "loudness": -28,
+      "speaker": 1
+    },
+    {
+      "text": "Priya.",
+      "start": 603.33,
+      "end": 603.735,
+      "role": "other",
+      "loudness": -26.8,
+      "speaker": 1
+    },
+    {
+      "text": "And",
+      "start": 604.735,
+      "end": 605.05,
+      "role": "wearer",
+      "loudness": -10.5,
+      "speaker": 0
+    },
+    {
+      "text": "this",
+      "start": 605.11,
+      "end": 605.47,
+      "role": "wearer",
+      "loudness": -11.4,
+      "speaker": 0
+    },
+    {
+      "text": "is",
+      "start": 605.53,
+      "end": 605.8,
+      "role": "wearer",
+      "loudness": -12.6,
+      "speaker": 0
+    },
+    {
+      "text": "where",
+      "start": 605.86,
+      "end": 606.265,
+      "role": "wearer",
+      "loudness": -13.3,
+      "speaker": 0
+    },
+    {
+      "text": "we",
+      "start": 606.325,
+      "end": 606.595,
+      "role": "wearer",
+      "loudness": -10.6,
+      "speaker": 0
+    },
+    {
+      "text": "sit.",
+      "start": 606.655,
+      "end": 606.97,
+      "role": "wearer",
+      "loudness": -12.5,
+      "speaker": 0
+    }
+  ]
+}
