@@ -94,6 +94,12 @@ export class Session {
   private inConversation = false
   /** Whether any conversation has begun since Catch started: until one has, anyone's speech begins it (D129). */
   private begun = false
+  /**
+   * How far the audio reached (on the session's timeline) when the wearer last
+   * long-pressed: a word that ended by then was said before the press, so it
+   * is not "the next thing the wearer says" and begins nothing (D52, M2).
+   */
+  private pressedAt = -Infinity
   private otherRun: string[] = []
   private otherCaught = new Set<number>()
   private wearerRun: string[] = []
@@ -211,9 +217,18 @@ export class Session {
     this.render()
   }
 
-  /** A long-press ends the conversation now (D52, D92). What the lens shows stays as it is. */
+  /**
+   * A long-press ends the conversation now (D52, D92). A line or a page
+   * showing goes back to the dot at once, so the end is visible and the ended
+   * conversation's names are never shown after it (operator answer 4).
+   */
   longPress(): void {
+    this.pressedAt = this.coveredUntil
     this.endConversation()
+    if (!this.hearing || this.closed) return
+    this.clearView()
+    this.view = { kind: 'dot' }
+    this.render()
   }
 
   /** Whether a conversation is open. */
@@ -255,13 +270,14 @@ export class Session {
     entry.side = sides.at(-1)!
     // How long ago the word ended, by the audio heard since: the provider's
     // answer comes after the speech, and the quiet is the wearer's (D92).
-    this.hear(word.text, entry.side, Math.max(0, (this.coveredUntil - word.end) * 1000))
+    this.hear(word.text, entry.side, word.end, Math.max(0, (this.coveredUntil - word.end) * 1000))
   }
 
-  private hear(text: string, side: Side, agoMs: number): void {
+  private hear(text: string, side: Side, end: number, agoMs: number): void {
     // D129: the first conversation after Catch starts begins on anyone's
-    // speech; every later one begins on the wearer's.
-    if (!this.inConversation && (side === 'wearer' || !this.begun)) {
+    // speech; every later one begins on the wearer's. Never on a word said
+    // before the last long-press, however late the provider delivers it (D52).
+    if (!this.inConversation && end > this.pressedAt && (side === 'wearer' || !this.begun)) {
       this.inConversation = true
       this.begun = true
       this.restartQuiet(agoMs)

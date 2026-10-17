@@ -4,11 +4,13 @@
 // Beta never ships pointed at a laptop; the shared token /audio demands is
 // built in from VITE_CATCH_TOKEN (the server's CATCH_AUDIO_TOKEN), taken from
 // the environment or the untracked apps/lens/.env.local, never committed.
-// Without it the package still builds, but cannot reach the server, and this
-// says so loudly. Uploading to Even Hub and the Beta group are the operator's.
+// Without it this stops before building (operator answer 6), unless
+// CATCH_ALLOW_NO_TOKEN=1 says this machine only checks that the package
+// builds. Uploading to Even Hub and the Beta group are the operator's.
 import { spawnSync } from 'node:child_process'
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { checkLensToken } from './lens-token.ts'
 
 const root = resolve(import.meta.dirname, '..')
 const lens = join(root, 'apps/lens')
@@ -20,17 +22,10 @@ if (origins.length !== 1) {
 }
 const [server] = origins
 
-/** VITE_CATCH_TOKEN from the environment, or as Vite would read it from apps/lens/.env.local. */
-function token() {
-  if (process.env.VITE_CATCH_TOKEN) return process.env.VITE_CATCH_TOKEN
-  for (const file of ['.env.production.local', '.env.local', '.env.production', '.env']) {
-    const path = join(lens, file)
-    if (!existsSync(path)) continue
-    const line = readFileSync(path, 'utf8').split('\n').find((l) => /^\s*VITE_CATCH_TOKEN\s*=/.test(l))
-    const value = line?.split('=').slice(1).join('=').trim().replace(/^["']|["']$/g, '')
-    if (value) return value
-  }
-  return ''
+const { token, error } = checkLensToken(lens, process.env)
+if (error) {
+  console.error(error)
+  process.exit(1)
 }
 
 function run(cmd, args, env = process.env) {
@@ -58,10 +53,9 @@ if (/wss?:\/\/(localhost|127\.0\.0\.1)/.test(bundle)) {
 run(join(root, 'node_modules/.bin/evenhub'), ['pack', 'apps/lens/app.json', 'apps/lens/dist', '--sdk-ver', '0.0.16', '-o', 'catch.ehpk'])
 
 console.log(`lens:pack: catch.ehpk points at ${server}`)
-if (!token()) {
+if (!token) {
   console.error(
-    '\nlens:pack: WARNING: VITE_CATCH_TOKEN is not set, so this catch.ehpk carries no token and the server will refuse it.\n' +
-      'Do not upload it. Put VITE_CATCH_TOKEN=<the CATCH_AUDIO_TOKEN value> in apps/lens/.env.local and pack again.\n',
+    '\nlens:pack: CATCH_ALLOW_NO_TOKEN=1: this catch.ehpk carries no token and the server will refuse it. Do not upload it.\n',
   )
 } else {
   console.log('lens:pack: the shared token is built in (from VITE_CATCH_TOKEN)')

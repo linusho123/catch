@@ -214,6 +214,27 @@ describe('a session', () => {
       expect(session.names.list()).toEqual(['Marcus'])
     })
 
+    // M1: D92's ten minutes as the ruling's own number, not the product's QUIET_MS,
+    // so a QUIET_MS anywhere off 600 000 ms by more than half a second turns this red.
+    it.each([
+      [599_500, 'the same conversation', ['Priya']],
+      [600_500, 'a new conversation', []],
+    ])('after %i ms of the wearer\'s silence while Dev talks, the wearer speaks again in %s (M1, D92: exactly ten minutes)', (silenceMs, _which, names) => {
+      const { session, say, clock } = setup()
+      session.setHearing(true)
+      // The clock runs with the stream: the wearer's last word ends at stream 0.6 s, judged at clock 0.6 s.
+      clock.advance(600 - clock.now())
+      say('Hello Dev.', 0, WEARER)
+      const wearerDone = 0.6
+      say("I'm Priya.", 1, OTHER)
+      devTalks((t, at, d) => { clock.advance(Math.max(0, at * 1000 - clock.now())); say(t, at, d) }, wearerDone, silenceMs / 1000)
+      const back = wearerDone + silenceMs / 1000
+      clock.advance(back * 1000 - clock.now())
+      say('Where were we?', back, WEARER)
+      expect(session.conversationOpen).toBe(true)
+      expect(session.names.list()).toEqual(names)
+    })
+
     it('measures the quiet from when the wearer\'s last word was said, not from when the provider delivered it', () => {
       const { session, say, frame, word, clock } = setup()
       session.setHearing(true)
@@ -255,6 +276,63 @@ describe('a session', () => {
       say("Hi, I'm Marcus.", 8, OTHER)
       expect(session.names.list()).toEqual(['Marcus'])
     })
+  })
+
+  describe('a long-press while the lens shows something (operator answer 4)', () => {
+    it('clears a showing line to the dot at once, so the end is visible', () => {
+      const { session, views, say } = setup()
+      session.setHearing(true)
+      say('Hello Dev.', 0, WEARER)
+      say("I'm Priya.", 1, OTHER)
+      expect(views.at(-1)!.view).toEqual({ kind: 'line', text: 'Priya' })
+      session.longPress()
+      expect(views.at(-1)!.view).toEqual({ kind: 'dot' })
+    })
+
+    it('clears a showing names page to the dot at once, so the ended conversation\'s names are never shown after it', () => {
+      const { session, views, say, clock } = setup()
+      session.setHearing(true)
+      say('Hello Dev.', 0, WEARER)
+      say("I'm Priya.", 1, OTHER)
+      clock.advance(LINE_MS)
+      session.tap()
+      expect(views.at(-1)!.view).toEqual({ kind: 'names', names: ['Priya'] })
+      session.longPress()
+      expect(views.at(-1)!.view).toEqual({ kind: 'dot' })
+      // The page's own five seconds then change nothing.
+      const after = views.length
+      clock.advance(PAGE_MS)
+      expect(views.length).toBe(after)
+    })
+  })
+
+  it('does not begin the next conversation on a wearer word said before the long-press but delivered after it (M2, D52)', () => {
+    const { session, frame, word, clock } = setup()
+    session.setHearing(true)
+    // The wearer talks from 0 to 2.0 s; "Okay." is delivered at once and begins the conversation.
+    for (let t = 1; t <= 20; t++) frame(t / 10, WEARER)
+    session.words([word('Okay.', 0, 0.3)])
+    expect(session.conversationOpen).toBe(true)
+    // The wearer finishes the sentence and long-presses at 2.0 s ...
+    clock.advance(2000 - clock.now())
+    session.longPress()
+    expect(session.conversationOpen).toBe(false)
+    // ... and the provider's final for "See you." (1.4-2.0 s) lands half a second later.
+    clock.advance(500)
+    frame(2.5, -70)
+    session.words([word('See', 1.4, 1.7), word('you.', 1.7, 2.0)])
+    expect(session.conversationOpen).toBe(false)
+    // Someone else's introduction before the wearer really speaks again is not caught ...
+    for (let t = 26; t <= 36; t++) frame(t / 10, OTHER)
+    session.words([word("I'm", 3.0, 3.3), word('Dana.', 3.3, 3.6)])
+    expect(session.names.list()).toEqual([])
+    // ... and the wearer's next words, said after the press, begin the next conversation.
+    for (let t = 37; t <= 42; t++) frame(t / 10, WEARER)
+    session.words([word('Hello', 3.6, 3.9), word('again.', 3.9, 4.2)])
+    expect(session.conversationOpen).toBe(true)
+    for (let t = 43; t <= 48; t++) frame(t / 10, OTHER)
+    session.words([word("I'm", 4.2, 4.5), word('Marcus.', 4.5, 4.8)])
+    expect(session.names.list()).toEqual(['Marcus'])
   })
 
   it('still never catches the wearer\'s own name after the conversation it was given in has ended (D29)', () => {
