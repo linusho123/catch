@@ -1041,3 +1041,10 @@ D127 2026-10-17 [V] ratifies D125
   resp: signed as drafted: the SDK's per-frame speaker role first, then loudness, then the provider's speaker labels, each answering only whether a word is the wearer's [V]
   touches: D119 D125
 # signed at the P0a block, Saturday afternoon. With the simulator only (D126) the role is `Unknown`, so loudness leads in practice; P1a's two-fixture rule requires only the wearer-louder fixture to pass on the simulator default, the other-louder fixture pinned as known-inverted.
+
+D128 2026-10-17 [V]
+  resp: nothing in the build, its tests or the demo depends on reaching the hosted server: the server runs on the build machine as a first-class path, one command starting it on the loopback with the lens in the simulator pointed at it, and the hosted copy on Fly.io is an extra for the Beta and for testers, never a requirement [V]
+  -> structural
+  serves: N3
+  touches: D126
+# the visionary, Saturday afternoon, after the build machine (reached over Tailscale) could not resolve the Fly host: "The build shouldn't need to fully rely on Fly". The lanes were already offline by construction; this ruling makes the local run the supported way to see Catch work, and the demo's fallback when the hall's network fails.
