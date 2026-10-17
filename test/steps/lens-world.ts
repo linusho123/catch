@@ -30,6 +30,8 @@ export const NAME_BOUND_MS = 2000
 export const LINE_MS = 1500
 /** How far a payload may land from its mark on fixture time: the socket hops between server and lens cost real milliseconds, 20 times over. */
 export const SLACK_MS = 300
+/** D31, D43: a held page stays five seconds with no touch. */
+export const PAGE_MS = 5000
 
 export interface Box {
   x: number
@@ -69,6 +71,12 @@ export interface LensWorld {
   linesBefore?: string[]
   lostAt?: number
   restoredAt?: number
+  /** The page the last tap brought up (holding.feature), and whether a later step has already read it. */
+  page?: Screen
+  pageRead?: boolean
+  /** The names held before the moment the scenario is about, read from a names page or the lines shown. */
+  heldBefore?: string[]
+  pressedAt?: number
 }
 
 let started = false
@@ -250,26 +258,55 @@ export function rememberLines(w: LensWorld): void {
   w.linesBefore = linesShown(w.h!, w.dotSince!, w.h!.clock.now()).map((l) => l.text)
 }
 
+/** The containers a held page draws: the names page's header, names and hint, or the one nothing-held page (D31, D43). */
+export const PAGE_PARTS = ['header', 'names', 'hint', 'empty']
+export const isPage = (s: Screen) => visible(s).length > 0 && visible(s).every((c) => PAGE_PARTS.includes(c.containerName))
+
 /**
  * The wearer taps the glasses (a textEvent with no eventType: CLICK_EVENT is 0
- * and protobuf omits it), and the page that comes back: the names it lists.
+ * and protobuf omits it). Returns the clock reading of the tap.
  */
-export async function tapForNames(w: LensWorld): Promise<string[]> {
+export function tap(w: LensWorld): number {
   const h = w.h!
-  const tappedAt = h.clock.now()
+  const at = h.clock.now()
   h.host.push('textEvent', { containerID: 1, containerName: 'dot' })
-  const page = () => screens(h).find((s) => s.at >= tappedAt && s.containers.some((c) => c.containerName === 'names'))
-  for (let waited = 0; waited < 2000 && !page(); waited += 50) {
+  return at
+}
+
+/** Plays the fixture on (or lets the clock run) until `found` finds something, for at most `ms` of fixture time. */
+export async function waitFor<T>(w: LensWorld, found: () => T | undefined, ms = 2000): Promise<T | undefined> {
+  const h = w.h!
+  for (let waited = 0; waited < ms && found() === undefined; waited += 50) {
     if (w.run) await w.run.playTo(nowSec(w) + 0.05)
     else await h.clock.sleepUntil(h.clock.now() + 50)
   }
-  const shown = page()
-  expect(shown, 'a tap brought up no names page').toBeDefined()
-  const names = visible(shown!).find((c) => c.containerName === 'names')
-  expect(names, 'the names page shows nothing').toBeDefined()
-  expect(names!.brightness, 'the names page is dim').toBe(LOWEST_READABLE)
-  expect(visible(shown!)).toHaveLength(1)
-  return names!.content.split('\n').filter((l) => l.trim() !== '')
+  return found()
+}
+
+/**
+ * The wearer taps and a held page comes up: the page, every part of it dim
+ * (D14) and nothing else on the lens. Kept on the world for the steps that read it.
+ */
+export async function tapForPage(w: LensWorld): Promise<Screen> {
+  const h = w.h!
+  const tappedAt = tap(w)
+  const shown = await waitFor(w, () => screens(h).find((s) => s.at >= tappedAt && isPage(s)))
+  expect(shown, `a tap brought up no page; screens since: ${JSON.stringify(screens(h).filter((s) => s.at >= tappedAt).map((s) => visible(s).map((c) => c.content)))}`).toBeDefined()
+  for (const c of visible(shown!)) expect(c.brightness, `the page's ${c.containerName} is dim`).toBe(LOWEST_READABLE)
+  w.page = shown
+  w.pageRead = false
+  return shown!
+}
+
+/** The names a page lists, in order: none on the nothing-held page. */
+export function namesOn(page: Screen): string[] {
+  const names = visible(page).find((c) => c.containerName === 'names')
+  return names ? names.content.split('\n').filter((l) => l.trim() !== '') : []
+}
+
+/** The wearer taps the glasses, and the names the page that comes back lists. */
+export async function tapForNames(w: LensWorld): Promise<string[]> {
+  return namesOn(await tapForPage(w))
 }
 
 /** The quoted names in a step's text: `"Priya" and "Priya (2)"` is ['Priya', 'Priya (2)']. */

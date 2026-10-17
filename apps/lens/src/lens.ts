@@ -60,7 +60,7 @@ function eventTypeOf(envelope?: { eventType?: OsEventTypeList }): OsEventTypeLis
   return envelope.eventType ?? OsEventTypeList.CLICK_EVENT
 }
 
-function text(containerID: number, containerName: string, content: string, box: { x: number; y: number; w: number; h: number }) {
+function text(containerID: number, containerName: string, content: string, box: { x: number; y: number; w: number; h: number }, capture = true) {
   return new TextContainerProperty({
     xPosition: box.x,
     yPosition: box.y,
@@ -72,8 +72,8 @@ function text(containerID: number, containerName: string, content: string, box: 
     containerName,
     content,
     textColor: DIM,
-    // The one container on every page takes the touches, so tap and double-tap always arrive.
-    isEventCapture: 1,
+    // One container on every page takes the touches, so tap, long-press and double-tap always arrive.
+    isEventCapture: capture ? 1 : 0,
   })
 }
 
@@ -82,8 +82,16 @@ const DOT_BOX = { x: CANVAS.width - 40, y: 0, w: 40, h: 40 }
 /** The lower third (D17). */
 const LINE_BOX = { x: 0, y: 208, w: CANVAS.width, h: 64 }
 const PAGE_BOX = { x: 0, y: 0, w: CANVAS.width, h: CANVAS.height }
+/** The names page (D43): its header on top, the names under it, the hint at the foot. */
+const HEADER_BOX = { x: 0, y: 0, w: CANVAS.width, h: 40 }
+const NAMES_BOX = { x: 0, y: 40, w: CANVAS.width, h: 208 }
+const HINT_BOX = { x: 0, y: 248, w: CANVAS.width, h: 40 }
 
-/** The names page with no names yet (D31's words; P1b finishes the page). */
+/** The names page's header: page 1 of 2, the promises page being the second (D43). */
+export const NAMES_HEADER = 'this conversation 1/2'
+/** The names page's foot: a swipe down turns to the promises (D43; the promises page is P2a's). */
+export const PROMISES_HINT = '↓ promises'
+/** The page when nothing is held (D31). */
 export const NOTHING_HELD = 'this conversation · nothing held'
 
 /** The containers that draw one view. Exactly one thing at a time. */
@@ -96,7 +104,13 @@ export function containersFor(view: LensView): TextContainerProperty[] {
     case 'line':
       return [text(2, 'line', view.text, LINE_BOX)]
     case 'names':
-      return [text(3, 'names', view.names.length > 0 ? view.names.join('\n') : NOTHING_HELD, PAGE_BOX)]
+      // Text containers, not the SDK's list container: a list has no brightness, and every mark Catch draws is dim (D14).
+      if (view.names.length === 0) return [text(3, 'empty', NOTHING_HELD, PAGE_BOX)]
+      return [
+        text(4, 'header', NAMES_HEADER, HEADER_BOX, false),
+        text(3, 'names', view.names.join('\n'), NAMES_BOX),
+        text(5, 'hint', PROMISES_HINT, HINT_BOX, false),
+      ]
   }
 }
 
@@ -117,6 +131,8 @@ export async function startLens(opts: LensOptions): Promise<Lens> {
     void bridge.rebuildPageContainer(new RebuildPageContainer({ containerTotalNum: page.length, textObject: page }))
   }
 
+  /** This launch of the plugin: the server tells a reconnect (the same id) from Catch starting again (D129). */
+  const lensId = Math.random().toString(36).slice(2, 12)
   let seq = 0
   let acked = 0
   let stopped = false
@@ -131,7 +147,7 @@ export async function startLens(opts: LensOptions): Promise<Lens> {
   function connect(): void {
     retry = undefined
     if (stopped) return
-    const ws = new WebSocket(`${server}/audio?token=${encodeURIComponent(opts.token)}`)
+    const ws = new WebSocket(`${server}/audio?token=${encodeURIComponent(opts.token)}&lens=${lensId}`)
     ws.binaryType = 'arraybuffer'
     socket = ws
     closed = new Promise<void>((resolve) => ws.addEventListener('close', () => resolve()))
@@ -199,6 +215,10 @@ export async function startLens(opts: LensOptions): Promise<Lens> {
     // A tap goes to the server, which knows what is showing and what it means there.
     if (textType === OsEventTypeList.CLICK_EVENT || sysType === OsEventTypeList.CLICK_EVENT) {
       sendToServer({ type: 'touch', gesture: 'tap' })
+    }
+    // A long-press ends the conversation now (D52); its release means nothing.
+    if (textType === OsEventTypeList.LONG_PRESS_EVENT || sysType === OsEventTypeList.LONG_PRESS_EVENT) {
+      sendToServer({ type: 'touch', gesture: 'long-press' })
     }
   })
 

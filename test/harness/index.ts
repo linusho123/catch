@@ -35,7 +35,7 @@ export interface Harness {
   stt: FixtureStt
   notifications: NotificationCapture
   model: ModelClient
-  /** Stops the last scenario's lenses (their sockets closed, so nothing of theirs is still in flight), clears the record and sets the clock to zero. */
+  /** Stops the last scenario's lenses (their sockets closed, so nothing of theirs is still in flight), forgets the wearer's session, clears the record and sets the clock to zero. */
   reset(): Promise<void>
   /** Starts the lens against the server; rejects, loudly, if it cannot open /audio. */
   startLens(): Promise<Lens>
@@ -82,6 +82,8 @@ async function start(): Promise<Harness> {
     model,
     async reset() {
       await Promise.all(lenses.splice(0).map((lens) => lens.stop()))
+      // The wearer's session outlives a socket (D79); a scenario starts with none.
+      server.forgetWearers()
       stt.reset()
       clock.reset()
       host.reset(clock)

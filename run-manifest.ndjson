@@ -7,13 +7,13 @@
 {"file":"features/dropped-thread.feature","title":"Someone else takes the floor [3]","status":"unbound"}
 {"file":"features/dropped-thread.feature","title":"The thread clears when the wearer resumes","status":"unbound"}
 {"file":"features/dropped-thread.feature","title":"With automatic detection off, a tap gives the thread back","status":"unbound"}
-{"file":"features/holding.feature","title":"A held page dismisses on its own [1]","status":"unbound"}
-{"file":"features/holding.feature","title":"A held page dismisses on its own [2]","status":"unbound"}
-{"file":"features/holding.feature","title":"A held page dismisses on its own [3]","status":"unbound"}
+{"file":"features/holding.feature","title":"A held page dismisses on its own [1]","status":"passed"}
+{"file":"features/holding.feature","title":"A held page dismisses on its own [2]","status":"passed"}
+{"file":"features/holding.feature","title":"A held page dismisses on its own [3]","status":"passed"}
 {"file":"features/holding.feature","title":"A long-press ends the conversation now","status":"unbound"}
 {"file":"features/holding.feature","title":"A swipe down turns to the promises page","status":"unbound"}
-{"file":"features/holding.feature","title":"A tap shows the names page","status":"unbound"}
-{"file":"features/holding.feature","title":"Nothing held shows an empty page","status":"unbound"}
+{"file":"features/holding.feature","title":"A tap shows the names page","status":"passed"}
+{"file":"features/holding.feature","title":"Nothing held shows an empty page","status":"passed"}
 {"file":"features/holding.feature","title":"Quiet ends a conversation at ten minutes [1]","status":"unbound"}
 {"file":"features/holding.feature","title":"Quiet ends a conversation at ten minutes [2]","status":"unbound"}
 {"file":"features/holding.feature","title":"The promises page with nothing promised","status":"unbound"}

@@ -95,6 +95,8 @@ export class FixtureStt implements SpeechToText {
   private readonly clock: Clock | undefined
   /** The clock reading at each stream the server opened that the provider accepted. */
   readonly opened: number[] = []
+  /** The clock reading at every stream the server tried to open, accepted or refused: how often it knocks while the provider is gone. */
+  readonly attempts: number[] = []
 
   constructor(clock?: Clock) {
     this.clock = clock
@@ -122,6 +124,7 @@ export class FixtureStt implements SpeechToText {
   }
 
   open(onWords: (words: SttWord[]) => void, onError: (err: unknown) => void = () => {}, onOpen?: () => void): SttStream {
+    this.attempts.push(this.clock?.now() ?? Number.NaN)
     if (this.down) {
       // Like a socket that cannot connect: the failure comes back after open() returns.
       queueMicrotask(() => onError(new Error('the speech-to-text provider is unreachable')))
@@ -164,10 +167,12 @@ export class FixtureStt implements SpeechToText {
     this.down = false
   }
 
-  /** Back to a provider that is up, for the next scenario. */
+  /** Back to a provider that is up, with no record of streams, for the next scenario (the clock starts again at zero). */
   reset(): void {
     this.down = false
     this.lost = false
+    this.opened.length = 0
+    this.attempts.length = 0
   }
 
   /**

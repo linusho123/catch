@@ -4,10 +4,10 @@ import { VirtualClock } from '../../../test/harness/clock.ts'
 import { pcmAt } from '../../../test/harness/player.ts'
 import { loudnessSplit } from '../split/split.ts'
 import type { SttWord } from '../stt/types.ts'
-import { FRAME_WAIT_MS, LINE_MS, Session } from './session.ts'
+import { FRAME_WAIT_MS, LINE_MS, PAGE_MS, QUIET_MS, Session } from './session.ts'
 
 // The session on its own: words and frames in, views out, every duration on
-// the injected clock. The features (names, staying-dark) drive it end to end.
+// the injected clock. The features (names, staying-dark, holding) drive it end to end.
 
 const WEARER = -12
 const OTHER = -28
@@ -142,5 +142,183 @@ describe('a session', () => {
     expect(views.at(-1)!.view).toEqual({ kind: 'deaf' })
     session.setHearing(true)
     expect(views.at(-1)!.view).toEqual({ kind: 'dot' })
+  })
+
+  it('shows the names page for five seconds on its clock, then the dot (D31, D43)', () => {
+    const { session, views, say, clock } = setup()
+    session.setHearing(true)
+    say('Hello.', 0, WEARER)
+    say("I'm Priya.", 1, OTHER)
+    clock.advance(LINE_MS)
+    session.tap()
+    const page = views.at(-1)!
+    expect(page.view).toEqual({ kind: 'names', names: ['Priya'] })
+    clock.advance(PAGE_MS - 1)
+    expect(views.at(-1)).toBe(page)
+    clock.advance(1)
+    expect(views.at(-1)!.view).toEqual({ kind: 'dot' })
+  })
+
+  it('clears a line to the dot on a tap and does not open the page over it (D34)', () => {
+    const { session, views, say } = setup()
+    session.setHearing(true)
+    say('Hello.', 0, WEARER)
+    say("I'm Priya.", 1, OTHER)
+    expect(views.at(-1)!.view).toEqual({ kind: 'line', text: 'Priya' })
+    session.tap()
+    expect(views.at(-1)!.view).toEqual({ kind: 'dot' })
+  })
+
+  describe('the conversation boundary (D92, D129)', () => {
+    /** This clock also runs with the wall (speed 1), so an edge is checked a few milliseconds either side. */
+    const EDGE_MS = 20
+    /** Dev talks every 45 s through `seconds` of the wearer's silence from stream second `from`. */
+    const devTalks = (say: (t: string, s: number, d: number) => void, from: number, seconds: number) => {
+      for (let t = from + 20; t < from + seconds - 3; t += 45) say('So anyway, the launch went fine.', t, OTHER)
+    }
+
+    it('stays the same conversation after nine minutes of the wearer\'s silence while Dev talks (D55)', () => {
+      const { session, say, clock } = setup()
+      session.setHearing(true)
+      say('Hello Dev.', 0, WEARER)
+      say("I'm Priya.", 1, OTHER)
+      const wearerDone = 1.6
+      devTalks((t, at, d) => { clock.advance(Math.max(0, at * 1000 - clock.now())); say(t, at, d) }, wearerDone, 540)
+      clock.advance(wearerDone * 1000 + 540_000 - clock.now())
+      say('Where were we?', wearerDone + 540, WEARER)
+      expect(session.conversationOpen).toBe(true)
+      expect(session.names.list()).toEqual(['Priya'])
+    })
+
+    it('ends the conversation at ten minutes of the wearer\'s silence, whatever Dev says, and clears its names (D56, D92)', () => {
+      const { session, views, say, clock } = setup()
+      session.setHearing(true)
+      say('Hello Dev.', 0, WEARER)
+      // The clock when the wearer's last word was judged (its audio was all in, so no time ago).
+      const spoke = clock.now()
+      say("I'm Priya.", 1, OTHER)
+      devTalks((t, at, d) => { clock.advance(Math.max(0, at * 1000 - clock.now())); say(t, at, d) }, 0.6, 600)
+      clock.advance(spoke + QUIET_MS - EDGE_MS - clock.now())
+      expect(session.conversationOpen).toBe(true)
+      clock.advance(2 * EDGE_MS)
+      expect(session.conversationOpen).toBe(false)
+      expect(session.names.list()).toEqual([])
+      // Someone else speaking does not begin the next conversation; nothing they say is caught ...
+      say("Hi, I'm Dana.", 602, OTHER)
+      expect(session.conversationOpen).toBe(false)
+      expect(views.filter((v) => v.view.kind === 'line').map((v) => v.view)).toEqual([{ kind: 'line', text: 'Priya' }])
+      // ... the wearer's next speech does.
+      say('Sorry, where were we?', 605, WEARER)
+      expect(session.conversationOpen).toBe(true)
+      say("Hi, I'm Marcus.", 608, OTHER)
+      expect(session.names.list()).toEqual(['Marcus'])
+    })
+
+    it('measures the quiet from when the wearer\'s last word was said, not from when the provider delivered it', () => {
+      const { session, say, frame, word, clock } = setup()
+      session.setHearing(true)
+      say('Hello.', 0, WEARER)
+      // The wearer's word ends at 1.5 s; the provider delivers it two seconds of audio later.
+      for (let t = 11; t <= 35; t++) frame(t / 10, t <= 15 ? WEARER : -70)
+      const heard = clock.now()
+      session.words([word('Okay.', 1.2, 1.5)])
+      clock.advance(heard + QUIET_MS - 2000 - EDGE_MS - clock.now())
+      expect(session.conversationOpen).toBe(true)
+      clock.advance(2 * EDGE_MS)
+      expect(session.conversationOpen).toBe(false)
+    })
+
+    it('ends the first conversation ten minutes after it began on someone else\'s speech, if the wearer never speaks (D129)', () => {
+      const { session, say, clock } = setup()
+      session.setHearing(true)
+      say("Hi, I'm Priya.", 0, OTHER)
+      expect(session.conversationOpen).toBe(true)
+      clock.advance(QUIET_MS + 1000)
+      expect(session.conversationOpen).toBe(false)
+      expect(session.names.list()).toEqual([])
+    })
+
+    it('ends the conversation on a long-press: its names clear and the next tap shows nothing held (D52)', () => {
+      const { session, views, say, clock } = setup()
+      session.setHearing(true)
+      say('Hello Dev.', 0, WEARER)
+      say("I'm Priya.", 1, OTHER)
+      clock.advance(LINE_MS)
+      session.longPress()
+      expect(session.conversationOpen).toBe(false)
+      session.tap()
+      expect(views.at(-1)!.view).toEqual({ kind: 'names', names: [] })
+      session.tap()
+      say("Hi, I'm Dana.", 4, OTHER)
+      expect(session.names.list()).toEqual([])
+      say('Oh, hello again.', 6, WEARER)
+      say("Hi, I'm Marcus.", 8, OTHER)
+      expect(session.names.list()).toEqual(['Marcus'])
+    })
+  })
+
+  it('still never catches the wearer\'s own name after the conversation it was given in has ended (D29)', () => {
+    const { session, say } = setup()
+    session.setHearing(true)
+    say("Hi, I'm Linus.", 0, WEARER)
+    session.longPress()
+    say('Right, a new one.', 3, WEARER)
+    say('Everyone, this is Linus.', 5, OTHER)
+    expect(session.conversationOpen).toBe(true)
+    expect(session.names.list()).toEqual([])
+  })
+
+  describe('one wearer, many sockets (D79)', () => {
+    it('keeps the conversation, its names and the wearer\'s own name when the lens comes back, and shows the newer lens the dot', () => {
+      const { session, say, clock } = setup()
+      session.setHearing(true)
+      say("Hi, I'm Linus.", 0, WEARER)
+      say("I'm Priya.", 2, OTHER)
+      clock.advance(LINE_MS)
+      const again: LensView[] = []
+      session.attach((view) => again.push(view), { lens: undefined })
+      expect(again).toEqual([])
+      session.setHearing(true)
+      expect(again).toEqual([{ kind: 'dot' }])
+      say('Everyone, this is Linus.', 5, OTHER)
+      expect(session.conversationOpen).toBe(true)
+      expect(session.names.list()).toEqual(['Priya'])
+    })
+
+    it('tells a lens a newer one replaced that it cannot hear, and ignores its going', () => {
+      const clock = new VirtualClock(1)
+      const session = new Session({ clock, split: loudnessSplit() })
+      const first: LensView[] = []
+      let replaced = false
+      const a = session.attach((view) => first.push(view), { lens: 'x', onReplaced: () => (replaced = true) })
+      session.setHearing(true)
+      const second: LensView[] = []
+      const b = session.attach((view) => second.push(view), { lens: 'x' })
+      expect(replaced).toBe(true)
+      expect(a.active).toBe(false)
+      expect(first.at(-1)).toEqual({ kind: 'deaf' })
+      session.setHearing(true)
+      a.detach()
+      expect(b.active).toBe(true)
+      expect(second.at(-1)).toEqual({ kind: 'dot' })
+    })
+
+    it('begins the next conversation on anyone\'s speech when Catch starts again with none open, but not on a reconnect (D129)', () => {
+      const { session, say } = setup()
+      session.attach(() => {}, { lens: 'first' })
+      session.setHearing(true)
+      say('Hello Dev.', 0, WEARER)
+      session.longPress()
+      // The same launch reconnecting: the next conversation still waits for the wearer.
+      session.attach(() => {}, { lens: 'first' })
+      session.setHearing(true)
+      say("Hi, I'm Dana.", 2, OTHER)
+      expect(session.names.list()).toEqual([])
+      // A new launch of the plugin: Catch has started again.
+      session.attach(() => {}, { lens: 'second' })
+      session.setHearing(true)
+      say("Hi, I'm Priya.", 4, OTHER)
+      expect(session.names.list()).toEqual(['Priya'])
+    })
   })
 })

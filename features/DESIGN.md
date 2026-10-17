@@ -15,6 +15,7 @@ The orienting document for the agent that builds Catch, with the human as second
 - The server is where speech-to-text, the wearer/other split, the catch detectors, the joggers and the stores live; the lens app streams audio up and draws what comes down. [chosen]
 - What comes down is a view (the dot, no mark, one line, the names page), each timed on the server's clock; the lens keeps no timer of its own but its reconnect, sends its taps up, and decides alone only that with no server Catch cannot hear. [chosen]
 - One wearer per account: a pair of glasses delivers to exactly one phone. [ruled: D79]
+- The conversation is the wearer's, not the connection's: the server keeps one session per account, keyed by the shared token, so a lens that loses its socket and comes back finds its conversation, its held names and the wearer's own name as it left them; the newest socket counts. A fresh launch of the plugin counts as Catch starting (D129) only when no conversation is open. [chosen]
 - Catch hears English only. [ruled: D78]
 
 ## The lens, exactly
@@ -22,6 +23,7 @@ The orienting document for the agent that builds Catch, with the human as second
 - Idle: a single dim dot at the lowest brightness, top right. No dot means Catch cannot hear; a dim dash means the wearer paused it. [ruled: D14]
 - Gestures, with two meanings each depending on what is showing: tap opens the held page when only the dot shows and clears any line otherwise; long-press ends the conversation now; swipe up asks to keep the conversation when only the dot shows and scrolls back on a page; swipe down pauses or resumes when only the dot shows, declines the keep prompt, turns the names page to promises, and scrolls. Double-tap is Even's exit. [ruled: D34, D40, D43, D86, D92]
 - The held page: names in the order heard, scrolling past twenty, then the promises page, the wearer's own first, then those owed; the page dismisses on a tap or after five seconds. [ruled: D43]
+- The names page is drawn as three dim text containers (the header `this conversation 1/2`, the names one per line, the hint `↓ promises` at the foot) and the empty page as one; not the SDK's list container, which takes no brightness. [chosen]
 - With automatic cut-off detection switched off by the operator, a tap on the bare dot opens the held page with the wearer's last six words as its first line, so the thread can still be asked for. [ruled: D120]
 - The lens never shows two things at once: the newest wins; an unanswered keep prompt returns after the line that displaced it. [ruled: D32, D40]
 - The thread is the wearer's most recent continuous run of speech, last six words, never reaching back across someone else's turn. [ruled: D48]
@@ -79,3 +81,4 @@ The orienting document for the agent that builds Catch, with the human as second
 - 2026-10-17 — D129 at the P1a questions: the first conversation after Catch starts begins on anyone's speech, so the demo opener's introduction is caught; one ruled line changed.
 - 2026-10-17 — P1a fix round: the glyphs `chosen` line now says only that the check was done in the simulator (M4). No ruled line touched.
 - 2026-10-17 — D130: the phone's screens return on the plugin's own phone page in Even Hub; P4 and P5 required and in the demo build; one ruled line changed.
+- 2026-10-17 — P1b: two `chosen` lines: the conversation held per account across lost sockets (the operator's carry, under D79); the names page as dim text containers rather than the SDK's list container. No ruled line touched.

@@ -1,0 +1,171 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "blip",
+  "variant": "other-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "Hi, I'm Linus."
+    },
+    {
+      "at": 2,
+      "who": "Priya",
+      "text": "Hi, I'm Priya."
+    },
+    {
+      "at": 10,
+      "who": "Marcus",
+      "text": "Everyone, this is Linus."
+    },
+    {
+      "gap": 0.6,
+      "who": "Marcus",
+      "text": "And I'm Marcus."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Good to see you."
+    }
+  ],
+  "words": [
+    {
+      "text": "Hi,",
+      "start": 0,
+      "end": 0.27,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "I'm",
+      "start": 0.33,
+      "end": 0.6,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "Linus.",
+      "start": 0.66,
+      "end": 1.065,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "Hi,",
+      "start": 2,
+      "end": 2.27,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "I'm",
+      "start": 2.33,
+      "end": 2.6,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "Priya.",
+      "start": 2.66,
+      "end": 3.065,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 1
+    },
+    {
+      "text": "Everyone,",
+      "start": 10,
+      "end": 10.54,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 2
+    },
+    {
+      "text": "this",
+      "start": 10.6,
+      "end": 10.96,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 2
+    },
+    {
+      "text": "is",
+      "start": 11.02,
+      "end": 11.29,
+      "role": "other",
+      "loudness": -14.6,
+      "speaker": 2
+    },
+    {
+      "text": "Linus.",
+      "start": 11.35,
+      "end": 11.755,
+      "role": "other",
+      "loudness": -12.7,
+      "speaker": 2
+    },
+    {
+      "text": "And",
+      "start": 12.355,
+      "end": 12.67,
+      "role": "other",
+      "loudness": -14.2,
+      "speaker": 2
+    },
+    {
+      "text": "I'm",
+      "start": 12.73,
+      "end": 13,
+      "role": "other",
+      "loudness": -13.6,
+      "speaker": 2
+    },
+    {
+      "text": "Marcus.",
+      "start": 13.06,
+      "end": 13.51,
+      "role": "other",
+      "loudness": -14.5,
+      "speaker": 2
+    },
+    {
+      "text": "Good",
+      "start": 14.51,
+      "end": 14.87,
+      "role": "wearer",
+      "loudness": -26.7,
+      "speaker": 0
+    },
+    {
+      "text": "to",
+      "start": 14.93,
+      "end": 15.2,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "see",
+      "start": 15.26,
+      "end": 15.575,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "you.",
+      "start": 15.635,
+      "end": 15.95,
+      "role": "wearer",
+      "loudness": -26.6,
+      "speaker": 0
+    }
+  ]
+}

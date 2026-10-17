@@ -15,8 +15,12 @@ import type { SpeechToText, SttStream, SttWord } from './stt/types.ts'
 
 // The server: GET /health, the SQLite store opened, and a WebSocket at /audio
 // that accepts lens frames (shared/wire.ts), acknowledges each with the byte
-// count of its PCM, and feeds them to one speech-to-text stream per session.
-// Each session (catch/session.ts) lines the words up with the frames, splits
+// count of its PCM, and feeds them to one speech-to-text stream per socket.
+// The session (catch/session.ts) is the wearer's, not the socket's: one wearer
+// per account (D79), keyed by the shared token, so a lens that loses its
+// socket and comes back finds its conversation, held names and own name as it
+// left them; the newest socket for a token is the one that counts, and an
+// older one still open is told it cannot hear. The session lines the words up with the frames, splits
 // the wearer from everyone else, catches names, and sends the lens what to
 // show (shared/lens-protocol.ts); the lens sends its taps back. A lost
 // speech-to-text stream hides the dot and is reopened every STT_RETRY_MS until
@@ -74,8 +78,10 @@ export const MAX_AUDIO_MESSAGE_BYTES = 64 * 1024
 
 const digest = (s: string) => createHash('sha256').update(s).digest()
 
+const params = (req: IncomingMessage) => new URL(req.url ?? '/', 'http://localhost').searchParams
+
 function carriesToken(req: IncomingMessage, expected: Buffer): boolean {
-  const given = new URL(req.url ?? '/', 'http://localhost').searchParams.get('token')
+  const given = params(req).get('token')
   return given !== null && timingSafeEqual(digest(given), expected)
 }
 
@@ -84,6 +90,11 @@ export interface RunningServer {
   store: Store
   clock: Clock
   events: EventEmitter<ServerEvents>
+  /**
+   * Drops every wearer's in-memory session, as a restart of the process would
+   * (P9 makes them survive one). The test harness calls it between scenarios.
+   */
+  forgetWearers(): void
   close(): Promise<void>
 }
 
@@ -107,6 +118,8 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   const split = opts.split ?? createSplit()
   const events = new EventEmitter<ServerEvents>()
   let sessions = 0
+  /** One session per wearer, keyed by the digest of the shared token their lens carries (D79). */
+  const wearers = new Map<string, Session>()
 
   const http = createServer((req: IncomingMessage, res: ServerResponse) => {
     if (req.method === 'OPTIONS') {
@@ -127,12 +140,14 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     maxPayload: MAX_AUDIO_MESSAGE_BYTES,
     verifyClient: (info, done) => (carriesToken(info.req, expectedToken) ? done(true) : done(false, 401, 'Unauthorized')),
   })
-  wss.on('connection', (socket) => {
+  wss.on('connection', (socket, req) => {
     const session = ++sessions
     const send = (msg: ServerMessage) => {
       if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(msg))
     }
-    const lens = new Session({ clock, split, wearerName: opts.wearerName, show: (view: LensView) => send({ type: 'show', view }) })
+    const wearer = digest(params(req).get('token') ?? '').toString('hex')
+    const lens = wearers.get(wearer) ?? new Session({ clock, split, wearerName: opts.wearerName })
+    wearers.set(wearer, lens)
 
     // One speech-to-text stream at a time; a lost one is reopened on the clock.
     // `zero` is where the stream's first audio starts on the session's
@@ -141,13 +156,22 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     let attempt: object | undefined
     let retry: TimerHandle | undefined
     let closed = false
+    const stopStream = () => {
+      closed = true
+      if (retry) clock.clearTimeout(retry)
+      stream?.stt?.close()
+    }
+    const attachment = lens.attach((view: LensView) => send({ type: 'show', view }), {
+      lens: params(req).get('lens') ?? undefined,
+      onReplaced: stopStream,
+    })
     const openStream = () => {
       retry = undefined
       if (!opts.stt || closed) return
       const mine: Feed = {}
       attempt = mine
       let lost = false
-      const live = () => attempt === mine && !lost
+      const live = () => attempt === mine && !lost && attachment.active
       let opened: SttStream | undefined = undefined
       opened = opts.stt.open(
         (raw) => {
@@ -176,20 +200,22 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     }
     openStream()
 
+    // The socket goes, the conversation stays (D79): the session only learns it cannot hear this lens.
     socket.on('close', () => {
-      closed = true
-      if (retry) clock.clearTimeout(retry)
-      stream?.stt?.close()
-      lens.close()
+      stopStream()
+      attachment.detach()
     })
     // An oversized message makes ws emit 'error' and close the socket with 1009;
     // unheard, that error would take the whole process down.
     socket.on('error', () => socket.terminate())
     socket.on('message', (data, isBinary) => {
+      // A socket a newer lens has replaced no longer speaks for the wearer.
+      if (!attachment.active) return
       const bytes = data instanceof Buffer ? data : Buffer.concat(data as Buffer[])
       if (!isBinary) {
         const msg = parseLensMessage(bytes.toString('utf8'))
         if (msg?.type === 'touch' && msg.gesture === 'tap') lens.tap()
+        if (msg?.type === 'touch' && msg.gesture === 'long-press') lens.longPress()
         return
       }
       try {
@@ -215,6 +241,10 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     store,
     clock,
     events,
+    forgetWearers() {
+      for (const session of wearers.values()) session.close()
+      wearers.clear()
+    },
     async close() {
       for (const client of wss.clients) client.terminate()
       await new Promise<void>((resolve) => wss.close(() => resolve()))

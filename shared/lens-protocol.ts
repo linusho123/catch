@@ -14,7 +14,7 @@ export type LensView =
   | { kind: 'deaf' }
   /** One catch: a dim line in the lower third for a second and a half (D17). */
   | { kind: 'line'; text: string }
-  /** The held names, in the order heard (the minimal page P1b finishes). */
+  /** The names page (D43): the held names in the order heard; none held is D31's empty page. */
   | { kind: 'names'; names: string[] }
 
 /** Server to lens. */
@@ -23,7 +23,8 @@ export type ServerMessage =
   | { type: 'show'; view: LensView }
   | { type: 'error'; message: string }
 
-export type Gesture = 'tap'
+/** A tap; a long-press ends the conversation now (D52). Double-tap is Even's exit and never leaves the lens. */
+export type Gesture = 'tap' | 'long-press'
 
 /** Lens to server. */
 export type LensMessage = { type: 'touch'; gesture: Gesture }
@@ -31,7 +32,7 @@ export type LensMessage = { type: 'touch'; gesture: Gesture }
 export function parseLensMessage(raw: string): LensMessage | null {
   try {
     const msg = JSON.parse(raw) as Partial<LensMessage>
-    if (msg.type === 'touch' && msg.gesture === 'tap') return { type: 'touch', gesture: 'tap' }
+    if (msg.type === 'touch' && (msg.gesture === 'tap' || msg.gesture === 'long-press')) return { type: 'touch', gesture: msg.gesture }
   } catch {
     // not JSON: ignored like any other message the server does not know
   }

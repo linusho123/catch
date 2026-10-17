@@ -45,6 +45,29 @@ const SMALL_TALK_TURNS: [who: string, text: string][] = [
   ['Dev', 'Right, the tacos are the best thing there now.'],
 ]
 
+/** Dev talking on through the wearer's silence (D92: the room's talk never keeps a conversation open). */
+const DEV_FILLER = ['The launch went fine.', 'Batch two was late.', 'We need more boxes.', 'Strange weather lately.']
+
+/**
+ * D55, D56, D92: the wearer talks with Dev, Priya introduces herself, the
+ * wearer promises Dev the deck (ending at second 8 exactly), then says nothing
+ * for `silence` seconds while Dev keeps talking, a short line about every 50
+ * seconds and once just before the wearer speaks again (short, so the
+ * scenario stays cheap: every word is played, the silences skipped).
+ */
+function quiet(silence: number): ScriptLine[] {
+  const back = 8 + silence
+  const lines: ScriptLine[] = [
+    { at: 0, who: 'wearer', text: 'Hey Dev, how is it going?' },
+    { at: 2.5, who: 'Priya', text: "Hi, I'm Priya." },
+    { at: 6, who: 'wearer', text: "Dev, I'll send you the deck.", span: 2 },
+  ]
+  for (let at = 28, i = 0; at < back - 8; at += 50, i++) lines.push({ at, who: 'Dev', text: DEV_FILLER[i % DEV_FILLER.length]! })
+  lines.push({ at: back - 4, who: 'Dev', text: 'Anyway, that is my week.', span: 2 })
+  lines.push({ at: back, who: 'wearer', text: 'Sorry, where were we?' })
+  return lines
+}
+
 const SMALL_TALK: ScriptLine[] = (() => {
   const lines: ScriptLine[] = []
   // The turns run in order, round and round: 45 of them run just past three minutes.
@@ -164,6 +187,55 @@ export const SCRIPTS: Record<string, ScriptLine[]> = {
   // D14, D16, D37: three minutes of talk with Dev in which nobody introduces
   // themselves, the wearer makes no promise, and nobody cuts the wearer off.
   'small-talk': SMALL_TALK,
+
+  // P1b.
+
+  // D43: Priya, Marcus and Dana introduce themselves; the wearer promises Dev
+  // the deck and an intro to Sam; Dev promises the agenda (held from P2a).
+  'held-page': [
+    { at: 0, who: 'wearer', text: 'Hi everyone, good to see you all.' },
+    { at: 3, who: 'Priya', text: "Hi, I'm Priya." },
+    { gap: 0.8, who: 'Marcus', text: 'My name is Marcus.' },
+    { gap: 0.8, who: 'Dana', text: 'Dana, nice to meet you.' },
+    { gap: 2, who: 'wearer', text: "Dev, I'll send you the deck." },
+    { gap: 1, who: 'wearer', text: "And I'll introduce you to Sam." },
+    { gap: 1, who: 'Dev', text: "Great, I'll send you the agenda." },
+    { gap: 1, who: 'wearer', text: 'Perfect, thanks.' },
+  ],
+  // D55 and D56 (as D92 reads them): nine minutes, and ten minutes and one second, of the wearer's silence.
+  'quiet-9min': quiet(540),
+  'quiet-10min1s': quiet(601),
+  // D52: twenty minutes with Dev (the wearer speaks every four minutes, so
+  // quiet never ends it), Priya at the start, the promise; the long-press
+  // comes at 1200 s. Then Dana introduces herself before the wearer speaks
+  // (no conversation is open, so she is not caught), the wearer speaks, and
+  // Marcus introduces himself in the new conversation.
+  'long-press': [
+    { at: 0, who: 'wearer', text: 'Hey Dev, thanks for making the time.' },
+    { at: 3, who: 'Priya', text: "Hi, I'm Priya." },
+    { gap: 1, who: 'wearer', text: "Dev, I'll send you the deck tonight." },
+    { at: 240, who: 'wearer', text: 'So where does the budget stand?' },
+    { gap: 1, who: 'Dev', text: 'Still waiting on finance.' },
+    { at: 480, who: 'wearer', text: 'And the hiring plan?' },
+    { gap: 1, who: 'Dev', text: 'Two more people by spring.' },
+    { at: 720, who: 'wearer', text: 'What about the office move?' },
+    { gap: 1, who: 'Dev', text: 'Pushed to the summer.' },
+    { at: 960, who: 'wearer', text: 'Okay, that helps a lot.' },
+    { at: 1190, who: 'wearer', text: 'Anyway, that is all I had.' },
+    { at: 1203, who: 'Dana', text: "Hi, I'm Dana." },
+    { at: 1209, who: 'wearer', text: 'Oh, hello again.' },
+    { at: 1212, who: 'Marcus', text: "Hi, I'm Marcus." },
+  ],
+  // The operator's P1b carry (a): the wearer gives their name, Priya
+  // introduces herself, the lens loses its socket at about 6 s and comes back;
+  // then Marcus names the wearer and himself.
+  blip: [
+    { at: 0, who: 'wearer', text: "Hi, I'm Linus." },
+    { at: 2, who: 'Priya', text: "Hi, I'm Priya." },
+    { at: 10, who: 'Marcus', text: 'Everyone, this is Linus.' },
+    { gap: 0.6, who: 'Marcus', text: "And I'm Marcus." },
+    { gap: 1, who: 'wearer', text: 'Good to see you.' },
+  ],
 }
 
 export const VARIANTS = ['wearer-louder', 'other-louder'] as const

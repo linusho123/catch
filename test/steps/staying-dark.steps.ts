@@ -24,6 +24,20 @@ import {
 
 const TALK = 'small-talk.wearer-louder'
 
+/**
+ * D37's "the moment Catch can hear again": the dot is back within a second of
+ * the provider answering, and the server knocks at least that often while it
+ * is gone, so the moment does not depend on where in the outage the provider returns.
+ */
+const MOMENT_MS = 1000
+/**
+ * The outage, in fixture seconds: one minute, ending on a whole second that a
+ * one-second retry meets and a two-, three-, four- or five-second one does
+ * not (operator, P1b: a 5 s retry must turn this red; at exactly 60 s every
+ * retry dividing sixty would meet the provider's return).
+ */
+const OUTAGE_S = 61
+
 const stayingDark: Definer<LensWorld> = (reg) => {
   // D14
   reg.define(/^the wearer is in a conversation in which nothing has slipped$/, async (w) => {
@@ -98,7 +112,7 @@ const stayingDark: Definer<LensWorld> = (reg) => {
     w.lostAt = h.clock.now()
     h.stt.loseConnection()
     // The conversation goes on while Catch cannot hear.
-    await playTo(w, w.run!.seconds(w.lostAt) + 60)
+    await playTo(w, w.run!.seconds(w.lostAt) + OUTAGE_S)
     w.restoredAt = h.clock.now()
     h.stt.restore()
   })
@@ -116,10 +130,16 @@ const stayingDark: Definer<LensWorld> = (reg) => {
   reg.define(/^the wearer sees the dot return the moment Catch can hear again$/, async (w) => {
     const h = w.h!
     await playTo(w, w.run!.seconds(w.restoredAt!) + 3)
-    // Catch can hear again when the provider takes a stream once more.
+    // While the provider was gone the server kept knocking, never more than a moment apart ...
+    const knocks = [w.lostAt!, ...h.stt.attempts.filter((at) => at > w.lostAt! && at < w.restoredAt!), w.restoredAt!]
+    expect(knocks.length, 'the server never tried the provider again while it was gone').toBeGreaterThan(2)
+    for (let i = 1; i < knocks.length; i++) {
+      expect(knocks[i]! - knocks[i - 1]!, `the server went ${knocks[i]! - knocks[i - 1]!} ms without trying the provider`).toBeLessThanOrEqual(MOMENT_MS + SLACK_MS)
+    }
+    // ... and Catch can hear again when the provider takes a stream once more.
     const heard = h.stt.opened.find((at) => at >= w.restoredAt!)
     expect(heard, 'the server never opened a new speech-to-text stream').toBeDefined()
-    expect(heard! - w.restoredAt!, `the server took ${heard! - w.restoredAt!} ms to reach the provider again`).toBeLessThanOrEqual(1000 + SLACK_MS)
+    expect(heard! - w.restoredAt!, `the server took ${heard! - w.restoredAt!} ms to reach the provider again`).toBeLessThanOrEqual(MOMENT_MS + SLACK_MS)
     const back = screens(h).find((s) => s.at >= w.restoredAt! && isDotOnly(s))
     expect(back, 'the dot never came back').toBeDefined()
     expect(back!.at).toBeGreaterThanOrEqual(heard!)

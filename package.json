@@ -16,7 +16,7 @@
     "local": "node --env-file-if-exists=.env scripts/local.mjs",
     "lens:dev": "vite apps/lens",
     "lens:build": "vite build apps/lens",
-    "lens:pack": "npm run lens:build && evenhub pack apps/lens/app.json apps/lens/dist --sdk-ver 0.0.16 -o catch.ehpk",
+    "lens:pack": "node scripts/pack-lens.mjs",
     "lens:simulate": "evenhub-simulator http://localhost:5173",
     "fixtures": "node test/fixtures/make-fixtures.ts",
     "fixtures:print": "node test/fixtures/print-words.ts"

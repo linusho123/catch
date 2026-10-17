@@ -11,9 +11,9 @@ import type { LensView, ServerMessage } from '../../shared/lens-protocol.ts'
 // D37 at the server's edge: when the speech-to-text stream drops, the server
 // tells the lens there is no dot, keeps trying the provider, and sends the dot
 // the moment a stream opens again, at whatever moment the provider returns
-// (the staying-dark feature returns it after exactly one minute, which any
-// retry cadence dividing sixty seconds would meet). Read from what the lens is
-// sent over /audio.
+// (the staying-dark feature returns it after 61 seconds and checks that the
+// server tries the provider at least once a second while it is gone). Read
+// from what the lens is sent over /audio.
 
 const TOKEN = 'stt-reconnect-token'
 /** "The moment it can": within a second of the provider answering again (the server's retry, STT_RETRY_MS). */

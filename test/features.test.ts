@@ -4,6 +4,7 @@ import { basename, join, resolve } from 'node:path'
 import { afterAll } from 'vitest'
 import { runFeatures, type Definer, type WipEntry } from 'gherkin-node-test/vitest'
 import { closeHarness } from './steps/lens-world.ts'
+import holding from './steps/holding.steps.ts'
 import names from './steps/names.steps.ts'
 import stayingDark from './steps/staying-dark.steps.ts'
 
@@ -22,7 +23,19 @@ const FEATURE_DIR = join(ROOT, 'features')
 // The wip register: features (or scenarios) not yet bound. It only shrinks.
 const WIP: WipEntry[] = [
   'dropped-thread',
-  'holding',
+  // P1b binds D43's names page, D31 and the dismissal; these wait for P2a (the
+  // promises page; the phone's half of the end), P4 (the keep) and P10 (scrolling).
+  // The lens steps of the two ends are bound, and first run when P2a binds the phone.
+  {
+    feature: 'holding',
+    scenarios: [
+      'A swipe down turns to the promises page',
+      'Thirty names scroll before the promises page',
+      'The promises page with nothing promised',
+      'Quiet ends a conversation at ten minutes',
+      'A long-press ends the conversation now',
+    ],
+  },
   'kept-conversations',
   'phone-handoff',
   'promises',
@@ -40,6 +53,7 @@ const WIP: WipEntry[] = [
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- each feature's world type is its own
 const definers: Record<string, Definer<any>> = {
+  holding,
   names,
   'staying-dark': stayingDark,
 }

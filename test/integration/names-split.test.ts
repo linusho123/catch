@@ -6,7 +6,7 @@ import { FixtureRun, FixtureStt } from '../harness/player.ts'
 import { startServer, type RunningServer } from '../../server/src/app.ts'
 import { createSplit, SPLIT_NAMES, type SplitName } from '../../server/src/split/split.ts'
 import { VARIANTS, type Variant } from '../fixtures/scripts.ts'
-import { isDotOnly, lineIn, linesShown, NAME_BOUND_MS, screenAt, screens, visible } from '../steps/lens-world.ts'
+import { isDotOnly, isPage, lineIn, linesShown, NAME_BOUND_MS, namesOn, screenAt, screens } from '../steps/lens-world.ts'
 
 // The two-fixture rule for P1a (BUILD-PLAN.md, Acceptance bars; D127): the
 // names catches through the whole pipeline (fixture frames through the real
@@ -67,6 +67,7 @@ interface Played extends Outcome {
  */
 async function play(split: SplitName, fixture: string, until: number, opts: { to?: Served; outage?: { from: number; to: number } } = {}): Promise<Played> {
   const { server, stt } = opts.to ?? servers.get(split)!
+  server.forgetWearers()
   stt.reset()
   clock.reset()
   host.reset(clock)
@@ -95,10 +96,9 @@ async function play(split: SplitName, fixture: string, until: number, opts: { to
     const lines = shown.map((l) => l.text)
     const tappedAt = clock.now()
     host.push('textEvent', { containerID: 1 })
-    const page = () => screens({ host }).find((s) => s.at >= tappedAt && s.containers.some((c) => c.containerName === 'names'))
+    const page = () => screens({ host }).find((s) => s.at >= tappedAt && isPage(s))
     await waitUntil(() => page() !== undefined)
-    const content = visible(page()!).find((c) => c.containerName === 'names')!.content
-    return { lines, page: content === 'this conversation · nothing held' ? [] : content.split('\n'), run, shown }
+    return { lines, page: namesOn(page()!), run, shown }
   } finally {
     await lens.stop()
   }

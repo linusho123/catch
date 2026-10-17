@@ -1,0 +1,649 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "quiet-10min1s",
+  "variant": "wearer-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "Hey Dev, how is it going?"
+    },
+    {
+      "at": 2.5,
+      "who": "Priya",
+      "text": "Hi, I'm Priya."
+    },
+    {
+      "at": 6,
+      "who": "wearer",
+      "text": "Dev, I'll send you the deck.",
+      "span": 2
+    },
+    {
+      "at": 28,
+      "who": "Dev",
+      "text": "The launch went fine."
+    },
+    {
+      "at": 78,
+      "who": "Dev",
+      "text": "Batch two was late."
+    },
+    {
+      "at": 128,
+      "who": "Dev",
+      "text": "We need more boxes."
+    },
+    {
+      "at": 178,
+      "who": "Dev",
+      "text": "Strange weather lately."
+    },
+    {
+      "at": 228,
+      "who": "Dev",
+      "text": "The launch went fine."
+    },
+    {
+      "at": 278,
+      "who": "Dev",
+      "text": "Batch two was late."
+    },
+    {
+      "at": 328,
+      "who": "Dev",
+      "text": "We need more boxes."
+    },
+    {
+      "at": 378,
+      "who": "Dev",
+      "text": "Strange weather lately."
+    },
+    {
+      "at": 428,
+      "who": "Dev",
+      "text": "The launch went fine."
+    },
+    {
+      "at": 478,
+      "who": "Dev",
+      "text": "Batch two was late."
+    },
+    {
+      "at": 528,
+      "who": "Dev",
+      "text": "We need more boxes."
+    },
+    {
+      "at": 578,
+      "who": "Dev",
+      "text": "Strange weather lately."
+    },
+    {
+      "at": 605,
+      "who": "Dev",
+      "text": "Anyway, that is my week.",
+      "span": 2
+    },
+    {
+      "at": 609,
+      "who": "wearer",
+      "text": "Sorry, where were we?"
+    }
+  ],
+  "words": [
+    {
+      "text": "Hey",
+      "start": 0,
+      "end": 0.315,
+      "role": "wearer",
+      "loudness": -13,
+      "speaker": 0
+    },
+    {
+      "text": "Dev,",
+      "start": 0.375,
+      "end": 0.69,
+      "role": "wearer",
+      "loudness": -10.8,
+      "speaker": 0
+    },
+    {
+      "text": "how",
+      "start": 0.75,
+      "end": 1.065,
+      "role": "wearer",
+      "loudness": -11,
+      "speaker": 0
+    },
+    {
+      "text": "is",
+      "start": 1.125,
+      "end": 1.395,
+      "role": "wearer",
+      "loudness": -11.7,
+      "speaker": 0
+    },
+    {
+      "text": "it",
+      "start": 1.455,
+      "end": 1.725,
+      "role": "wearer",
+      "loudness": -10.6,
+      "speaker": 0
+    },
+    {
+      "text": "going?",
+      "start": 1.785,
+      "end": 2.19,
+      "role": "wearer",
+      "loudness": -11.3,
+      "speaker": 0
+    },
+    {
+      "text": "Hi,",
+      "start": 2.5,
+      "end": 2.77,
+      "role": "other",
+      "loudness": -27.2,
+      "speaker": 1
+    },
+    {
+      "text": "I'm",
+      "start": 2.83,
+      "end": 3.1,
+      "role": "other",
+      "loudness": -27.2,
+      "speaker": 1
+    },
+    {
+      "text": "Priya.",
+      "start": 3.16,
+      "end": 3.565,
+      "role": "other",
+      "loudness": -28.9,
+      "speaker": 1
+    },
+    {
+      "text": "Dev,",
+      "start": 6,
+      "end": 6.27,
+      "role": "wearer",
+      "loudness": -12.9,
+      "speaker": 0
+    },
+    {
+      "text": "I'll",
+      "start": 6.33,
+      "end": 6.601,
+      "role": "wearer",
+      "loudness": -12.7,
+      "speaker": 0
+    },
+    {
+      "text": "send",
+      "start": 6.661,
+      "end": 6.97,
+      "role": "wearer",
+      "loudness": -10.6,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 7.03,
+      "end": 7.3,
+      "role": "wearer",
+      "loudness": -13.1,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 7.36,
+      "end": 7.631,
+      "role": "wearer",
+      "loudness": -12.5,
+      "speaker": 0
+    },
+    {
+      "text": "deck.",
+      "start": 7.691,
+      "end": 8,
+      "role": "wearer",
+      "loudness": -12.4,
+      "speaker": 0
+    },
+    {
+      "text": "The",
+      "start": 28,
+      "end": 28.315,
+      "role": "other",
+      "loudness": -28,
+      "speaker": 2
+    },
+    {
+      "text": "launch",
+      "start": 28.375,
+      "end": 28.825,
+      "role": "other",
+      "loudness": -29.4,
+      "speaker": 2
+    },
+    {
+      "text": "went",
+      "start": 28.885,
+      "end": 29.245,
+      "role": "other",
+      "loudness": -29.2,
+      "speaker": 2
+    },
+    {
+      "text": "fine.",
+      "start": 29.305,
+      "end": 29.665,
+      "role": "other",
+      "loudness": -26.7,
+      "speaker": 2
+    },
+    {
+      "text": "Batch",
+      "start": 78,
+      "end": 78.405,
+      "role": "other",
+      "loudness": -27.9,
+      "speaker": 2
+    },
+    {
+      "text": "two",
+      "start": 78.465,
+      "end": 78.78,
+      "role": "other",
+      "loudness": -26.9,
+      "speaker": 2
+    },
+    {
+      "text": "was",
+      "start": 78.84,
+      "end": 79.155,
+      "role": "other",
+      "loudness": -28.3,
+      "speaker": 2
+    },
+    {
+      "text": "late.",
+      "start": 79.215,
+      "end": 79.575,
+      "role": "other",
+      "loudness": -29.3,
+      "speaker": 2
+    },
+    {
+      "text": "We",
+      "start": 128,
+      "end": 128.27,
+      "role": "other",
+      "loudness": -28,
+      "speaker": 2
+    },
+    {
+      "text": "need",
+      "start": 128.33,
+      "end": 128.69,
+      "role": "other",
+      "loudness": -26.9,
+      "speaker": 2
+    },
+    {
+      "text": "more",
+      "start": 128.75,
+      "end": 129.11,
+      "role": "other",
+      "loudness": -29,
+      "speaker": 2
+    },
+    {
+      "text": "boxes.",
+      "start": 129.17,
+      "end": 129.575,
+      "role": "other",
+      "loudness": -27.2,
+      "speaker": 2
+    },
+    {
+      "text": "Strange",
+      "start": 178,
+      "end": 178.495,
+      "role": "other",
+      "loudness": -28,
+      "speaker": 2
+    },
+    {
+      "text": "weather",
+      "start": 178.555,
+      "end": 179.05,
+      "role": "other",
+      "loudness": -26.8,
+      "speaker": 2
+    },
+    {
+      "text": "lately.",
+      "start": 179.11,
+      "end": 179.56,
+      "role": "other",
+      "loudness": -29.5,
+      "speaker": 2
+    },
+    {
+      "text": "The",
+      "start": 228,
+      "end": 228.315,
+      "role": "other",
+      "loudness": -26.5,
+      "speaker": 2
+    },
+    {
+      "text": "launch",
+      "start": 228.375,
+      "end": 228.825,
+      "role": "other",
+      "loudness": -27.4,
+      "speaker": 2
+    },
+    {
+      "text": "went",
+      "start": 228.885,
+      "end": 229.245,
+      "role": "other",
+      "loudness": -28.6,
+      "speaker": 2
+    },
+    {
+      "text": "fine.",
+      "start": 229.305,
+      "end": 229.665,
+      "role": "other",
+      "loudness": -29.3,
+      "speaker": 2
+    },
+    {
+      "text": "Batch",
+      "start": 278,
+      "end": 278.405,
+      "role": "other",
+      "loudness": -28,
+      "speaker": 2
+    },
+    {
+      "text": "two",
+      "start": 278.465,
+      "end": 278.78,
+      "role": "other",
+      "loudness": -27.9,
+      "speaker": 2
+    },
+    {
+      "text": "was",
+      "start": 278.84,
+      "end": 279.155,
+      "role": "other",
+      "loudness": -27,
+      "speaker": 2
+    },
+    {
+      "text": "late.",
+      "start": 279.215,
+      "end": 279.575,
+      "role": "other",
+      "loudness": -26.9,
+      "speaker": 2
+    },
+    {
+      "text": "We",
+      "start": 328,
+      "end": 328.27,
+      "role": "other",
+      "loudness": -28.3,
+      "speaker": 2
+    },
+    {
+      "text": "need",
+      "start": 328.33,
+      "end": 328.69,
+      "role": "other",
+      "loudness": -28.3,
+      "speaker": 2
+    },
+    {
+      "text": "more",
+      "start": 328.75,
+      "end": 329.11,
+      "role": "other",
+      "loudness": -26.8,
+      "speaker": 2
+    },
+    {
+      "text": "boxes.",
+      "start": 329.17,
+      "end": 329.575,
+      "role": "other",
+      "loudness": -29.4,
+      "speaker": 2
+    },
+    {
+      "text": "Strange",
+      "start": 378,
+      "end": 378.495,
+      "role": "other",
+      "loudness": -27.6,
+      "speaker": 2
+    },
+    {
+      "text": "weather",
+      "start": 378.555,
+      "end": 379.05,
+      "role": "other",
+      "loudness": -27.5,
+      "speaker": 2
+    },
+    {
+      "text": "lately.",
+      "start": 379.11,
+      "end": 379.56,
+      "role": "other",
+      "loudness": -26.6,
+      "speaker": 2
+    },
+    {
+      "text": "The",
+      "start": 428,
+      "end": 428.315,
+      "role": "other",
+      "loudness": -28.8,
+      "speaker": 2
+    },
+    {
+      "text": "launch",
+      "start": 428.375,
+      "end": 428.825,
+      "role": "other",
+      "loudness": -27.6,
+      "speaker": 2
+    },
+    {
+      "text": "went",
+      "start": 428.885,
+      "end": 429.245,
+      "role": "other",
+      "loudness": -29.4,
+      "speaker": 2
+    },
+    {
+      "text": "fine.",
+      "start": 429.305,
+      "end": 429.665,
+      "role": "other",
+      "loudness": -29.3,
+      "speaker": 2
+    },
+    {
+      "text": "Batch",
+      "start": 478,
+      "end": 478.405,
+      "role": "other",
+      "loudness": -27.9,
+      "speaker": 2
+    },
+    {
+      "text": "two",
+      "start": 478.465,
+      "end": 478.78,
+      "role": "other",
+      "loudness": -27.5,
+      "speaker": 2
+    },
+    {
+      "text": "was",
+      "start": 478.84,
+      "end": 479.155,
+      "role": "other",
+      "loudness": -28.4,
+      "speaker": 2
+    },
+    {
+      "text": "late.",
+      "start": 479.215,
+      "end": 479.575,
+      "role": "other",
+      "loudness": -26.6,
+      "speaker": 2
+    },
+    {
+      "text": "We",
+      "start": 528,
+      "end": 528.27,
+      "role": "other",
+      "loudness": -28.1,
+      "speaker": 2
+    },
+    {
+      "text": "need",
+      "start": 528.33,
+      "end": 528.69,
+      "role": "other",
+      "loudness": -27.5,
+      "speaker": 2
+    },
+    {
+      "text": "more",
+      "start": 528.75,
+      "end": 529.11,
+      "role": "other",
+      "loudness": -27.8,
+      "speaker": 2
+    },
+    {
+      "text": "boxes.",
+      "start": 529.17,
+      "end": 529.575,
+      "role": "other",
+      "loudness": -29.4,
+      "speaker": 2
+    },
+    {
+      "text": "Strange",
+      "start": 578,
+      "end": 578.495,
+      "role": "other",
+      "loudness": -28.5,
+      "speaker": 2
+    },
+    {
+      "text": "weather",
+      "start": 578.555,
+      "end": 579.05,
+      "role": "other",
+      "loudness": -27.9,
+      "speaker": 2
+    },
+    {
+      "text": "lately.",
+      "start": 579.11,
+      "end": 579.56,
+      "role": "other",
+      "loudness": -27.5,
+      "speaker": 2
+    },
+    {
+      "text": "Anyway,",
+      "start": 605,
+      "end": 605.463,
+      "role": "other",
+      "loudness": -28.8,
+      "speaker": 2
+    },
+    {
+      "text": "that",
+      "start": 605.523,
+      "end": 605.894,
+      "role": "other",
+      "loudness": -26.9,
+      "speaker": 2
+    },
+    {
+      "text": "is",
+      "start": 605.954,
+      "end": 606.232,
+      "role": "other",
+      "loudness": -27,
+      "speaker": 2
+    },
+    {
+      "text": "my",
+      "start": 606.292,
+      "end": 606.569,
+      "role": "other",
+      "loudness": -26.8,
+      "speaker": 2
+    },
+    {
+      "text": "week.",
+      "start": 606.629,
+      "end": 607,
+      "role": "other",
+      "loudness": -29.1,
+      "speaker": 2
+    },
+    {
+      "text": "Sorry,",
+      "start": 609,
+      "end": 609.405,
+      "role": "wearer",
+      "loudness": -10.7,
+      "speaker": 0
+    },
+    {
+      "text": "where",
+      "start": 609.465,
+      "end": 609.87,
+      "role": "wearer",
+      "loudness": -13.4,
+      "speaker": 0
+    },
+    {
+      "text": "were",
+      "start": 609.93,
+      "end": 610.29,
+      "role": "wearer",
+      "loudness": -12.6,
+      "speaker": 0
+    },
+    {
+      "text": "we?",
+      "start": 610.35,
+      "end": 610.62,
+      "role": "wearer",
+      "loudness": -12.3,
+      "speaker": 0
+    }
+  ]
+}
