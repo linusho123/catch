@@ -8,6 +8,9 @@
 //   full (npm test): the gate. The feature-file lint, oxlint, the one
 //        typecheck, every Vitest project, all of features/. FEATURES is
 //        ignored here: the full lane always runs every feature file.
+//
+// `--realtime` (either lane) runs the fixture clock at real time instead of
+// twenty times it (CATCH_REALTIME=1), for timing probes.
 import { spawnSync } from 'node:child_process'
 
 const LANES = {
@@ -24,14 +27,21 @@ const LANES = {
   ],
 }
 
-const lane = process.argv[2]
+const [lane, ...flags] = process.argv.slice(2)
 const steps = LANES[lane]
 if (!steps) {
   console.error(`usage: node scripts/lane.mjs <${Object.keys(LANES).join('|')}>`)
   process.exit(2)
 }
 
+for (const flag of flags) {
+  if (flag !== '--realtime') {
+    console.error(`unknown flag ${flag}; the lanes take only --realtime`)
+    process.exit(2)
+  }
+}
 const env = { ...process.env }
+if (flags.includes('--realtime')) env.CATCH_REALTIME = '1'
 if (lane === 'full') delete env.FEATURES
 if (lane === 'fast' && env.FEATURES) console.log(`[${lane}] FEATURES=${env.FEATURES}`)
 

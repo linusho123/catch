@@ -8,4 +8,4 @@ Commands run from `catch/`:
 - `npm run lens:build`: `apps/lens/dist/`.
 - `npm run lens:pack`: `catch.ehpk` for Even Beta.
 
-Files: `src/main.ts` (bridge, the dot, the socket, exit), `src/frames.ts` (an SDK audio event to a wire frame, with `speakerRole` and `direction`), `../../shared/wire.ts` (the frame format).
+Files: `src/main.ts` (the Even app's bridge, the phone-side status line), `src/lens.ts` (the dot, the socket, exit; takes its bridge, so the test harness runs it on the real SDK against a stand-in Even app), `src/frames.ts` (an SDK audio event to a wire frame, with `speakerRole` and `direction`), `../../shared/wire.ts` (the frame format).
