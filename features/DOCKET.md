@@ -1048,3 +1048,12 @@ D128 2026-10-17 [V]
   serves: N3
   touches: D126
 # the visionary, Saturday afternoon, after the build machine (reached over Tailscale) could not resolve the Fly host: "The build shouldn't need to fully rely on Fly". The lanes were already offline by construction; this ruling makes the local run the supported way to see Catch work, and the demo's fallback when the hall's network fails.
+
+D129 2026-10-17 [V] amends D92
+  resp: a conversation ends after {10 minutes} in which the wearer does not speak, whatever anyone else says, or at once when the wearer long-presses; at either end the held names clear, the held promises go to the phone, and the wearer's next speech begins a new conversation; when Catch starts and no conversation has yet begun, the first speech by anyone begins one, so an introduction heard before the wearer has spoken is caught [V]
+  why: {10 minutes} carried from D92 [V]
+  -> structural
+  serves: N3 N4
+  spread: Quiet ends a conversation at ten minutes
+  touches: D92 D21 D55 D56
+# the visionary at the P1a questions, Saturday evening: the demo opens with the teammate's "Hi, I'm Priya" to a judge who has not spoken, and as built the first conversation waited for the wearer's own speech, so the opener caught nothing. Chosen: "Anyone's speech starts it". Road not taken: keep the wearer-first start and have the wearer speak first in the demo.
