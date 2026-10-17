@@ -14,7 +14,9 @@ The fence for Catch, scoped 2026-10-15. Every entry cites the docket ruling it c
 
 ## Deferred — each with its reopening condition
 
-Nothing was deferred by ruling. What may go unbuilt when the time runs out is governed by the cut order in `DESIGN.md` (D104; amended by D118, 2026-10-16); anything left unbuilt at the last merge is to be recorded here, under this heading, by the build.
+- **The iPhone app, tick-off on the phone, and the website** (D126, 2026-10-17): every phone-side and website screen in `phone-handoff.feature` (the `<surface>` outline rows, "opens in full", "never appears on the phone"). Catch lives in the Even Hub plugin with a screenless server. Reopens only if the visionary asks for a screen after the event.
+
+Apart from that, what may go unbuilt when the time runs out is governed by the cut order in `DESIGN.md` (D104; amended by D118, 2026-10-16); anything left unbuilt at the last merge is to be recorded here, under this heading, by the build.
 
 ## Named assumptions
 
@@ -27,7 +29,7 @@ Nothing was deferred by ruling. What may go unbuilt when the time runs out is go
 
 ## Out of reach by construction — stated so nobody expects it
 
-- **Speaker identification.** Catch knows the wearer's voice from everyone else's by loudness, or by the speech-to-text provider's speaker labels used only for "the wearer or not", and never knows which other person is speaking; every ruling that names another person rests on a name having been caught. (D95, 2026-10-15; amended by D119, 2026-10-16)
+- **Speaker identification.** Catch knows the wearer's voice from everyone else's by the Even SDK's per-frame speaker role, by loudness, or by the speech-to-text provider's speaker labels, each used only for "the wearer or not", and never knows which other person is speaking; every ruling that names another person rests on a name having been caught. (D95, 2026-10-15; amended by D119, 2026-10-16; amended by D125, 2026-10-16, awaiting signature)
 - **Anything said while Catch cannot hear or is paused.** No catch, no held item and no jogger line comes from those minutes; a kept jogger says only how long was missed. (D37, D86, D53, 2026-10-15)
 
 ## Roads not taken
@@ -61,5 +63,5 @@ Nothing was deferred by ruling. What may go unbuilt when the time runs out is go
 - Phone screens: one running list of every open promise grouped by conversation; an inbox of conversations with a tap into each; a glossary-first jogger; open promises only with joggers gone after seven days; no home at all. (D98, D99, D100, 2026-10-15)
 - Electives: a read-only website placed last in the cut order; the website deferred to the fence. (D103, D104, 2026-10-15)
 - Cut order after the Even brief: the order of D104 kept; the iPhone app and the website cut outright. (D118, 2026-10-16)
-- Telling the wearer from the rest: loudness alone; a voiceprint of the wearer. (D119, 2026-10-16)
+- Telling the wearer from the rest: loudness alone; a voiceprint of the wearer. (D119, 2026-10-16) Loudness first; the speaker role alone with no fallback. (D125, 2026-10-16, awaiting signature)
 - Thread fallback: a new gesture; the thread line always at the head of the held page; no fallback. (D120, 2026-10-16)

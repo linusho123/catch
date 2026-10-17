@@ -1022,3 +1022,16 @@ D123 2026-10-16 [V] ratifies D119
 D124 2026-10-16 [V] ratifies D120
   resp: signed as drafted: with detection off, a tap on the bare dot gives the thread back [V]
   touches: D43 D120
+
+D125 2026-10-16 [I] amends D119
+  resp: speaker identification is out of reach by construction: Catch tells the wearer's speech from everyone else's first by the speaker role the Even SDK attaches to every glasses audio frame (self, other or unknown, computed by Even's own audio algorithm), then by loudness, the mic sitting at the wearer's mouth, and, where neither separates them on the real glasses, by the speech-to-text provider's speaker labels; every one of these signals answers only whether a word is the wearer's; Catch never knows which other person is speaking, and every ruling that names another person (D26, D87, D91) rests on a name having been caught, not on a voice being recognized [I]
+  -> structural
+  serves: N3 N4 N5
+  touches: D119 D95 D26 D87 D91
+# restates D119 in full with a first signal. Found 2026-10-16 in the SDK README (0.0.16): since 0.0.14 each glasses audio event carries `speakerRole` and a raw `direction`; the phone mic gives Unknown. Even calls it "the App audio algorithm result, not a firmware identity assertion", so its accuracy is measured in hour one before it leads. Drafted for the visionary's signature. Roads not taken: loudness first; speaker role alone with no fallback.
+
+D126 2026-10-17 [V] amends D102 D103 D104
+  resp: no custom UI and no website: Catch lives entirely in the Even Hub plugin on the G2, with the Fly.io server as a screenless backend (speech-to-text, the detectors, the store; the keys never ship in the plugin); the iPhone app (P2b), tick-off on the phone (P7) and the website (P8) are cut; the phone-side and website screens of `phone-handoff.feature` are deferred; P2a's notification semantics stay bound only against the harness's notification capture [V]
+  -> structural
+  touches: D102 D103 D104 D115 D118
+# the visionary at 13:30 Saturday, before P0a: "do not bother with any custom UI or website or anything. It should all be hosted in the EVEN G2 hub", then "keep server, no UI". Same day, also ruled: no audio fixtures exist, so the lanes run on synthetic pre-transcribed word-timing JSON written from the plan's fixture scripts (each word with its `role` and a loudness value, both variants); real recordings arrive on the loaner and serve only provider checks, the real-signal regression pair and PS tuning. Speech-to-text: Deepgram. Also 2026-10-17: the team is waitlisted for a G2 loaner, so the whole build, its checks and the demo video run on the Even Hub simulator; the hour-one hardware test cannot run, the SDK speaker role is `Unknown` off the glasses, so the split defaults to loudness (D125's roleless path) with the provider's labels as the configured alternative; the speaker-role implementation is still built and fixture-tested, to lead if a G2 arrives.
