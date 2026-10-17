@@ -10,7 +10,7 @@ The orienting document for the agent that builds Catch, with the human as second
 
 ## Shape
 
-- Four parts: the lens app (an Even Hub plugin running in the Even app's WebView on the phone, driving the glasses' containers and receiving their mic and touch events); and a screenless server that hears, judges and writes. There is no iPhone app and no website (D126); the phone's screens and the website are deferred. [ruled: D102, D103, D126]
+- Four parts: the lens app (an Even Hub plugin running in the Even app's WebView on the phone, driving the glasses' containers and receiving their mic and touch events); and a screenless server that hears, judges and writes. There is no separate iPhone app and no website (D126); the phone's screens (history, conversation screen, jogger) live on the plugin's own page in the Even app (D130). [ruled: D102, D103, D126, D130]
 - The lens is the only surface during a conversation; the phone and the website are the surfaces after it. Nothing done on the phone shows on the lens. [ruled: D61]
 - The server is where speech-to-text, the wearer/other split, the catch detectors, the joggers and the stores live; the lens app streams audio up and draws what comes down. [chosen]
 - What comes down is a view (the dot, no mark, one line, the names page), each timed on the server's clock; the lens keeps no timer of its own but its reconnect, sends its taps up, and decides alone only that with no server Catch cannot hear. [chosen]
@@ -78,3 +78,4 @@ The orienting document for the agent that builds Catch, with the human as second
 - 2026-10-17 — P1a: two `chosen` lines: the glyphs as checked in the Even Hub simulator (no loaner, D126), replacing the line that left them to be confirmed; and the views the server sends the lens, each timed on the server's clock. No ruled line touched.
 - 2026-10-17 — D129 at the P1a questions: the first conversation after Catch starts begins on anyone's speech, so the demo opener's introduction is caught; one ruled line changed.
 - 2026-10-17 — P1a fix round: the glyphs `chosen` line now says only that the check was done in the simulator (M4). No ruled line touched.
+- 2026-10-17 — D130: the phone's screens return on the plugin's own phone page in Even Hub; P4 and P5 required and in the demo build; one ruled line changed.

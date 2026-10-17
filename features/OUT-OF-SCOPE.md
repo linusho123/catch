@@ -14,7 +14,7 @@ The fence for Catch, scoped 2026-10-15. Every entry cites the docket ruling it c
 
 ## Deferred — each with its reopening condition
 
-- **The iPhone app, tick-off on the phone, and the website** (D126, 2026-10-17): every phone-side and website screen in `phone-handoff.feature` (the `<surface>` outline rows, "opens in full", "never appears on the phone"). Catch lives in the Even Hub plugin with a screenless server. Reopens only if the visionary asks for a screen after the event.
+- **Tick-off on the phone and the website** (D126, 2026-10-17; narrowed by D130 the same day): the tick-off outlines and every website row of the `<surface>` outlines in `phone-handoff.feature`. The phone's other screens (history, conversation screen, jogger) are built on the Even Hub plugin's own phone page (D130), not a separate app. Reopens only if the visionary asks after the event.
 
 Apart from that, what may go unbuilt when the time runs out is governed by the cut order in `DESIGN.md` (D104; amended by D118, 2026-10-16); anything left unbuilt at the last merge is to be recorded here, under this heading, by the build.
 

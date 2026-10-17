@@ -1057,3 +1057,10 @@ D129 2026-10-17 [V] amends D92
   spread: Quiet ends a conversation at ten minutes
   touches: D92 D21 D55 D56
 # the visionary at the P1a questions, Saturday evening: the demo opens with the teammate's "Hi, I'm Priya" to a judge who has not spoken, and as built the first conversation waited for the wearer's own speech, so the opener caught nothing. Chosen: "Anyone's speech starts it". Road not taken: keep the wearer-first start and have the wearer speak first in the demo.
+
+D130 2026-10-17 [V] amends D126
+  resp: the phone's screens come back, inside Even Hub: the plugin's own page, which the Even app shows on the phone, carries the history (D100), the conversation screen with its YOU and OWED TO YOU sections (D98) and the jogger (D99), in place of the cut SwiftUI app; the iPhone rows of the screen outlines in `phone-handoff.feature` bind against that page; the website and tick-off on the phone stay cut; keep and the jogger (`P4`) and promises owed to the wearer (`P5`) are required, built after shipping, and are in the demo build; pause (`P6`) stays out of it [V]
+  -> structural
+  serves: N4 N8
+  touches: D126 D98 D99 D100 D102 D104 D118
+# the visionary, Saturday afternoon, when asked how many phases remained: "keep P4 and P5 as important optional parts of the build. They should happen for the project to succeed"; then, asked where the jogger and the owed list appear with no iPhone app, chose the plugin's phone page, and chose to demo both. Roads not taken: the jogger on the lens; the jogger in the notification only; P4 and P5 built but switched off in the demo build. Unverified: that the Even app shows a plugin's page on the phone while the glasses run it; the next builder checks it in the simulator and the SDK docs first and raises a question if it does not hold.
