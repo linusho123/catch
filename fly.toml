@@ -1,5 +1,5 @@
 # The Catch server: wss://catch-g2.fly.dev, the one origin in apps/lens/app.json.
-# Secrets (DEEPGRAM_API_KEY, GEMINI_API_KEY) are staged with `fly secrets set`;
+# Secrets (DEEPGRAM_API_KEY, GEMINI_API_KEY, CATCH_AUDIO_TOKEN) are staged with `fly secrets set`;
 # none is in this file or the repository. Deploy: `fly deploy` from catch/.
 app = 'catch-g2'
 primary_region = 'lax'

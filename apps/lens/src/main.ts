@@ -15,6 +15,10 @@ import { toWireFrame } from './frames'
 // point a local build elsewhere, but never ships in app.json.
 
 const SERVER = (import.meta.env.VITE_CATCH_SERVER as string | undefined) ?? 'wss://catch-g2.fly.dev'
+// The shared token /audio requires (the server's CATCH_AUDIO_TOKEN), built in
+// from VITE_CATCH_TOKEN in an untracked .env; never committed. A browser
+// WebSocket cannot set headers, so it travels as a query parameter.
+const TOKEN = (import.meta.env.VITE_CATCH_TOKEN as string | undefined) ?? ''
 
 const status = document.querySelector<HTMLDivElement>('#status')
 function setStatus(text: string) {
@@ -41,7 +45,7 @@ await bridge.createStartUpPageContainer(new CreateStartUpPageContainer({ contain
 
 let seq = 0
 let acked = 0
-const socket = new WebSocket(`${SERVER}/audio`)
+const socket = new WebSocket(`${SERVER}/audio?token=${encodeURIComponent(TOKEN)}`)
 socket.binaryType = 'arraybuffer'
 socket.addEventListener('open', () => {
   setStatus(`connected to ${SERVER}`)

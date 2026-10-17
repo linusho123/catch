@@ -10,6 +10,12 @@ describe('the lens audio handler', () => {
     expect(Array.from(frame.pcm)).toEqual([1, 2, 3, 4])
   })
 
+  it("forwards the wearer's own 'self' role, the signal meant to lead on a G2 (M4)", () => {
+    const frame = decodeFrame(toWireFrame({ audioPcm: new Uint8Array(2), speakerRole: 'self', direction: -3 }, 1, 100))
+    expect(frame.speakerRole).toBe('self')
+    expect(frame.direction).toBe(-3)
+  })
+
   it('sends unknown and null when the SDK has no role or direction (phone mic, simulator)', () => {
     const frame = decodeFrame(toWireFrame({ audioPcm: new Uint8Array(2), speakerRole: 'unknown', direction: null }, 0, 0))
     expect(frame.speakerRole).toBe('unknown')

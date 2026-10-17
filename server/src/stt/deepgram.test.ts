@@ -6,6 +6,9 @@ describe('the Deepgram adapter', () => {
     const url = new URL(deepgramUrl())
     expect(url.origin + url.pathname).toBe('wss://api.deepgram.com/v1/listen')
     expect(Object.fromEntries(url.searchParams)).toMatchObject({
+      // M5: the model DESIGN.md's chosen line names; without it Deepgram uses its default.
+      model: 'nova-3',
+      language: 'en',
       encoding: 'linear16',
       sample_rate: '16000',
       channels: '1',

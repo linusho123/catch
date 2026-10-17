@@ -105,8 +105,10 @@ export function providerLabelSplit(opts: SplitOptions = {}): WearerSplit {
         if (anchored[i] === 'wearer') s.wearer++
         share.set(w.speaker, s)
       })
+      // A label none of whose words the vote gives the wearer is never the
+      // wearer's; when every label is like that, no label is chosen (M3).
       let wearerLabel: number | null = null
-      let best = -1
+      let best = 0
       for (const [label, s] of share) {
         const ratio = s.wearer / s.total
         if (ratio > best) {
@@ -140,7 +142,14 @@ export function splitFromEnv(env: Record<string, string | undefined> = process.e
     throw new Error(`CATCH_SPLIT=${name} is not one of ${SPLIT_NAMES.join(', ')}`)
   }
   const raw = env.CATCH_LOUDNESS_THRESHOLD_DBFS
-  return createSplit(name as SplitName, raw === undefined ? {} : { loudnessThresholdDbfs: Number(raw) })
+  if (raw === undefined) return createSplit(name as SplitName)
+  // Number('') and Number(' ') are 0 and Number('abc') is NaN; either would
+  // silently call every word 'other', so a bad value is refused like a bad CATCH_SPLIT (M1).
+  const threshold = raw.trim() === '' ? NaN : Number(raw)
+  if (!Number.isFinite(threshold)) {
+    throw new Error(`CATCH_LOUDNESS_THRESHOLD_DBFS=${JSON.stringify(raw)} is not a finite number of dBFS`)
+  }
+  return createSplit(name as SplitName, { loudnessThresholdDbfs: threshold })
 }
 
 /** RMS level of a PCM s16le chunk in dBFS; silence is -Infinity. */

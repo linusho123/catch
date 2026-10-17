@@ -52,15 +52,38 @@ export function parseDeepgramMessage(raw: string): SttWord[] {
   }))
 }
 
-export function deepgram(apiKey: string): SpeechToText {
+/**
+ * The most PCM held while the socket is still opening: five seconds of 16 kHz
+ * mono s16le. Past it the oldest audio is dropped and onError says so (M7).
+ */
+export const MAX_PENDING_BYTES = 5 * 16000 * 2
+
+export interface DeepgramOptions {
+  /** The listen URL; a loopback stand-in in tests. Defaults to deepgramUrl(). */
+  url?: string
+}
+
+export function deepgram(apiKey: string, opts: DeepgramOptions = {}): SpeechToText {
   if (!apiKey) throw new Error('DEEPGRAM_API_KEY is not set')
+  const url = opts.url ?? deepgramUrl()
   return {
     name: 'deepgram',
     open(onWords, onError): SttStream {
-      const socket = new WebSocket(deepgramUrl(), { headers: { authorization: `Token ${apiKey}` } })
+      const socket = new WebSocket(url, { headers: { authorization: `Token ${apiKey}` } })
       const pending: Uint8Array[] = []
+      let pendingBytes = 0
+      let overflowReported = false
+      let closing = false
       socket.on('open', () => {
         for (const chunk of pending.splice(0)) socket.send(chunk)
+        pendingBytes = 0
+      })
+      // Deepgram drops idle or failed streams; audio after that would vanish
+      // without a sound, so an unexpected close is an error (M7).
+      socket.on('close', (code, reason) => {
+        if (closing) return
+        const why = reason.toString()
+        onError(new Error(`Deepgram closed the stream (code ${code}${why ? `, ${why}` : ''})`))
       })
       socket.on('message', (data) => {
         try {
@@ -73,10 +96,27 @@ export function deepgram(apiKey: string): SpeechToText {
       socket.on('error', onError)
       return {
         sendPcm(pcm) {
-          if (socket.readyState === WebSocket.OPEN) socket.send(pcm)
-          else if (socket.readyState === WebSocket.CONNECTING) pending.push(pcm)
+          if (socket.readyState === WebSocket.OPEN) {
+            socket.send(pcm)
+          } else if (socket.readyState === WebSocket.CONNECTING) {
+            pending.push(pcm)
+            pendingBytes += pcm.byteLength
+            let dropped = 0
+            while (pendingBytes > MAX_PENDING_BYTES && pending.length > 0) {
+              const old = pending.shift()!
+              pendingBytes -= old.byteLength
+              dropped += old.byteLength
+            }
+            if (dropped > 0 && !overflowReported) {
+              overflowReported = true
+              onError(new Error(`dropped ${dropped} bytes of audio held before Deepgram opened (cap ${MAX_PENDING_BYTES})`))
+            }
+          } else if (!closing) {
+            onError(new Error(`dropped ${pcm.byteLength} bytes of audio: the Deepgram stream is closed`))
+          }
         },
         close() {
+          closing = true
           if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: 'CloseStream' }))
           else socket.terminate()
         },

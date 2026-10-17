@@ -69,6 +69,71 @@ describe("the provider's speaker labels", () => {
     })
   }
 
+  // M2: the label majority must do the work. Here the per-word anchor (the
+  // speaker-role vote) is wrong on a few words, because their frames carry the
+  // wrong role; the provider's labels still put those words on the right side.
+  for (const name of fixtureNames()) {
+    it(`correct the anchor where a few frames carry the wrong role on ${name} (M2)`, () => {
+      const fx = loadFixture(name)
+      const truth = roles(name)
+      const words = splitWords(fx)
+      const wearerIdx = truth.flatMap((r, i) => (r === 'wearer' ? [i] : [])).slice(0, 2)
+      const otherIdx = truth.flatMap((r, i) => (r === 'other' ? [i] : [])).slice(0, 1)
+      const flipped = new Set([...wearerIdx, ...otherIdx])
+      const frames = framesFor(fx).map((f) => {
+        for (const i of flipped) {
+          const w = words[i]!
+          if (f.start < w.end && f.end > w.start) {
+            return { ...f, role: truth[i] === 'wearer' ? ('other' as const) : ('self' as const) }
+          }
+        }
+        return f
+      })
+      const anchor = speakerRoleSplit().classify(words, frames)
+      for (const i of flipped) expect(anchor[i], `anchor on word ${i}`).not.toBe(truth[i])
+      expect(providerLabelSplit().classify(words, frames)).toEqual(truth)
+    })
+  }
+
+  // M2: the roleless path, the configured alternative in the simulator (D126).
+  for (const name of wearerLouder) {
+    it(`tell every word's side with every frame unknown, as in the simulator, on ${name} (M2)`, () => {
+      expect(classify(providerLabelSplit(), name, { roleless: true })).toEqual(roles(name))
+    })
+  }
+
+  // Not a goal (operator, 2026-10-17: only wearer-louder must pass on the
+  // simulator default): with no speaker role the anchor is loudness, so the
+  // louder other person's label is taken for the wearer's. Pinned as known-inverted.
+  for (const name of otherLouder) {
+    it(`take one louder other person's label for the wearer's with every frame unknown on ${name} (M2)`, () => {
+      const fx = loadFixture(name)
+      const sides = classify(providerLabelSplit(), name, { roleless: true })
+      fx.words.forEach((w, i) => {
+        if (w.role === 'wearer') expect(sides[i], `wearer word ${i}`).toBe('other')
+      })
+      const calledWearer = new Set(fx.words.filter((_, i) => sides[i] === 'wearer').map((w) => w.speaker))
+      expect(calledWearer.size).toBe(1)
+      const [label] = calledWearer
+      expect(fx.words.filter((w) => w.speaker === label).every((w) => w.role === 'other')).toBe(true)
+      expect(sides.filter((s) => s === 'wearer').length).toBe(fx.words.filter((w) => w.speaker === label).length)
+    })
+  }
+
+  it('name no label the wearer\'s when the anchor gives none of its words to the wearer (M3)', () => {
+    const words = [
+      { text: 'hi', start: 0, end: 0.2, speaker: 1 },
+      { text: 'there', start: 0.3, end: 0.5, speaker: 2 },
+    ]
+    const frames: FrameSignal[] = [0, 0.1, 0.2, 0.3, 0.4].map((start) => ({
+      start,
+      end: Math.round((start + 0.1) * 10) / 10,
+      role: 'other',
+      loudness: -40,
+    }))
+    expect(providerLabelSplit().classify(words, frames)).toEqual(['other', 'other'])
+  })
+
   it('answer only the wearer or not, however many labels the provider gives', () => {
     const sides = new Set(classify(providerLabelSplit(), 'introductions.other-louder'))
     expect([...sides].sort()).toEqual(['other', 'wearer'])
@@ -92,6 +157,19 @@ describe('choosing the split', () => {
     const name = 'own-name.other-louder'
     // Below both speakers, everyone is the wearer; the threshold reached the split.
     expect(new Set(classify(splitFromEnv({ CATCH_LOUDNESS_THRESHOLD_DBFS: '-40' }), name))).toEqual(new Set(['wearer']))
+  })
+
+  it('refuses a malformed or blank CATCH_LOUDNESS_THRESHOLD_DBFS, naming the variable (M1)', () => {
+    for (const raw of ['abc', '', ' ', 'NaN', 'Infinity', '-20dB']) {
+      for (const CATCH_SPLIT of ['loudness', 'speaker-role', 'provider-labels']) {
+        expect(() => splitFromEnv({ CATCH_SPLIT, CATCH_LOUDNESS_THRESHOLD_DBFS: raw }), `${CATCH_SPLIT} ${JSON.stringify(raw)}`).toThrow(
+          /CATCH_LOUDNESS_THRESHOLD_DBFS/,
+        )
+      }
+    }
+    const loud: FrameSignal[] = [{ start: 0, end: 0.2, role: 'unknown', loudness: -10 }]
+    const word = { text: 'so', start: 0, end: 0.2, speaker: null }
+    expect(splitFromEnv({ CATCH_LOUDNESS_THRESHOLD_DBFS: ' -15 ' }).classify([word], loud)).toEqual(['wearer'])
   })
 })
 
