@@ -1,0 +1,415 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "promises",
+  "variant": "other-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "Dev",
+      "text": "Hi, I'm Dev."
+    },
+    {
+      "gap": 0.6,
+      "who": "wearer",
+      "text": "Good to meet you, Dev."
+    },
+    {
+      "gap": 0.8,
+      "who": "Dev",
+      "text": "Are you free tonight?"
+    },
+    {
+      "gap": 0.6,
+      "who": "wearer",
+      "text": "I'll send you the deck tonight."
+    },
+    {
+      "gap": 2,
+      "who": "wearer",
+      "text": "I'll intro you to Sam."
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "Would you join the Tuesday meeting?"
+    },
+    {
+      "gap": 0.6,
+      "who": "wearer",
+      "text": "I'll think about it."
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "Can you send me the budget by Friday?"
+    },
+    {
+      "gap": 0.6,
+      "who": "wearer",
+      "text": "Yeah, I'll do it."
+    }
+  ],
+  "words": [
+    {
+      "text": "Hi,",
+      "start": 0,
+      "end": 0.27,
+      "role": "other",
+      "loudness": -15.1,
+      "speaker": 0
+    },
+    {
+      "text": "I'm",
+      "start": 0.33,
+      "end": 0.6,
+      "role": "other",
+      "loudness": -13.6,
+      "speaker": 0
+    },
+    {
+      "text": "Dev.",
+      "start": 0.66,
+      "end": 0.975,
+      "role": "other",
+      "loudness": -15.1,
+      "speaker": 0
+    },
+    {
+      "text": "Good",
+      "start": 1.575,
+      "end": 1.935,
+      "role": "wearer",
+      "loudness": -26.3,
+      "speaker": 1
+    },
+    {
+      "text": "to",
+      "start": 1.995,
+      "end": 2.265,
+      "role": "wearer",
+      "loudness": -26.9,
+      "speaker": 1
+    },
+    {
+      "text": "meet",
+      "start": 2.325,
+      "end": 2.685,
+      "role": "wearer",
+      "loudness": -25.4,
+      "speaker": 1
+    },
+    {
+      "text": "you,",
+      "start": 2.745,
+      "end": 3.06,
+      "role": "wearer",
+      "loudness": -25.7,
+      "speaker": 1
+    },
+    {
+      "text": "Dev.",
+      "start": 3.12,
+      "end": 3.435,
+      "role": "wearer",
+      "loudness": -26.3,
+      "speaker": 1
+    },
+    {
+      "text": "Are",
+      "start": 4.235,
+      "end": 4.55,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 4.61,
+      "end": 4.925,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 0
+    },
+    {
+      "text": "free",
+      "start": 4.985,
+      "end": 5.345,
+      "role": "other",
+      "loudness": -14.6,
+      "speaker": 0
+    },
+    {
+      "text": "tonight?",
+      "start": 5.405,
+      "end": 5.9,
+      "role": "other",
+      "loudness": -12.7,
+      "speaker": 0
+    },
+    {
+      "text": "I'll",
+      "start": 6.5,
+      "end": 6.815,
+      "role": "wearer",
+      "loudness": -26.2,
+      "speaker": 1
+    },
+    {
+      "text": "send",
+      "start": 6.875,
+      "end": 7.235,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 1
+    },
+    {
+      "text": "you",
+      "start": 7.295,
+      "end": 7.61,
+      "role": "wearer",
+      "loudness": -26.5,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 7.67,
+      "end": 7.985,
+      "role": "wearer",
+      "loudness": -25.5,
+      "speaker": 1
+    },
+    {
+      "text": "deck",
+      "start": 8.045,
+      "end": 8.405,
+      "role": "wearer",
+      "loudness": -26.7,
+      "speaker": 1
+    },
+    {
+      "text": "tonight.",
+      "start": 8.465,
+      "end": 8.96,
+      "role": "wearer",
+      "loudness": -25.7,
+      "speaker": 1
+    },
+    {
+      "text": "I'll",
+      "start": 10.96,
+      "end": 11.275,
+      "role": "wearer",
+      "loudness": -26.7,
+      "speaker": 1
+    },
+    {
+      "text": "intro",
+      "start": 11.335,
+      "end": 11.74,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 1
+    },
+    {
+      "text": "you",
+      "start": 11.8,
+      "end": 12.115,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 1
+    },
+    {
+      "text": "to",
+      "start": 12.175,
+      "end": 12.445,
+      "role": "wearer",
+      "loudness": -26.6,
+      "speaker": 1
+    },
+    {
+      "text": "Sam.",
+      "start": 12.505,
+      "end": 12.82,
+      "role": "wearer",
+      "loudness": -26.3,
+      "speaker": 1
+    },
+    {
+      "text": "Would",
+      "start": 13.82,
+      "end": 14.225,
+      "role": "other",
+      "loudness": -13.3,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 14.285,
+      "end": 14.6,
+      "role": "other",
+      "loudness": -12.8,
+      "speaker": 0
+    },
+    {
+      "text": "join",
+      "start": 14.66,
+      "end": 15.02,
+      "role": "other",
+      "loudness": -15.4,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 15.08,
+      "end": 15.395,
+      "role": "other",
+      "loudness": -13.6,
+      "speaker": 0
+    },
+    {
+      "text": "Tuesday",
+      "start": 15.455,
+      "end": 15.95,
+      "role": "other",
+      "loudness": -14.4,
+      "speaker": 0
+    },
+    {
+      "text": "meeting?",
+      "start": 16.01,
+      "end": 16.505,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 0
+    },
+    {
+      "text": "I'll",
+      "start": 17.105,
+      "end": 17.42,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 1
+    },
+    {
+      "text": "think",
+      "start": 17.48,
+      "end": 17.885,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 1
+    },
+    {
+      "text": "about",
+      "start": 17.945,
+      "end": 18.35,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 1
+    },
+    {
+      "text": "it.",
+      "start": 18.41,
+      "end": 18.68,
+      "role": "wearer",
+      "loudness": -26,
+      "speaker": 1
+    },
+    {
+      "text": "Can",
+      "start": 19.68,
+      "end": 19.995,
+      "role": "other",
+      "loudness": -13.2,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 20.055,
+      "end": 20.37,
+      "role": "other",
+      "loudness": -12.9,
+      "speaker": 0
+    },
+    {
+      "text": "send",
+      "start": 20.43,
+      "end": 20.79,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 0
+    },
+    {
+      "text": "me",
+      "start": 20.85,
+      "end": 21.12,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 21.18,
+      "end": 21.495,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 0
+    },
+    {
+      "text": "budget",
+      "start": 21.555,
+      "end": 22.005,
+      "role": "other",
+      "loudness": -15.1,
+      "speaker": 0
+    },
+    {
+      "text": "by",
+      "start": 22.065,
+      "end": 22.335,
+      "role": "other",
+      "loudness": -14.8,
+      "speaker": 0
+    },
+    {
+      "text": "Friday?",
+      "start": 22.395,
+      "end": 22.845,
+      "role": "other",
+      "loudness": -14.8,
+      "speaker": 0
+    },
+    {
+      "text": "Yeah,",
+      "start": 23.445,
+      "end": 23.805,
+      "role": "wearer",
+      "loudness": -25.3,
+      "speaker": 1
+    },
+    {
+      "text": "I'll",
+      "start": 23.865,
+      "end": 24.18,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 1
+    },
+    {
+      "text": "do",
+      "start": 24.24,
+      "end": 24.51,
+      "role": "wearer",
+      "loudness": -24.9,
+      "speaker": 1
+    },
+    {
+      "text": "it.",
+      "start": 24.57,
+      "end": 24.84,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 1
+    }
+  ]
+}

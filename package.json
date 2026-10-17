@@ -1,14 +1,41 @@
 {
-  "name": "catch-scope",
+  "name": "catch",
   "private": true,
   "type": "module",
   "scripts": {
+    "test": "node scripts/lane.mjs full",
+    "test:fast": "node scripts/lane.mjs fast",
+    "typecheck": "tsc -p tsconfig.json --noEmit --incremental",
+    "lint": "oxlint --deny-warnings",
+    "lint:features": "node scripts/lint-features.mjs",
+    "validate": "node ~/Documents/RefLib/scope-tools/scope-validate.cjs features/*.feature",
+    "manifest": "CATCH_MANIFEST=1 vitest run --project features && git add run-manifest.ndjson",
     "docket": "docketry lint features/DOCKET.md --corpus features",
     "docket:strict": "docketry lint features/DOCKET.md --corpus features --strict",
-    "validate": "node ~/Documents/RefLib/scope-tools/scope-validate.cjs features/*.feature"
+    "server": "node server/src/main.ts",
+    "lens:dev": "vite apps/lens",
+    "lens:build": "vite build apps/lens",
+    "lens:pack": "npm run lens:build && evenhub pack apps/lens/app.json apps/lens/dist --sdk-ver 0.0.16 -o catch.ehpk",
+    "lens:simulate": "evenhub-simulator http://localhost:5173",
+    "fixtures": "node test/fixtures/make-fixtures.ts",
+    "fixtures:print": "node test/fixtures/print-words.ts"
   },
   "devDependencies": {
     "@bingh/docketry": "^0.1.0",
-    "gherkin-node-test": "^0.11.0"
+    "@evenrealities/even_hub_sdk": "^0.0.16",
+    "@evenrealities/evenhub-cli": "^0.1.14",
+    "@types/node": "^24.19.2",
+    "@types/ws": "^8.18.2",
+    "gherkin-node-test": "^0.11.0",
+    "oxlint": "^1.88.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.4",
+    "vitest": "^4.1.12"
+  },
+  "dependencies": {
+    "ws": "^8.22.0"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }

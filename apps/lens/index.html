@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+    <title>Catch</title>
+    <style>
+      html, body {
+        margin: 0;
+        height: 100%;
+        background: #232323;
+        color: #a7a7a7;
+        font: 12px/1.4 system-ui, sans-serif;
+        /* Kill WebView zoom + iOS auto-sizing + rubber-band scroll. */
+        touch-action: manipulation;
+        -webkit-text-size-adjust: 100%;
+        overscroll-behavior: none;
+      }
+      #status { padding: 12px; }
+    </style>
+  </head>
+  <body>
+    <!-- No phone UI (D126): one status line for debugging the connection, nothing else. -->
+    <div id="status">connecting…</div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

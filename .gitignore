@@ -1,3 +1,7 @@
 node_modules/
 .env
 .env.*
+.cache/
+data/
+apps/lens/dist/
+*.ehpk

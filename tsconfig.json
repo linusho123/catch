@@ -1,0 +1,28 @@
+{
+  // The one typecheck for the whole project (lens, server, shared, tests).
+  // Both lanes run it exactly once: `tsc --noEmit --incremental` via
+  // `npm run typecheck`. Vitest and Vite strip types and never type-check.
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "moduleDetection": "force",
+    "skipLibCheck": true,
+    "noEmit": true,
+    "incremental": true,
+    "tsBuildInfoFile": ".cache/tsc.tsbuildinfo"
+  },
+  "include": ["apps/lens/src", "apps/lens/vite.config.ts", "server", "shared", "test", "vitest.config.ts"]
+}

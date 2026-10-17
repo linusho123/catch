@@ -1,0 +1,76 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "own-name",
+  "variant": "other-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "Hi, I'm Linus."
+    },
+    {
+      "gap": 0.8,
+      "who": "Priya",
+      "text": "Nice to meet you."
+    }
+  ],
+  "words": [
+    {
+      "text": "Hi,",
+      "start": 0,
+      "end": 0.27,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "I'm",
+      "start": 0.33,
+      "end": 0.6,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "Linus.",
+      "start": 0.66,
+      "end": 1.065,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "Nice",
+      "start": 1.865,
+      "end": 2.225,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "to",
+      "start": 2.285,
+      "end": 2.555,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "meet",
+      "start": 2.615,
+      "end": 2.975,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 1
+    },
+    {
+      "text": "you.",
+      "start": 3.035,
+      "end": 3.35,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 1
+    }
+  ]
+}
