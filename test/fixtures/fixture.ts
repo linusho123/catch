@@ -40,8 +40,8 @@ export function fixtureNames(): string[] {
     .sort()
 }
 
-export function loadFixture(name: string): Fixture {
-  return JSON.parse(readFileSync(join(FIXTURE_DIR, `${name}.json`), 'utf8')) as Fixture
+export function loadFixture(name: string, dir = FIXTURE_DIR): Fixture {
+  return JSON.parse(readFileSync(join(dir, `${name}.json`), 'utf8')) as Fixture
 }
 
 export function splitWords(fx: Fixture): SplitWord[] {

@@ -59,13 +59,20 @@ export function readWavPcm(path: string): Uint8Array {
 /** The speech-to-text provider the server is given under test: the player's words, never a network call. */
 export class FixtureStt implements SpeechToText {
   readonly name = 'fixture'
-  private stream: { onWords: (words: SttWord[]) => void; open: boolean } | undefined
+  private stream: { onWords: (words: SttWord[]) => void; open: boolean; pcm: Uint8Array[] } | undefined
+
+  /** Every PCM chunk the server fed the latest stream, in order (copies): what the real provider would have heard (M1). */
+  get pcm(): readonly Uint8Array[] {
+    return this.stream?.pcm ?? []
+  }
 
   open(onWords: (words: SttWord[]) => void): SttStream {
-    const stream = { onWords, open: true }
+    const stream = { onWords, open: true, pcm: [] as Uint8Array[] }
     this.stream = stream
     return {
-      sendPcm() {},
+      sendPcm(pcm) {
+        stream.pcm.push(new Uint8Array(pcm))
+      },
       close: () => {
         stream.open = false
       },
@@ -90,6 +97,8 @@ export interface PlayerDeps {
   host: typeof evenHost
   stt: FixtureStt
   realStt?: boolean
+  /** Where the fixture's JSON (and, under CATCH_REAL_STT=1, its WAV) is read from; test/fixtures by default. */
+  fixtureDir?: string
 }
 
 /**
@@ -109,20 +118,33 @@ export class FixtureRun {
   constructor(name: string, deps: PlayerDeps) {
     this.name = name
     this.deps = deps
-    this.fixture = loadFixture(name)
+    const dir = deps.fixtureDir ?? FIXTURE_DIR
+    this.fixture = loadFixture(name, dir)
     this.epoch = deps.clock.now()
     const real = deps.realStt ?? process.env.CATCH_REAL_STT === '1'
     if (real && deps.clock.speed !== 1) throw new Error('CATCH_REAL_STT=1 plays in real time: the clock must run at speed 1')
-    const wav = join(FIXTURE_DIR, `${name}.wav`)
+    const wav = join(dir, `${name}.wav`)
     if (real && !existsSync(wav)) {
       throw new Error(`CATCH_REAL_STT=1 needs recorded audio at ${wav}; ${name} is ${this.fixture.synthetic ? 'synthetic (D126)' : 'missing it'}`)
     }
     const audio = real ? readWavPcm(wav) : undefined
     const bytes = FRAME_SAMPLES * 2
-    const frames: Item[] = framesFor(this.fixture).map((f, i) => ({
+    const signals = framesFor(this.fixture)
+    // M7: the recording must cover the fixture's frames, give or take the last
+    // one; a short or long WAV fails here instead of sending empty frames or
+    // being cut off in silence. Within that one frame, the tail is padded with silence.
+    if (audio && Math.abs(audio.byteLength / bytes - signals.length) > 1) {
+      throw new Error(`${wav} holds ${+(audio.byteLength / bytes).toFixed(1)} frames of audio; the fixture has ${signals.length}: re-record or re-time it`)
+    }
+    const recorded = (i: number) => {
+      const frame = new Uint8Array(bytes)
+      frame.set(audio!.subarray(i * bytes, (i + 1) * bytes))
+      return frame
+    }
+    const frames: Item[] = signals.map((f, i) => ({
       t: f.end,
       kind: 0,
-      play: () => deps.host.pushAudio(audio ? audio.subarray(i * bytes, (i + 1) * bytes) : pcmAt(f.loudness), f.role),
+      play: () => deps.host.pushAudio(audio ? recorded(i) : pcmAt(f.loudness), f.role),
     }))
     const words: Item[] = real
       ? []
@@ -154,10 +176,15 @@ export class FixtureRun {
     if (Number.isFinite(t)) await this.deps.clock.sleepUntil(this.at(t))
   }
 
-  /** Jumps the clock to fixture second `t` across silence; refuses to skip a word. */
+  /**
+   * Jumps the clock to fixture second `t` across silence; refuses to skip any
+   * part of a word (M6): a word that overlaps the gap at all would lose the
+   * frames that carry its audio.
+   */
   skipTo(t: number): void {
-    const skipped = this.fixture.words.find((w) => w.end > this.seconds(this.deps.clock.now()) && w.end <= t)
-    if (skipped) throw new Error(`skipTo(${t}) would skip "${skipped.text}" at ${skipped.end}s; play it instead`)
+    const now = this.seconds(this.deps.clock.now())
+    const skipped = this.fixture.words.find((w) => w.start < t && w.end > now)
+    if (skipped) throw new Error(`skipTo(${t}) would skip "${skipped.text}" at ${skipped.start}-${skipped.end}s; play it instead`)
     while (this.cursor < this.items.length && this.items[this.cursor]!.t <= t) this.cursor++
     this.deps.clock.advance(Math.max(0, this.at(t) - this.deps.clock.now()))
   }

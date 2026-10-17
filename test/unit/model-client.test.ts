@@ -35,6 +35,12 @@ describe('the model client, record and replay', () => {
     await expect(replayModel(d).complete(PROMISE_MODEL, 'a')).rejects.toThrow(/does not hold this prompt/)
   })
 
+  it('refuses a cassette whose model is not the one asked, even with the prompt asked (M5)', async () => {
+    const d = dir()
+    writeFileSync(join(d, `${cassetteKey(PROMISE_MODEL, 'a')}.json`), JSON.stringify({ cassette: 1, model: JOGGER_MODEL, prompt: 'a', response: 'x' }))
+    await expect(replayModel(d).complete(PROMISE_MODEL, 'a')).rejects.toThrow(/does not hold this prompt/)
+  })
+
   it('records what the live model answers, and replay then answers it', async () => {
     const d = dir()
     const live: ModelClient = { complete: async (_m, p) => `answer to ${p}` }

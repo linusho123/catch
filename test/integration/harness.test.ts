@@ -100,12 +100,28 @@ describe('the fixture player', () => {
     }
   })
 
+  it("feeds every frame's PCM into the session's speech-to-text stream, at the fixture's loudness (M1)", async () => {
+    await h.startLens()
+    const run = h.play('own-name.wearer-louder')
+    await run.playTo()
+    await h.clock.sleepUntil(run.at(4))
+    const expected = framesFor(run.fixture)
+    expect(h.stt.pcm).toHaveLength(expected.length)
+    for (const [i, pcm] of h.stt.pcm.entries()) {
+      expect(pcm.byteLength).toBe(3200)
+      expect(dbfsOf(pcm)).toBeCloseTo(expected[i]!.loudness, 0)
+    }
+  })
+
   it('jumps the clock across silence and still lands the next word on its fixture time', async () => {
     const words = listen('words')
     await h.startLens()
     const run = h.play('introductions.wearer-louder')
     await run.playTo(15)
     expect(() => run.skipTo(200)).toThrow(/would skip "Hi,"/)
+    // M6: a word the jump would land inside is skipped too (its frames before the landing).
+    const hi = run.fixture.words.find((w) => w.text === 'Hi,' && w.start >= 90)!
+    expect(() => run.skipTo((hi.start + hi.end) / 2)).toThrow(/would skip "Hi,"/)
     run.skipTo(92)
     await run.playTo(95)
     const priya2 = run.fixture.words.find((w) => w.start >= 93)!
