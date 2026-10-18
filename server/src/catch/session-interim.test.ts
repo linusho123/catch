@@ -137,6 +137,20 @@ describe('names from interim results (PT)', () => {
     })
   }
 
+  // The time half of risk-1's guard: a batch with as many words as the
+  // introduction ("Um, hi, I'm") but ending before the name has not passed it.
+  it('keeps a name when a final batch has as many words as the introduction but ends before the name (risk-1, time half)', () => {
+    const { session, interim, audio, lines } = opened()
+    interim("Hi, I'm Priya", 2, OTHER)
+    const at = (text: string, start: number): SttWord => ({ text, start, end: start + 0.3, confidence: 1, speaker: null, isFinal: true })
+    audio(3.0, OTHER)
+    session.words([at('Um,', 1.7), at('hi,', 2.0), at("I'm", 2.3)])
+    expect(session.names.list()).toEqual(['Priya'])
+    session.words([at('Priya.', 2.6)])
+    expect(lines()).toEqual(['Priya'])
+    expect(session.names.confirmedList()).toEqual(['Priya'])
+  })
+
   it('withdraws a name the final words do not give: off the held names, and its line taken down at once', () => {
     const { session, views, interim, final, lines, clock } = opened()
     interim("Hi, I'm Priya", 2, OTHER)
