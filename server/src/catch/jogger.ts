@@ -6,10 +6,11 @@ import type { TranscriptWord } from './transcript.ts'
 
 // The jogger writer (D24, D62, D99, D116, D53): one model pass per kept
 // conversation, through the model client (cassettes under test), on
-// gemini-3.8-flash. The model reads the conversation's transcript as numbered
-// lines and writes the specifics back as short bullets, each tagged with the
-// line it comes from; the code puts them in the order things came up (D99)
-// and adds what the model is never trusted with:
+// gemini-3.5-flash-lite (P4 fix round: D116's thirty seconds). The model
+// reads the conversation's transcript as numbered lines and writes the
+// specifics back as short bullets, each tagged with the line it comes from;
+// the code puts them in the order things came up (D99) and adds what the
+// model is never trusted with:
 //   - the wearer's promises, as bullets of their own at the line each was
 //     said, in the words the lens and the phone already use (D89, D99);
 //   - a `N minutes not heard` line where each span Catch could not hear fell,
@@ -101,7 +102,7 @@ export function joggerPrompt(lines: readonly JoggerLine[], names: readonly strin
     '- As many bullets as the specifics demand and no more: never pad, and never drop a specific to keep the list short.',
     '- Cover what was said about each topic and every specific technical term that came up.',
     '- Keep every question raised as a question in its bullet, with its answer when one came ("Asked when the beta ships: in March.").',
-    '- Set each technical term in bold with double asterisks, word for word as the transcript has it (**contrastive learning**); bold nothing else.',
+    '- Set every technical term in bold with double asterisks: every named tool, product, technique, method or field (**contrastive learning**, **PyTorch**), each time it first comes up, word for word as the transcript has it and only the term itself, never a word around it (**contrastive learning** runs, not **contrastive learning runs**); bold nothing else.',
     '- Use only what the transcript says: never add a term, a fact or a name it does not contain.',
     '- Never say when anything was said: no times of day.',
     ...promises,
@@ -130,22 +131,32 @@ export function parseJogger(response: string, lineCount: number): { line: number
   })
 }
 
-/** Lower case, words stripped of the punctuation around them, one space between: how a term is looked for in the transcript. */
+/**
+ * Lower case, words stripped of the punctuation around them, one space
+ * between: how a term is looked for in the transcript. A `#` or `+` at a
+ * word's edge is kept, as part of the term (C#, C++; fix round, risk-3).
+ */
 const normalized = (text: string) =>
   text
     .toLowerCase()
     .replace(/[’]/g, "'")
     .split(/\s+/)
-    .map((t) => t.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ''))
+    .map((t) => t.replace(/^[^\p{L}\p{N}#+]+|[^\p{L}\p{N}#+]+$/gu, ''))
     .filter(Boolean)
     .join(' ')
 
-/** A bullet with the bold kept only on terms the transcript contains (the second reviewer's focus: no invented term in bold). */
+/**
+ * A bullet with the bold kept only on terms the transcript contains (the
+ * second reviewer's focus: no invented term in bold). A term is looked for
+ * inside one sentence at a time: the transcript is cut at each line break and
+ * after each `.`, `!` or `?` that ends a word, so "learning. Rate" is not
+ * "learning rate" (risk-3).
+ */
 export function honestBold(text: string, transcript: string): string {
-  const heard = ` ${normalized(transcript)} `
+  const sentences = transcript.split(/\n|(?<=[.!?])\s+/).map((s) => ` ${normalized(s)} `)
   return text.replace(/\*\*(.+?)\*\*/g, (_whole, term: string) => {
     const t = normalized(term)
-    return t !== '' && heard.includes(` ${t} `) ? `**${term.trim()}**` : term
+    return t !== '' && sentences.some((s) => s.includes(` ${t} `)) ? `**${term.trim()}**` : term
   })
 }
 
@@ -160,7 +171,7 @@ export async function writeJogger(model: ModelClient, input: JoggerInput, call?:
   let said: { line: number; text: string }[] = []
   if (lines.length > 0) {
     const response = await model.complete(JOGGER_MODEL, joggerPrompt(lines, input.names, promiseLines), call)
-    const transcript = lines.map((l) => l.text).join(' ')
+    const transcript = lines.map((l) => l.text).join('\n')
     said = parseJogger(response, lines.length).map((b) => ({ line: b.line, text: honestBold(b.text, transcript) }))
   }
   // Each bullet's place: a model bullet at its line; a promise just before the bullets from its own line;

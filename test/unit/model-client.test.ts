@@ -3,13 +3,15 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cassetteKey, recordingModel, replayModel, type ModelClient } from '../../server/src/llm/client.ts'
-import { JOGGER_MODEL, PROMISE_MODEL } from '../../server/src/llm/gemini.ts'
+import { JOGGER_MODEL, PROMISE_MODEL, type GeminiModel } from '../../server/src/llm/gemini.ts'
 import { CASSETTE_DIR, modelForTests } from '../harness/model.ts'
 
 // The model client on cassettes: replay in the lanes, a missing cassette is a
 // loud failure and never a network call, and CATCH_REAL_LLM=1 records.
 
 const dir = () => mkdtempSync(join(tmpdir(), 'catch-cassettes-'))
+/** A model id other than the pinned one (both pinned ids are flash-lite since P4's fix round): the key and the check must tell them apart. */
+const ANOTHER_MODEL = 'gemini-3.8-flash' as unknown as GeminiModel
 afterEach(() => vi.restoreAllMocks())
 
 describe('the model client, record and replay', () => {
@@ -20,7 +22,7 @@ describe('the model client, record and replay', () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
     expect(await replayModel(d).complete(PROMISE_MODEL, prompt)).toBe('yes')
     expect(fetchSpy).not.toHaveBeenCalled()
-    expect(cassetteKey(JOGGER_MODEL, prompt)).not.toBe(cassetteKey(PROMISE_MODEL, prompt))
+    expect(cassetteKey(ANOTHER_MODEL, prompt)).not.toBe(cassetteKey(PROMISE_MODEL, prompt))
   })
 
   it('fails loudly on a missing cassette, naming the prompt and how to record it, without calling out', async () => {
@@ -37,7 +39,7 @@ describe('the model client, record and replay', () => {
 
   it('refuses a cassette whose model is not the one asked, even with the prompt asked (M5)', async () => {
     const d = dir()
-    writeFileSync(join(d, `${cassetteKey(PROMISE_MODEL, 'a')}.json`), JSON.stringify({ cassette: 1, model: JOGGER_MODEL, prompt: 'a', response: 'x' }))
+    writeFileSync(join(d, `${cassetteKey(PROMISE_MODEL, 'a')}.json`), JSON.stringify({ cassette: 1, model: ANOTHER_MODEL, prompt: 'a', response: 'x' }))
     await expect(replayModel(d).complete(PROMISE_MODEL, 'a')).rejects.toThrow(/does not hold this prompt/)
   })
 

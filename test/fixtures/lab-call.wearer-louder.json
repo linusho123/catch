@@ -74,6 +74,12 @@
     {
       "at": 900,
       "who": "wearer",
+      "text": "I'll send you my transcript by Friday.",
+      "span": 1.2
+    },
+    {
+      "at": 1180,
+      "who": "wearer",
       "text": "What should I read first?",
       "ask": "read",
       "span": 0.84
@@ -85,12 +91,6 @@
       "terms": [
         "inverse folding"
       ],
-      "span": 1.2
-    },
-    {
-      "at": 1180,
-      "who": "wearer",
-      "text": "I'll send you my transcript by Friday.",
       "span": 1.2
     },
     {
@@ -526,177 +526,177 @@
       "speaker": 1
     },
     {
-      "text": "What",
+      "text": "I'll",
       "start": 900,
-      "end": 900.12,
+      "end": 900.101,
       "role": "wearer",
       "loudness": -12.3,
       "speaker": 0
     },
     {
-      "text": "should",
-      "start": 900.18,
-      "end": 900.33,
+      "text": "send",
+      "start": 900.161,
+      "end": 900.277,
       "role": "wearer",
       "loudness": -12.3,
       "speaker": 0
     },
     {
-      "text": "I",
-      "start": 900.39,
-      "end": 900.465,
+      "text": "you",
+      "start": 900.337,
+      "end": 900.439,
       "role": "wearer",
       "loudness": -10.8,
       "speaker": 0
     },
     {
-      "text": "read",
-      "start": 900.525,
-      "end": 900.645,
+      "text": "my",
+      "start": 900.499,
+      "end": 900.586,
       "role": "wearer",
       "loudness": -13.4,
       "speaker": 0
     },
     {
-      "text": "first?",
-      "start": 900.705,
-      "end": 900.84,
+      "text": "transcript",
+      "start": 900.646,
+      "end": 900.848,
       "role": "wearer",
       "loudness": -12.3,
       "speaker": 0
     },
     {
-      "text": "Start",
-      "start": 901.84,
-      "end": 901.964,
-      "role": "other",
-      "loudness": -27.6,
-      "speaker": 1
-    },
-    {
-      "text": "with",
-      "start": 902.024,
-      "end": 902.134,
-      "role": "other",
-      "loudness": -27.5,
-      "speaker": 1
-    },
-    {
-      "text": "our",
-      "start": 902.194,
-      "end": 902.29,
-      "role": "other",
-      "loudness": -26.6,
-      "speaker": 1
-    },
-    {
-      "text": "paper",
-      "start": 902.35,
-      "end": 902.474,
-      "role": "other",
-      "loudness": -27,
-      "speaker": 1
-    },
-    {
-      "text": "on",
-      "start": 902.534,
-      "end": 902.617,
-      "role": "other",
-      "loudness": -26.5,
-      "speaker": 1
-    },
-    {
-      "text": "inverse",
-      "start": 902.677,
-      "end": 902.829,
-      "role": "other",
-      "loudness": -27,
-      "speaker": 1
-    },
-    {
-      "text": "folding.",
-      "start": 902.889,
-      "end": 903.04,
-      "role": "other",
-      "loudness": -28.6,
-      "speaker": 1
-    },
-    {
-      "text": "I'll",
-      "start": 1180,
-      "end": 1180.101,
+      "text": "by",
+      "start": 900.908,
+      "end": 900.995,
       "role": "wearer",
-      "loudness": -12.8,
+      "loudness": -11.2,
       "speaker": 0
     },
     {
-      "text": "send",
-      "start": 1180.161,
-      "end": 1180.277,
-      "role": "wearer",
-      "loudness": -11.6,
-      "speaker": 0
-    },
-    {
-      "text": "you",
-      "start": 1180.337,
-      "end": 1180.439,
-      "role": "wearer",
-      "loudness": -13.4,
-      "speaker": 0
-    },
-    {
-      "text": "my",
-      "start": 1180.499,
-      "end": 1180.586,
+      "text": "Friday.",
+      "start": 901.055,
+      "end": 901.2,
       "role": "wearer",
       "loudness": -13.3,
       "speaker": 0
     },
     {
-      "text": "transcript",
-      "start": 1180.646,
-      "end": 1180.848,
+      "text": "What",
+      "start": 1180,
+      "end": 1180.12,
       "role": "wearer",
-      "loudness": -13.2,
+      "loudness": -11.6,
       "speaker": 0
     },
     {
-      "text": "by",
-      "start": 1180.908,
-      "end": 1180.995,
-      "role": "wearer",
-      "loudness": -11.4,
-      "speaker": 0
-    },
-    {
-      "text": "Friday.",
-      "start": 1181.055,
-      "end": 1181.2,
+      "text": "should",
+      "start": 1180.18,
+      "end": 1180.33,
       "role": "wearer",
       "loudness": -11.5,
       "speaker": 0
     },
     {
+      "text": "I",
+      "start": 1180.39,
+      "end": 1180.465,
+      "role": "wearer",
+      "loudness": -10.6,
+      "speaker": 0
+    },
+    {
+      "text": "read",
+      "start": 1180.525,
+      "end": 1180.645,
+      "role": "wearer",
+      "loudness": -11,
+      "speaker": 0
+    },
+    {
+      "text": "first?",
+      "start": 1180.705,
+      "end": 1180.84,
+      "role": "wearer",
+      "loudness": -10.5,
+      "speaker": 0
+    },
+    {
+      "text": "Start",
+      "start": 1181.84,
+      "end": 1181.964,
+      "role": "other",
+      "loudness": -28.8,
+      "speaker": 1
+    },
+    {
+      "text": "with",
+      "start": 1182.024,
+      "end": 1182.134,
+      "role": "other",
+      "loudness": -27.6,
+      "speaker": 1
+    },
+    {
+      "text": "our",
+      "start": 1182.194,
+      "end": 1182.29,
+      "role": "other",
+      "loudness": -29.4,
+      "speaker": 1
+    },
+    {
+      "text": "paper",
+      "start": 1182.35,
+      "end": 1182.474,
+      "role": "other",
+      "loudness": -29.3,
+      "speaker": 1
+    },
+    {
+      "text": "on",
+      "start": 1182.534,
+      "end": 1182.617,
+      "role": "other",
+      "loudness": -29.2,
+      "speaker": 1
+    },
+    {
+      "text": "inverse",
+      "start": 1182.677,
+      "end": 1182.829,
+      "role": "other",
+      "loudness": -27.4,
+      "speaker": 1
+    },
+    {
+      "text": "folding.",
+      "start": 1182.889,
+      "end": 1183.04,
+      "role": "other",
+      "loudness": -27.5,
+      "speaker": 1
+    },
+    {
       "text": "Great,",
-      "start": 1182.2,
-      "end": 1182.33,
+      "start": 1184.04,
+      "end": 1184.17,
       "role": "other",
       "loudness": -27.9,
       "speaker": 1
     },
     {
       "text": "talk",
-      "start": 1182.39,
-      "end": 1182.505,
+      "start": 1184.23,
+      "end": 1184.345,
       "role": "other",
       "loudness": -27.5,
       "speaker": 1
     },
     {
       "text": "soon.",
-      "start": 1182.565,
-      "end": 1182.68,
+      "start": 1184.405,
+      "end": 1184.52,
       "role": "other",
       "loudness": -28.4,
       "speaker": 1

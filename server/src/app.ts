@@ -12,7 +12,7 @@ import { Session } from './catch/session.ts'
 import { Transcript } from './catch/transcript.ts'
 import type { ModelClient } from './llm/client.ts'
 import { SafeModelError } from './llm/errors.ts'
-import { keptNotification, Outbox, promiseNotification, type Notifier } from './notify.ts'
+import { checkedTimeZone, keptNotification, Outbox, promiseNotification, type Notifier } from './notify.ts'
 import { phoneRoute, wearerOf } from './phone/api.ts'
 import { History } from './phone/history.ts'
 import { createSplit, type WearerSplit } from './split/split.ts'
@@ -190,6 +190,8 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   const events = new EventEmitter<ServerEvents>()
   let threadDetection = opts.threadDetection ?? true
   const outbox = opts.notifier ? new Outbox(opts.notifier, clock) : undefined
+  // CATCH_TIME_ZONE, checked once as the server starts (risk-2).
+  const timeZone = checkedTimeZone(opts.timeZone)
   const promises = opts.model ? new PromiseDetector(opts.model) : undefined
   let sessions = 0
   /** Joggers being written, each cancelled when the wearers are forgotten or the server closes. */
@@ -265,7 +267,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
             .then((jogger) => {
               if (abort.signal.aborted) return
               history.recordJogger(id, jogger.bullets)
-              outbox?.enqueue(wearer, keptNotification(id, ended.names, ended.startedAt, opts.timeZone))
+              outbox?.enqueue(wearer, keptNotification(id, ended.names, ended.startedAt, timeZone))
             })
             .catch((error: unknown) => {
               if (abort.signal.aborted) return

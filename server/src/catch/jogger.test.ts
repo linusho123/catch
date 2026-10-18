@@ -69,6 +69,13 @@ describe('honest bold', () => {
     expect(honestBold('Uses **transformers** too.', heard)).toBe('Uses transformers too.')
     expect(honestBold('A **diffusion model** lab.', heard), 'not the same words').toBe('A diffusion model lab.')
   })
+
+  // Fix round, risk-3: a symbol that is part of a term is part of what must have been said, and a term never runs across a sentence's end.
+  it('takes the bold off C# and C++ when only the letter was said, and off a term heard only across a sentence end', () => {
+    expect(honestBold('Uses **C#** and **C++** and **learning rate**', 'we like c. the learning. rate was fine')).toBe('Uses C# and C++ and learning rate')
+    expect(honestBold('Uses **C#** and **C++** and **learning rate**', 'we write C# and C++. the learning rate was fine')).toBe('Uses **C#** and **C++** and **learning rate**')
+    expect(honestBold('Tuned the **learning rate**', 'we tuned the learning\nrate later'), 'a line break is a sentence end too').toBe('Tuned the learning rate')
+  })
 })
 
 describe("the model's answer", () => {
@@ -110,6 +117,31 @@ describe('writing a jogger', () => {
       'You asked how designs are validated.',
       'Designs are screened with **AlphaFold**.',
       'You promised: send Ana the transcript by Friday',
+    ])
+  })
+
+  // Fix round, head-1: a promise said before something else came up sits at its own line, not at the end (D99).
+  it('puts a promise said mid-conversation between what came up before it and what came up after', async () => {
+    const MID = words([
+      ['other', "Hi, I'm Ana.", 0],
+      ['other', 'My lab designs proteins with diffusion models.', 5],
+      ['wearer', "I'll send you my transcript by Friday.", 10],
+      ['other', 'We screen them with AlphaFold.', 15],
+    ])
+    const { model } = answering(
+      JSON.stringify({
+        bullets: [
+          { line: 4, text: 'Designs are screened with **AlphaFold**.' },
+          { line: 2, text: 'Her lab designs proteins with **diffusion models**.' },
+        ],
+      }),
+    )
+    const promiseEnd = MID.find((w) => w.text === 'Friday.')!.end
+    const jogger = await writeJogger(model, { names: ['Ana'], transcript: MID, promises: ['send Ana my transcript by Friday'], promiseTimes: [promiseEnd], gaps: [] })
+    expect(jogger.bullets).toEqual([
+      'Her lab designs proteins with **diffusion models**.',
+      'You promised: send Ana my transcript by Friday',
+      'Designs are screened with **AlphaFold**.',
     ])
   })
 

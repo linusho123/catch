@@ -12,7 +12,8 @@ import { deepgram } from './stt/deepgram.ts'
 // CATCH_WEARER_NAME (optional) is the wearer's name, never caught.
 // CATCH_THREAD_DETECTION (on | off, default on) is the operator's D120 switch.
 // CATCH_TIME_ZONE (optional, e.g. America/Los_Angeles) is the wearer's zone, for
-// a kept notification that names the time because no name was caught.
+// a kept notification that names the time because no name was caught; one the
+// server does not know is warned about at startup and its own zone is used.
 // GEMINI_API_KEY (optional locally) turns on the promise detector and the
 // jogger writer; without it Catch still hears and catches names, promises
 // nothing, and a kept conversation gets no jogger. There is no

@@ -439,7 +439,9 @@ export const SCRIPTS: Record<string, ScriptLine[]> = {
   ]),
   // D24, D99: a twenty-five-minute call with Ana about joining her lab. The
   // scenario keeps it at second 7 and long-presses at 25:00; the wearer speaks
-  // at least every ten minutes, so quiet never ends it (D92).
+  // at least every ten minutes, so quiet never ends it (D92). The wearer's
+  // promise comes before the last question and term, so a jogger that moved
+  // the promise to the end would be out of order (P4 fix round, head-1).
   'lab-call': brisk([
     { at: 0, who: 'wearer', text: 'Hi, thanks for taking the call.' },
     { at: 2.5, who: 'Ana', text: "Hi, I'm Ana." },
@@ -450,9 +452,9 @@ export const SCRIPTS: Record<string, ScriptLine[]> = {
     { gap: 1, who: 'Ana', text: 'Extending our equivariant transformer to small molecules.', terms: ['equivariant transformer'] },
     { at: 600, who: 'wearer', text: 'Is there funding for the summer?', ask: 'funding' },
     { gap: 1, who: 'Ana', text: 'Yes, from our NSF grant.' },
-    { at: 900, who: 'wearer', text: 'What should I read first?', ask: 'read' },
+    { at: 900, who: 'wearer', text: "I'll send you my transcript by Friday." },
+    { at: 1180, who: 'wearer', text: 'What should I read first?', ask: 'read' },
     { gap: 1, who: 'Ana', text: 'Start with our paper on inverse folding.', terms: ['inverse folding'] },
-    { at: 1180, who: 'wearer', text: "I'll send you my transcript by Friday." },
     { gap: 1, who: 'Ana', text: 'Great, talk soon.' },
   ]),
   // D62: a two-minute chat at a booth, kept at second 7, long-pressed at 2:00.

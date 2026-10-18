@@ -69,18 +69,43 @@ export function promiseNotification(conversation: number | undefined, you: reado
   return { title: 'Catch', body: cutLine(line), ...(conversation === undefined ? {} : { data: { conversation: String(conversation) } }) }
 }
 
+/** Whether `zone` is a time zone this runtime knows (Intl throws a RangeError on one it does not). */
+function knownTimeZone(zone: string): boolean {
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: zone })
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * CATCH_TIME_ZONE as the server uses it, checked once at startup (fix round,
+ * risk-2): a zone the runtime does not know is named in a warning and the
+ * server's own zone is used, so a typo never costs a kept notification.
+ */
+export function checkedTimeZone(zone: string | undefined, warn: (message: string) => void = console.warn): string | undefined {
+  if (zone === undefined || knownTimeZone(zone)) return zone
+  warn(`CATCH_TIME_ZONE is not a time zone this server knows (${JSON.stringify(zone)}): a kept notification with no name gives the time in the server's own zone`)
+  return undefined
+}
+
 /**
  * The notification for a kept conversation whose jogger has been written
  * (D24): "Kept: conversation with Ana", or with the time it began when no
  * name was caught ("Kept: conversation at 2:10 pm", in `timeZone`, the
- * wearer's; the server's own when unset). Opening it opens the jogger
+ * wearer's; the server's own when unset or unknown). The time is formatted
+ * only when it is used (risk-2). Opening it opens the jogger
  * (`data.screen`). It queues like any other (D114).
  */
 export function keptNotification(conversation: number, names: readonly string[], startedAt: number, timeZone?: string): PhoneNotification {
-  const time = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', ...(timeZone ? { timeZone } : {}) })
-    .format(startedAt)
-    .replace(/\s?([AP]M)$/, (_m, half: string) => ` ${half.toLowerCase()}`)
-  const line = `Kept: conversation ${names.length > 0 ? `with ${listOf([...names])}` : `at ${time}`}`
+  const at = () => {
+    const zone = timeZone !== undefined && knownTimeZone(timeZone) ? { timeZone } : {}
+    return new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', ...zone })
+      .format(startedAt)
+      .replace(/\s?([AP]M)$/, (_m, half: string) => ` ${half.toLowerCase()}`)
+  }
+  const line = `Kept: conversation ${names.length > 0 ? `with ${listOf([...names])}` : `at ${at()}`}`
   return { title: 'Catch', body: cutLine(line), data: { conversation: String(conversation), screen: 'jogger' } }
 }
 

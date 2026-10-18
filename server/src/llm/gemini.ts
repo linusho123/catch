@@ -1,5 +1,8 @@
 // The Gemini API adapter (DESIGN.md: chosen). Two pinned model ids and nothing
-// else: never a gemini-2.5-* id (retiring) and never a -preview id. The key is
+// else: never a gemini-2.5-* id (retiring) and never a -preview id. Both name
+// gemini-3.5-flash-lite since the P4 fix round (the visionary's answer): the
+// jogger moved off gemini-3.8-flash, whose free tier took 32-168 s with 503s
+// and twenty requests a day, which cannot meet D116's thirty seconds. The key is
 // GEMINI_API_KEY. P0b wraps this in the record-and-replay client; no test may
 // reach the network through it. Its errors never quote the prompt or the
 // answer, which come from the conversation (SafeModelError, head-log-1).
@@ -7,7 +10,7 @@
 import { SafeModelError } from './errors.ts'
 
 export const PROMISE_MODEL = 'gemini-3.5-flash-lite'
-export const JOGGER_MODEL = 'gemini-3.8-flash'
+export const JOGGER_MODEL = 'gemini-3.5-flash-lite'
 
 export type GeminiModel = typeof PROMISE_MODEL | typeof JOGGER_MODEL
 

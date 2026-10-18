@@ -4,7 +4,8 @@ import { generateText, JOGGER_MODEL, PROMISE_MODEL } from './gemini.ts'
 describe('the Gemini adapter', () => {
   it('pins the two chosen model ids, neither retiring nor preview', () => {
     expect(PROMISE_MODEL).toBe('gemini-3.5-flash-lite')
-    expect(JOGGER_MODEL).toBe('gemini-3.8-flash')
+    // P4 fix round, the visionary's answer: the jogger is written on flash-lite too (D116's thirty seconds).
+    expect(JOGGER_MODEL).toBe('gemini-3.5-flash-lite')
     for (const id of [PROMISE_MODEL, JOGGER_MODEL]) {
       expect(id).not.toMatch(/^gemini-2\.5-/)
       expect(id).not.toMatch(/preview/)

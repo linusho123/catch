@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { VirtualClock } from '../../test/harness/clock.ts'
-import { cutLine, keptNotification, listOf, NOTIFICATION_LINE_CHARS, NOTIFY_RETRY_MS, Outbox, promiseNotification, type Notifier, type PhoneNotification } from './notify.ts'
+import { checkedTimeZone, cutLine, keptNotification, listOf, NOTIFICATION_LINE_CHARS, NOTIFY_RETRY_MS, Outbox, promiseNotification, type Notifier, type PhoneNotification } from './notify.ts'
 
 // The notification semantics on their own (D28, D51, D114, D117).
 
@@ -39,6 +39,23 @@ describe('the kept notification (D24)', () => {
     const at = Date.UTC(2026, 9, 17, 21, 10)
     expect(keptNotification(7, [], at, 'America/Los_Angeles').body).toBe('Kept: conversation at 2:10 pm')
     expect(keptNotification(7, [], at, 'UTC').body).toBe('Kept: conversation at 9:10 pm')
+  })
+
+  // Fix round, risk-2: a mistyped CATCH_TIME_ZONE never costs a kept notification.
+  it('is still sent with a mistyped zone: by name when one was caught, in the server\'s zone when none was', () => {
+    const at = Date.UTC(2026, 9, 17, 21, 10)
+    expect(keptNotification(1, ['Ana'], at, 'Foo/Bar').body).toBe('Kept: conversation with Ana')
+    expect(keptNotification(1, [], at, 'Foo/Bar').body).toBe(keptNotification(1, [], at).body)
+  })
+
+  it('has its zone checked once at startup: a mistyped one is named in a warning and the server\'s own is used', () => {
+    const warn = vi.fn()
+    expect(checkedTimeZone('Foo/Bar', warn)).toBeUndefined()
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(String(warn.mock.calls[0]![0])).toMatch(/CATCH_TIME_ZONE.*Foo\/Bar/)
+    expect(checkedTimeZone('America/Los_Angeles', warn)).toBe('America/Los_Angeles')
+    expect(checkedTimeZone(undefined, warn)).toBeUndefined()
+    expect(warn).toHaveBeenCalledTimes(1)
   })
 })
 

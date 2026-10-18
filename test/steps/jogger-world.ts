@@ -206,13 +206,20 @@ export function heard(lines: readonly ScriptLine[]): string {
 /**
  * D99: one flat list, no sections, each bullet short, nothing padded, and
  * nothing set in bold that the conversation did not contain (the second
- * reviewer's focus). `transcript` is what Catch heard.
+ * reviewer's focus). `transcript` is what Catch heard. Every conversation read
+ * here was heard throughout (the gap scenario reads its jogger with steps of
+ * its own), so no bullet admits missed time: D53's line is absent when
+ * nothing was missed (fix round, head-2).
  */
 export function expectFlat(jogger: ReturnType<typeof joggerOn>, transcript: string, lineCount: number): void {
   expect(jogger.lists, 'one list').toBe(1)
   expect(jogger.headings, 'no headings under the header').toEqual([])
   expect(jogger.bullets.length, 'some bullets').toBeGreaterThan(0)
   expect(jogger.bullets.length, 'never padded: no more bullets than things said').toBeLessThanOrEqual(lineCount)
+  expect(
+    jogger.bullets.map((b) => b.text).filter((t) => /\bnot heard$/.test(t.trim())),
+    'Catch heard the whole conversation, yet the jogger says something was not heard',
+  ).toEqual([])
   for (const b of jogger.bullets) {
     // A short bullet (the builder's reading: one line of at most twenty-five words), and no heading in disguise.
     expect(b.text.split(/\s+/).length, `"${b.text}" is not short`).toBeLessThanOrEqual(25)
