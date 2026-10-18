@@ -36,9 +36,9 @@ const WIP: WipEntry[] = [
   // rows of the history and jogger outlines, with steps that match only the
   // "iPhone app" surface; P5 binds D117 (its owed line) and D28 (its "opens in
   // full", with both owed promises on the phone page's OWED TO YOU). The
-  // tick-off outlines and every website row are cut (D126, D130); the history
-  // and jogger outlines stay scenario-scoped wip while their website rows are
-  // unbound (deferred by D126, operator answer 3).
+  // tick-off outlines' iPhone rows are bound by P7 (D133) the same way. Every
+  // website row is cut (D126), so all four outlines stay scenario-scoped wip
+  // while their website rows are unbound (deferred by D126, operator answer 3).
   {
     feature: 'phone-handoff',
     scenarios: [

@@ -9,7 +9,8 @@ import { systemClock } from '../../shared/clock.ts'
 import type { HistoryResponse } from '../../shared/phone-protocol.ts'
 import { isHistory, isJogger, joggerLinkOn, joggerOn, openPhone, rowsOn, sectionsOn } from '../harness/phone.ts'
 
-// The phone API on a real server, and the phone page drawing from it (D130).
+// The phone API on a real server, and the phone page drawing from it (D130);
+// its one write, the tick (P7), is tested in phone-tick.test.ts.
 // The conversations are written into the store the way the server writes one
 // as it ends; P2a's promises and P4's keep will write them through the
 // pipeline, and the bound scenarios will read them through this same path.
@@ -102,8 +103,8 @@ describe('the phone page on the API', () => {
     ])
     await phone.open(Number(rows[1]!.conversation))
     expect(sectionsOn(record.innerHTML)).toEqual([
-      { title: 'YOU', promises: [{ text: 'Send Dev the deck tonight', tickable: false }, { text: 'Introduce Dev to Sam', tickable: false }] },
-      { title: 'OWED TO YOU', promises: [{ text: 'Dev sends the agenda', tickable: false }] },
+      { title: 'YOU', promises: [{ text: 'Send Dev the deck tonight', tickable: true }, { text: 'Introduce Dev to Sam', tickable: true }] },
+      { title: 'OWED TO YOU', promises: [{ text: 'Dev sends the agenda', tickable: true }] },
     ])
     await phone.home()
     expect(isHistory(record.innerHTML)).toBe(true)

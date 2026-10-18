@@ -7,7 +7,7 @@ import type { Phone, PhoneRoot } from '../../apps/lens/src/phone.ts'
 // stamped with the clock, and "the wearer sees" on the phone reads those
 // writes, never the page's own state. `rowsOn` and `sectionsOn` read a screen
 // the way the wearer would: the day headings, each row's names, time, open
-// count and kept mark; each section's promises.
+// count and kept mark; each section's promises, and each tick box (P7).
 
 export interface PhoneScreen {
   at: number
@@ -97,6 +97,15 @@ export function sectionsOn(markup: string): { title: string; promises: { text: s
       tickable: /<input type="checkbox"/.test(p[1]!) && !/<input type="checkbox" disabled/.test(p[1]!),
     })),
   }))
+}
+
+/** The tick box of the promise reading `promise` on a conversation screen, by the id it ticks (P7); undefined when no such promise shows. */
+export function tickBoxOn(markup: string, promise: string): string | undefined {
+  for (const p of markup.matchAll(/<li class="promise">(.*?)<\/li>/g)) {
+    const box = p[1]!.match(/<input type="checkbox" data-tick="(\d+)"/)
+    if (box && text(p[1]!) === promise) return box[1]
+  }
+  return undefined
 }
 
 /** The phone page started against the harness's server, drawing into a fresh record. */

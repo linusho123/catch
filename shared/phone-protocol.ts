@@ -1,19 +1,27 @@
 // What the server's phone API answers the plugin's phone page (D130): the
-// history (D100) and one conversation's screen (D98). Read-only GETs over the
-// store, behind the same shared token as /audio, sent as
-// `Authorization: Bearer <token>`. No runtime imports, so the browser bundle
+// history (D100) and one conversation's screen (D98), read with GETs over the
+// store, and one write, a promise ticked off (D39, D133, P7), all behind the
+// same shared token as /audio, sent as `Authorization: Bearer <token>`. No runtime imports, so the browser bundle
 // and Node load it as is. Times are milliseconds on the server's clock, like
 // Date.now(); the page groups and formats them in the phone's own time zone.
 //
 // Filled in by the phases that make what it carries: the wearer's promises
 // (`you`) in P2a, the keep (`kept`) and the jogger in P4, the promises owed to
-// the wearer (`owed`) in P5. Tick-off on the phone is cut (D126, D130), so
-// nothing yet sets `done`.
+// the wearer (`owed`) in P5, and `done` by a tick on the phone page (P7, D133).
 
 export const PHONE_HISTORY_PATH = '/phone/history'
 export const PHONE_CONVERSATION_PATH = '/phone/conversations/'
 /** GET /phone/conversations/<id>/jogger: a kept conversation's jogger (D99). */
 export const PHONE_JOGGER_SUFFIX = '/jogger'
+/**
+ * PUT /phone/promises/<id>/done: ticks one of the wearer's promises off (D39),
+ * YOU or OWED TO YOU, and answers that conversation's screen as it now stands
+ * (a ConversationResponse). Idempotent: a promise already ticked answers the
+ * same, and nothing ever unticks one. A promise that is not the token's
+ * wearer's is answered 404, like one that does not exist.
+ */
+export const PHONE_PROMISE_PATH = '/phone/promises/'
+export const PHONE_DONE_SUFFIX = '/done'
 
 /** One promise on a conversation's screen. */
 export interface PhonePromise {

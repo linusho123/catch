@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { ConversationResponse, HistoryResponse } from '../../../shared/phone-protocol.ts'
 import { systemClock } from '../../../shared/clock.ts'
 import { isHistory, PhoneScreenRecord, rowsOn, sectionsOn } from '../../../test/harness/phone.ts'
-import { clockTime, conversationMarkup, dayLabel, historyMarkup, httpOrigin, startPhone } from './phone.ts'
+import { clockTime, conversationMarkup, dayLabel, historyMarkup, httpOrigin, startPhone, TICK_NOT_SAVED } from './phone.ts'
 
 // The phone page's two screens (D100, D98), read back the way the wearer reads
 // them (test/harness/phone.ts); the API they come from is tested end to end in
@@ -31,7 +31,8 @@ const CONVERSATION: ConversationResponse = {
   owed: [
     { id: 10, text: 'Dev sends the agenda', done: false },
     { id: 11, text: 'Dev intros you to Kim', done: false },
-  ],  jogger: false,
+  ],
+  jogger: false,
 }
 
 describe('the history screen (D100)', () => {
@@ -63,15 +64,24 @@ describe('the history screen (D100)', () => {
 })
 
 describe("a conversation's screen (D98)", () => {
-  it('heads with the names and the time, then YOU and OWED TO YOU with every promise, each with a tick box drawn and inert', () => {
+  it('heads with the names and the time, then YOU and OWED TO YOU with every open promise, each with a live tick box (P7)', () => {
     const markup = conversationMarkup(CONVERSATION, NOW)
     expect(markup).toContain('<h1 class="names">Dev</h1>')
     expect(markup).toContain('2:10 pm')
     expect(sectionsOn(markup)).toEqual([
-      { title: 'YOU', promises: CONVERSATION.you.map((p) => ({ text: p.text, tickable: false })) },
-      { title: 'OWED TO YOU', promises: CONVERSATION.owed.map((p) => ({ text: p.text, tickable: false })) },
+      { title: 'YOU', promises: CONVERSATION.you.map((p) => ({ text: p.text, tickable: true })) },
+      { title: 'OWED TO YOU', promises: CONVERSATION.owed.map((p) => ({ text: p.text, tickable: true })) },
     ])
-    expect(markup.match(/<input type="checkbox" disabled/g)).toHaveLength(7)
+    expect(markup.match(/<input type="checkbox" data-tick="\d+"/g)).toHaveLength(7)
+    expect(markup).not.toContain('disabled')
+  })
+
+  it('leaves a promise that is done off the list (D39), in either section', () => {
+    const markup = conversationMarkup({ ...CONVERSATION, you: CONVERSATION.you.map((p) => ({ ...p, done: p.id === 0 })), owed: CONVERSATION.owed.map((p) => ({ ...p, done: true })) }, NOW)
+    expect(sectionsOn(markup).map((s) => [s.title, s.promises.map((p) => p.text)])).toEqual([
+      ['YOU', CONVERSATION.you.slice(1).map((p) => p.text)],
+      ['OWED TO YOU', []],
+    ])
   })
 
   it('draws both sections even when one is empty, and "no name" when none was caught', () => {
@@ -207,5 +217,165 @@ describe('the page', () => {
     await Promise.all([opening, refreshing])
     expect(isHistory(root.innerHTML)).toBe(false)
     expect(sectionsOn(root.innerHTML).map((s) => s.title)).toEqual(['YOU', 'OWED TO YOU'])
+  })
+
+  // P7: tick-off (D39, D133), its idempotency and its failures (the second reviewer's focus).
+  describe('a tick', () => {
+    const PROMISE = '/phone/promises/0/done'
+    const done = (c: ConversationResponse, ...ids: number[]): ConversationResponse => ({
+      ...c,
+      you: c.you.map((p) => (ids.includes(p.id) ? { ...p, done: true } : p)),
+      owed: c.owed.map((p) => (ids.includes(p.id) ? { ...p, done: true } : p)),
+    })
+    const you = (root: PhoneScreenRecord) => sectionsOn(root.innerHTML)[0]!.promises.map((p) => p.text)
+    const tick = (asked: { url: string }[]) => asked.filter((a) => new URL(a.url).pathname.startsWith('/phone/promises/'))
+
+    function puts(answer: () => Response | Promise<Response>) {
+      const asked: { url: string; method: string; auth: string | null }[] = []
+      const fetch = (async (url: string, init?: RequestInit) => {
+        asked.push({ url, method: init?.method ?? 'GET', auth: new Headers(init?.headers).get('authorization') })
+        const path = new URL(url).pathname
+        if (path === '/phone/conversations/3') return json(CONVERSATION)()
+        if (path === PROMISE) return answer()
+        return new Response('', { status: 404 })
+      }) as typeof globalThis.fetch
+      return { asked, fetch }
+    }
+
+    it('takes the promise off the screen at once, writes it with the shared token, then draws the server\'s answer', async () => {
+      let release!: () => void
+      const held = new Promise<void>((r) => (release = r))
+      const { asked, fetch } = puts(async () => {
+        await held
+        return json(done(CONVERSATION, 0))()
+      })
+      const root = new PhoneScreenRecord(systemClock)
+      const phone = startPhone({ root, server: 'ws://localhost:8080', token: 't0k', fetch, now: () => NOW })
+      await phone.open(3)
+      root.tap('data-tick', '0')
+      expect(you(root), 'off the screen before the server answers').toEqual(CONVERSATION.you.slice(1).map((p) => p.text))
+      expect(tick(asked)).toEqual([{ url: 'http://localhost:8080/phone/promises/0/done', method: 'PUT', auth: 'Bearer t0k' }])
+      const drawn = root.screens.length
+      release()
+      await new Promise((r) => setTimeout(r, 0))
+      await new Promise((r) => setTimeout(r, 0))
+      expect(root.screens.length, "the server's answer is drawn").toBe(drawn + 1)
+      expect(you(root)).toEqual(CONVERSATION.you.slice(1).map((p) => p.text))
+      expect(root.innerHTML).not.toContain('class="note"')
+    })
+
+    it('asks the server once for a double tap, and nothing for a promise already ticked', async () => {
+      const { asked, fetch } = puts(json(done(CONVERSATION, 0)))
+      const root = new PhoneScreenRecord(systemClock)
+      const phone = startPhone({ root, server: 'http://localhost:1', token: 't', fetch, now: () => NOW })
+      await phone.open(3)
+      await Promise.all([phone.tick(0), phone.tick(0)])
+      await phone.tick(0)
+      expect(tick(asked), 'one write').toHaveLength(1)
+      expect(you(root)).toEqual(CONVERSATION.you.slice(1).map((p) => p.text))
+      expect(root.innerHTML).not.toContain('class="note"')
+    })
+
+    it('puts the promise back, with a quiet line and no error screen, when the server cannot be reached or refuses it', async () => {
+      const answers: (() => Response | Promise<Response>)[] = [
+        async () => {
+          throw new TypeError('fetch failed')
+        },
+        () => new Response('{"error":"no such promise"}', { status: 404 }),
+        () => new Response('', { status: 401 }),
+        () => new Response('not json', { status: 200 }),
+        json(CONVERSATION),
+      ]
+      for (const answer of answers) {
+        const { fetch } = puts(answer)
+        const root = new PhoneScreenRecord(systemClock)
+        const phone = startPhone({ root, server: 'http://localhost:1', token: 't', fetch, now: () => NOW })
+        await phone.open(3)
+        await phone.tick(0)
+        expect(you(root), 'the promise is back, in its place').toEqual(CONVERSATION.you.map((p) => p.text))
+        expect(root.innerHTML).toContain(`<p class="note">${TICK_NOT_SAVED}</p>`)
+        expect(root.innerHTML).not.toContain('class="error"')
+        expect(sectionsOn(root.innerHTML)[1]!.promises, 'nothing else changed').toHaveLength(2)
+      }
+    })
+
+    it('keeps a confirmed tick off the screen when an older answer arrives after it', async () => {
+      let release!: () => void
+      const late = new Promise<void>((r) => (release = r))
+      let gets = 0
+      const fetch = (async (url: string) => {
+        const path = new URL(url).pathname
+        if (path === PROMISE) return json(done(CONVERSATION, 0))()
+        if (++gets === 2) await late
+        return json(CONVERSATION)()
+      }) as typeof globalThis.fetch
+      const root = new PhoneScreenRecord(systemClock)
+      const phone = startPhone({ root, server: 'http://localhost:1', token: 't', fetch, now: () => NOW })
+      await phone.open(3)
+      const refreshing = phone.refresh()
+      await phone.tick(0)
+      release()
+      await refreshing
+      expect(you(root), 'the refresh left before the tick and answered after it').toEqual(CONVERSATION.you.slice(1).map((p) => p.text))
+    })
+
+    it('touches no other screen when it fails after the wearer has gone back to the history', async () => {
+      let release!: () => void
+      const held = new Promise<void>((r) => (release = r))
+      const { fetch } = puts(async () => {
+        await held
+        throw new TypeError('fetch failed')
+      })
+      const root = new PhoneScreenRecord(systemClock)
+      const answers = fetch
+      const phone = startPhone({
+        root,
+        server: 'http://localhost:1',
+        token: 't',
+        fetch: (async (url: string, init?: RequestInit) => (new URL(url).pathname === '/phone/history' ? json(HISTORY)() : answers(url, init))) as typeof globalThis.fetch,
+        now: () => NOW,
+      })
+      await phone.open(3)
+      const ticking = phone.tick(0)
+      await phone.home()
+      release()
+      await ticking
+      expect(isHistory(root.innerHTML)).toBe(true)
+      await phone.open(3)
+      expect(you(root), 'the promise that was not saved is on its screen again').toEqual(CONVERSATION.you.map((p) => p.text))
+    })
+
+    it('draws the history again with the drop when a tick is confirmed after the wearer went back to it and it answered first (risk-3)', async () => {
+      let release!: () => void
+      const held = new Promise<void>((r) => (release = r))
+      let saved = false
+      const counted = (): HistoryResponse => ({
+        open: HISTORY.open - (saved ? 1 : 0),
+        conversations: HISTORY.conversations.map((c) => (c.id === 3 && saved ? { ...c, open: c.open - 1 } : c)),
+      })
+      const fetch = (async (url: string) => {
+        const path = new URL(url).pathname
+        if (path === '/phone/history') return json(counted())()
+        if (path === '/phone/conversations/3') return json(CONVERSATION)()
+        if (path === PROMISE) {
+          await held
+          saved = true
+          return json(done(CONVERSATION, 0))()
+        }
+        return new Response('', { status: 404 })
+      }) as typeof globalThis.fetch
+      const root = new PhoneScreenRecord(systemClock)
+      const phone = startPhone({ root, server: 'http://localhost:1', token: 't', fetch, now: () => NOW })
+      await phone.open(3)
+      const ticking = phone.tick(0)
+      await phone.home()
+      expect(rowsOn(root.innerHTML).find((r) => r.at === at(14, 10))!.open, 'the history answered before the tick landed').toBe('2 open')
+      release()
+      await ticking
+      for (let i = 0; i < 5; i++) await new Promise((r) => setTimeout(r, 0))
+      expect(isHistory(root.innerHTML)).toBe(true)
+      expect(rowsOn(root.innerHTML).find((r) => r.at === at(14, 10))!.open, "the row's open count dropped once the tick was confirmed").toBe('1 open')
+      expect(root.innerHTML).toContain('<p class="open-total">4 open</p>')
+    })
   })
 })

@@ -7,7 +7,7 @@ import { History } from '../../server/src/phone/history.ts'
 import type { Store } from '../../server/src/store.ts'
 import { HARNESS_TOKEN, OTHER_HARNESS_TOKEN } from '../harness/index.ts'
 import { linesOf, type Captured } from '../harness/notifications.ts'
-import { isHistory, joggerLinkOn, openPhone, rowsOn, sectionsOn, type PhoneScreen } from '../harness/phone.ts'
+import { isHistory, joggerLinkOn, openPhone, rowsOn, sectionsOn, tickBoxOn, type PhoneScreen, type PhoneScreenRecord } from '../harness/phone.ts'
 import { find, rows, tables } from '../harness/store-reader.ts'
 import {
   expectFlat,
@@ -85,6 +85,18 @@ import {
 // through the page's own links, history row, conversation screen, "Kept
 // conversation ›", and read against the store (jogger-world.ts).
 
+// P7 (D39, D133) binds the iPhone rows of the two tick-off outlines against
+// the phone page, with steps that match only the "iPhone app" surface; their
+// website rows stay unbound and the outlines in wip (D126). The conversation
+// is played through the whole pipeline and ended on the glasses; its screen is
+// opened from its notification on the phone page; the tick is a tap on the
+// promise's tick box, through the page's own click handler, and the page has
+// drawn the server's answer before the Then reads it. "Sees only ..." reads
+// the screen the page drew, then the far side: the promise's row in the
+// store's file, the screen drawn again by a fresh page (a reload), and the
+// history row's open count, which drops for the wearer's own and stays for an
+// owed one (operator answer 2).
+
 const V = 'wearer-louder'
 
 // The in-world control (fix round, M1): a conversation with a promise, for the
@@ -148,6 +160,9 @@ interface HandoffWorld extends PhoneWorld, JoggerWorld {
   backAt?: number
   /** D100: the history's three conversations as the lens caught them: names, promises, and the clock at their start. */
   day?: { names: string[]; promised: string[]; at: number }[]
+  /** P7: the conversation screen opened on the phone page, its conversation, its history row's count before the tick, and the promise ticked. */
+  screenOpen?: { record: PhoneScreenRecord; conversation: string; openBefore: string }
+  tickedOff?: { text: string; id: string }
 }
 
 /** The lens's lines since the scenario's fixture began: the wearer's promise summaries, the owed lines (`Dev promised · …`, P5), and the names. */
@@ -221,7 +236,108 @@ function distinctiveWords(w: LensWorld, summary: string): string[] {
   return [...new Set(words.filter((t) => !keep.has(t.toLowerCase())))]
 }
 
+/** A conversation screen's sections, each title with its promises' text. */
+const sectionTexts = (markup: string) => Object.fromEntries(sectionsOn(markup).map((s) => [s.title, s.promises.map((p) => p.text)]))
+
+/** The history row's open count for a conversation, from a fresh phone page. */
+async function openCountOf(w: LensWorld, conversation: string): Promise<string> {
+  const { phone, record } = await openPhone({ server: w.h!.server.url, token: HARNESS_TOKEN, clock: w.h!.clock })
+  await phone.home()
+  const row = rowsOn(record.innerHTML).find((r) => r.conversation === conversation)
+  expect(row, 'the conversation is on the history').toBeDefined()
+  return row!.open
+}
+
+/**
+ * P7: the handoff conversation (the wearer's two promises to Dev, Dev's one)
+ * played through the pipeline and ended with a long-press; its notification
+ * opened on the phone page, which shows its screen.
+ */
+async function openHandoffScreen(w: HandoffWorld): Promise<Record<string, string[]>> {
+  const h = await begin(w)
+  await playAll(w, `handoff.${V}`)
+  expect(w.caught, 'the conversation is with Dev').toEqual(['Dev'])
+  expect(w.promised, "the wearer's two promises, seen on the lens").toEqual(['send Dev the deck tonight', 'introduce Dev to Sam'])
+  expect(w.owedShown, "Dev's, seen on the lens").toEqual(['Dev promised · send the agenda'])
+  await longPress(w)
+  await waitFor(w, () => (h.notifications.phone(ACCOUNT).length > 0 ? true : undefined))
+  const n = theNotification(w)
+  const conversation = n.notification.data!.conversation!
+  const openBefore = await openCountOf(w, conversation)
+  const { phone, record } = await openPhone({ server: h.server.url, token: HARNESS_TOKEN, clock: h.clock })
+  await phone.openNotification(n.notification.data)
+  expect(record.innerHTML, "the notification opens that conversation's screen").toContain('<h1 class="names">Dev</h1>')
+  w.screenOpen = { record, conversation, openBefore }
+  return sectionTexts(record.innerHTML)
+}
+
+/** The promise's row in the store's file, and every other row of its conversation, as done flags by text. */
+function doneInStore(w: HandoffWorld): Record<string, number> {
+  const its = (rows(w.h!.dbPath, 'promises') as { conversation_id: number; text: string; done: number }[]).filter((p) => String(p.conversation_id) === w.screenOpen!.conversation)
+  return Object.fromEntries(its.map((p) => [p.text, p.done]))
+}
+
+/** The far side of a tick: the store's row, a reloaded page's screen, and the screen the page drew carrying no "not saved" line. */
+async function expectTickHeld(w: HandoffWorld, expected: Record<string, string[]>): Promise<void> {
+  const h = w.h!
+  const { record, conversation } = w.screenOpen!
+  const ticked = w.tickedOff!
+  expect(record.innerHTML, 'the page says the tick was not saved').not.toContain('class="note"')
+  const store = doneInStore(w)
+  expect(store[ticked.text], `"${ticked.text}" is not done in the store: the tick only hid it on the phone`).toBe(1)
+  expect(Object.entries(store).filter(([text, done]) => text !== ticked.text && done !== 0), 'another promise was ticked in the store').toEqual([])
+  // A reload: a fresh page, the same conversation's screen, drawn from the server.
+  const reloaded = await openPhone({ server: h.server.url, token: HARNESS_TOKEN, clock: h.clock })
+  await reloaded.phone.open(Number(conversation))
+  expect(sectionTexts(reloaded.record.innerHTML), 'the screen after a reload').toEqual(expected)
+}
+
 const phoneHandoff: Definer<HandoffWorld> = (reg) => {
+  // P7 (D39, D98, D133), the iPhone rows: tick-off on the phone page.
+  reg.define(/^the wearer has opened a conversation's screen on the iPhone app showing "([^"]+)" and "([^"]+)" under YOU$/, async (w, firstArg, secondArg) => {
+    const sections = await openHandoffScreen(w)
+    expect(sections['YOU'], 'under YOU').toEqual([String(firstArg), String(secondArg)])
+    expect(w.screenOpen!.openBefore, 'the history row counts both').toBe('2 open')
+  })
+
+  reg.define(/^the wearer has opened a conversation's screen on the iPhone app showing "([^"]+)" under OWED TO YOU$/, async (w, owedArg) => {
+    const sections = await openHandoffScreen(w)
+    expect(sections['OWED TO YOU'], 'under OWED TO YOU').toEqual([String(owedArg)])
+  })
+
+  reg.define(/^the wearer ticks off "([^"]+)"$/, async (w, promiseArg) => {
+    const { record } = w.screenOpen!
+    const text = String(promiseArg)
+    const id = tickBoxOn(record.innerHTML, text)
+    expect(id, `no tick box for "${text}" on the screen`).toBeDefined()
+    const drawn = record.screens.length
+    record.tap('data-tick', id)
+    // The page draws the tick at once, then the server's answer.
+    expect(record.screens.length, 'the tick shows at once').toBe(drawn + 1)
+    await waitFor(w, () => (record.screens.length > drawn + 1 ? true : undefined))
+    expect(record.screens.length, "the page drew the server's answer").toBe(drawn + 2)
+    w.tickedOff = { text, id: id! }
+  })
+
+  reg.define(/^the wearer sees only "([^"]+)" under YOU on the iPhone app$/, async (w, leftArg) => {
+    const { record, conversation, openBefore } = w.screenOpen!
+    const expected = { YOU: [String(leftArg)], 'OWED TO YOU': sectionTexts(record.screens[0]!.markup)['OWED TO YOU']! }
+    expect(sectionTexts(record.innerHTML), 'the screen').toEqual(expected)
+    await expectTickHeld(w, expected)
+    // The history row's count drops by the one ticked off.
+    expect([openBefore, await openCountOf(w, conversation)], "the history row's open count").toEqual(['2 open', '1 open'])
+  })
+
+  reg.define(/^the wearer sees nothing under OWED TO YOU on the iPhone app$/, async (w) => {
+    const { record, conversation, openBefore } = w.screenOpen!
+    const expected = { YOU: sectionTexts(record.screens[0]!.markup)['YOU']!, 'OWED TO YOU': [] }
+    expect(sectionTexts(record.innerHTML), 'the screen').toEqual(expected)
+    expect(expected.YOU, "the wearer's own are untouched").toHaveLength(2)
+    await expectTickHeld(w, expected)
+    // An owed promise never counted (operator answer 2): the row's count is as it was.
+    expect([openBefore, await openCountOf(w, conversation)], "the history row's open count").toEqual(['2 open', '2 open'])
+  })
+
   // D117 (the owed second line is P5's and stays unbound).
   reg.define(/^in a conversation with Dev the wearer said "([^"]+)" and "([^"]+)"$/, async (w, firstArg, secondArg) => {
     await begin(w)

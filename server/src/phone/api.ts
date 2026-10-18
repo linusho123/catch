@@ -1,14 +1,17 @@
 import { createHash, timingSafeEqual } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { PHONE_CONVERSATION_PATH, PHONE_HISTORY_PATH, PHONE_JOGGER_SUFFIX } from '../../../shared/phone-protocol.ts'
+import { PHONE_CONVERSATION_PATH, PHONE_DONE_SUFFIX, PHONE_HISTORY_PATH, PHONE_JOGGER_SUFFIX, PHONE_PROMISE_PATH } from '../../../shared/phone-protocol.ts'
 import type { History } from './history.ts'
 
 // The phone API (D130): the plugin's phone page reads the history (D100), one
-// conversation's screen (D98) and a kept conversation's jogger (D99) from here. Read-only: GET only, nothing
-// written. It takes the same shared token as /audio (CATCH_AUDIO_TOKEN), as
-// `Authorization: Bearer <token>` (a fetch can set headers, unlike a browser
-// WebSocket), and answers only with the conversations of the wearer that
-// token stands for (D79).
+// conversation's screen (D98) and a kept conversation's jogger (D99) from here,
+// with GETs, and ticks a promise off (D39, D133, P7) with the one write,
+// `PUT /phone/promises/<id>/done`, idempotent: a second tick of the same
+// promise answers the same and changes nothing. It takes the same shared token
+// as /audio (CATCH_AUDIO_TOKEN), as `Authorization: Bearer <token>` (a fetch
+// can set headers, unlike a browser WebSocket), and reads and writes only the
+// conversations of the wearer that token stands for (D79): another wearer's
+// promise is answered 404, as one that does not exist, and is never touched.
 
 /** The wearer a shared token stands for: the key the server files sessions and conversations under. */
 export function wearerOf(token: string): string {
@@ -31,13 +34,15 @@ export function phoneRoute(
   opts: { history: History; expected: readonly Buffer[]; headers: Record<string, string> },
 ): boolean {
   const path = new URL(req.url ?? '/', 'http://localhost').pathname
-  if (path !== PHONE_HISTORY_PATH && !path.startsWith(PHONE_CONVERSATION_PATH)) return false
+  const tick = path.startsWith(PHONE_PROMISE_PATH)
+  if (path !== PHONE_HISTORY_PATH && !path.startsWith(PHONE_CONVERSATION_PATH) && !tick) return false
   const json = (status: number, body: unknown) => {
     res.writeHead(status, { ...opts.headers, 'content-type': 'application/json', 'cache-control': 'no-store' })
     res.end(JSON.stringify(body))
   }
-  if (req.method !== 'GET') {
-    res.writeHead(405, { ...opts.headers, allow: 'GET' }).end()
+  const allowed = tick ? 'PUT' : 'GET'
+  if (req.method !== allowed) {
+    res.writeHead(405, { ...opts.headers, allow: allowed }).end()
     return true
   }
   const token = bearer(req)
@@ -46,6 +51,14 @@ export function phoneRoute(
     return true
   }
   const wearer = wearerOf(token)
+  if (tick) {
+    const rest = path.slice(PHONE_PROMISE_PATH.length)
+    const id = rest.endsWith(PHONE_DONE_SUFFIX) ? rest.slice(0, -PHONE_DONE_SUFFIX.length) : ''
+    const screen = /^\d+$/.test(id) ? opts.history.tick(wearer, Number(id)) : undefined
+    if (screen) json(200, screen)
+    else json(404, { error: 'no such promise' })
+    return true
+  }
   if (path === PHONE_HISTORY_PATH) {
     json(200, opts.history.list(wearer))
     return true

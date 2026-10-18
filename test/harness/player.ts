@@ -369,6 +369,11 @@ export class FixtureRun {
     this.items = [...frames, ...words].sort((a, b) => a.t - b.t || a.kind - b.kind)
   }
 
+  /** The fixture second of the next frame or word still to be played (Infinity when every one has been). */
+  get next(): number {
+    return this.items[this.cursor]?.t ?? Infinity
+  }
+
   /** The end of the 100 ms frame that carries fixture second `t`: a word ending at `t` is heard once it is played. */
   frameEnd(t: number): number {
     return Math.round(Math.ceil(t / FRAME_SECONDS - 1e-6) * FRAME_SECONDS * 1000) / 1000
