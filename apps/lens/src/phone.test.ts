@@ -146,6 +146,18 @@ describe('the page', () => {
     expect(isHistory(root.innerHTML)).toBe(true)
   })
 
+  it('ends the open conversation from the history\'s End conversation button, then redraws the history', async () => {
+    const { asked, fetch } = fakeServer({ '/phone/history': json(HISTORY), '/phone/end': json({ ended: true }) })
+    const root = new PhoneScreenRecord(systemClock)
+    const phone = startPhone({ root, server: 'ws://localhost:8080', token: 't0k', fetch, now: () => NOW })
+    await phone.home()
+    root.tap('data-end')
+    for (let i = 0; i < 4; i++) await new Promise((r) => setTimeout(r, 0))
+    expect(asked.map((a) => new URL(a.url).pathname)).toEqual(['/phone/history', '/phone/end', '/phone/history'])
+    expect(asked[1]!.auth).toBe('Bearer t0k')
+    expect(isHistory(root.innerHTML)).toBe(true)
+  })
+
   it('says when the server refuses the token or cannot be reached, with a way to try again', async () => {
     const refused = fakeServer({ '/phone/history': () => new Response('', { status: 401 }) })
     const root = new PhoneScreenRecord(systemClock)
