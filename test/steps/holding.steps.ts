@@ -228,6 +228,8 @@ const holding: Definer<LensWorld & JoggerWorld> = (reg) => {
     expect(new Set(intros.map((l) => l.who)).size, 'thirty people').toBe(30)
     expect(new Set(heard).size, 'thirty different names').toBe(30)
     const last = lineIn(run, intros.at(-1)!.text)
+    // Every word played, the silences between the introductions skipped (head-2); then the last name's bound, played.
+    await fastForward(w, last.end)
     await playTo(w, last.end + (NAME_BOUND_MS + SLACK_MS) / 1000)
     // The lens caught each of them in turn, as they spoke.
     expect(linesShown(h, w.dotSince!, h.clock.now()).map((l) => l.text), 'the names caught, in the order heard').toEqual(heard)
@@ -239,6 +241,7 @@ const holding: Definer<LensWorld & JoggerWorld> = (reg) => {
     const last = lineIn(run, run.fixture.lines.filter((l) => l.who !== 'wearer').at(-1)!.text)
     const deck = lineIn(run, "Dev, I'll send you the deck.", last.end)
     expect(deck.words.every((wd) => wd.role === 'wearer'), 'the wearer promises').toBe(true)
+    await fastForward(w, run.fixture.words.at(-1)!.end)
     await playTo(w, run.fixture.words.at(-1)!.end + PROMISE_DONE_S)
     const shown = promiseLinesShown(w, run.at(deck.start), w.h!.clock.now())
     expect(shown.promises, 'the promise, as the lens showed it').toEqual(['promised · send Dev the deck'])

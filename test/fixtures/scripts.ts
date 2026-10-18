@@ -526,14 +526,16 @@ export const SCRIPTS: Record<string, ScriptLine[]> = {
     { gap: 1, who: 'Dev', text: "And I'll share the notes." },
   ],
   // P10, D43: thirty people introduce themselves around a circle, each a
-  // different voice, about a second apart, every name different (so D87 never
-  // numbers one); then the wearer promises Dev the deck.
-  circle: [
+  // different voice, one after another, every name different (so D87 never
+  // numbers one); then the wearer promises Dev the deck. Brisk (P4), so the
+  // thirty introductions stay cheap to play (head-2).
+  circle: brisk([
     { at: 0, who: 'wearer', text: "Hi everyone, let's go around the circle." },
     ...CIRCLE.map((name, i): ScriptLine => ({ gap: i === 0 ? 1 : 0.4, who: name, text: `I'm ${name}.` })),
-    { gap: 1, who: 'wearer', text: "Dev, I'll send you the deck." },
+    // Past the last name's two-second bound, so the promise's line never falls inside them; the silence costs nothing.
+    { gap: 3, who: 'wearer', text: "Dev, I'll send you the deck." },
     { gap: 1, who: 'wearer', text: 'Thanks, everyone.' },
-  ],
+  ]),
   // D51: Priya and Marcus introduce themselves and nobody promises anything; then the wearer says nothing.
   'names-only': [
     { at: 0, who: 'wearer', text: 'Hi everyone, good to see you all.' },

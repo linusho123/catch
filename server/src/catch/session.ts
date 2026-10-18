@@ -892,7 +892,8 @@ export class Session {
    * On the prompt it changes nothing (the prompt stays, D41); on a line it
    * means nothing. On a held page it scrolls back (D43, P10): the names page
    * to the page of names before, the promises page to the last names; at the
-   * first name it does nothing, never the prompt. With no conversation open
+   * first name it changes nothing on the lens, never the prompt, but restarts
+   * the page's five seconds (a touch). With no conversation open
    * there is nothing to keep, and it does nothing.
    */
   swipeUp(): void {
@@ -901,6 +902,8 @@ export class Session {
       case 'names': {
         const page = this.heldPage ?? { thread: this.view.thread, from: 0 }
         if (page.from > 0) this.showNames(page.thread, Math.max(0, page.from - namesPerPage(page.thread)))
+        // At the first name nothing changes on the lens, but a touch restarts the page's five seconds (D43; the operator's answer 4).
+        else this.restartPage()
         return
       }
       case 'promises': {
@@ -1203,6 +1206,12 @@ export class Session {
     this.heldPage = { thread, from: page.from }
     this.viewTimer = this.clock.setTimeout(() => this.backToDot(), PAGE_MS)
     this.render()
+  }
+
+  /** The page showing stays, its five seconds counted again from now (D43: "5 seconds pass with no touch"). */
+  private restartPage(): void {
+    if (this.viewTimer) this.clock.clearTimeout(this.viewTimer)
+    this.viewTimer = this.clock.setTimeout(() => this.backToDot(), PAGE_MS)
   }
 
   /** Shows the promises page, for five seconds of its own (D43, D112): the wearer's own, then those owed (P5). */
