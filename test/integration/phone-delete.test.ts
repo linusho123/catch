@@ -18,6 +18,7 @@ import { NotificationCapture } from '../harness/notifications.ts'
 import { isHistory, openPhone, rowsOn } from '../harness/phone.ts'
 import { pcmAt } from '../harness/player.ts'
 import { find, rows } from '../harness/store-reader.ts'
+import { audioProtocols } from '../../shared/audio-token.ts'
 
 // D134 on a real server over its own SQLite file: a conversation deleted from
 // its screen on the phone page is gone everywhere. Its history row, names,
@@ -122,7 +123,7 @@ const until = async (ok: () => boolean, what: string) => {
 
 /** The lens: a real /audio socket, the views the server sent it, and speech at a loudness (the loudness split, D126). */
 async function lens(server: RunningServer, say: (w: SttWord[]) => void) {
-  const socket = new WebSocket(`${server.url.replace(/^http/, 'ws')}/audio?token=${TOKEN}&lens=delete-test`)
+  const socket = new WebSocket(`${server.url.replace(/^http/, 'ws')}/audio?lens=delete-test`, audioProtocols(TOKEN))
   sockets.push(socket)
   const views: LensView[] = []
   let acks = 0
