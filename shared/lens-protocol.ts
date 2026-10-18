@@ -64,6 +64,20 @@ export type ServerMessage =
    * reconnects during a pause never reopens the microphone.
    */
   | { type: 'listening'; on: boolean }
+  /**
+   * How the lens draws (readability pass, on the real G2): the text's
+   * brightness (the SDK's textColor, 0..4) and where the dot sits. Sent once
+   * as the server takes a socket, from CATCH_LENS_BRIGHTNESS, CATCH_DOT_X and
+   * CATCH_DOT_Y; a lens that never hears it keeps its defaults, and an older
+   * lens ignores it.
+   */
+  | { type: 'style'; style: LensStyle }
+
+/** The lens's brightness and the dot's top-left corner on the 576 x 288 canvas. */
+export interface LensStyle {
+  brightness: number
+  dot: { x: number; y: number }
+}
 
 /**
  * A tap; a long-press ends the conversation now (D52); a swipe down scrolls

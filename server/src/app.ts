@@ -5,7 +5,7 @@ import type { AddressInfo } from 'node:net'
 import { WebSocketServer } from 'ws'
 import { systemClock, type Clock, type TimerHandle } from '../../shared/clock.ts'
 import { AUDIO_PROTOCOL, offeredTokens, tokenFromProtocol } from '../../shared/audio-token.ts'
-import { parseLensMessage, type LensView, type ServerMessage } from '../../shared/lens-protocol.ts'
+import { parseLensMessage, type LensStyle, type LensView, type ServerMessage } from '../../shared/lens-protocol.ts'
 import { decodeFrame, type AudioFrame } from '../../shared/wire.ts'
 import { writeKeptJogger, type TidyOutcome } from './catch/jogger.ts'
 import { command, PromiseDetector } from './catch/promises.ts'
@@ -140,6 +140,8 @@ export interface ServerOptions {
    * and the keep prompt's swipe downs are as they were.
    */
   pause?: boolean
+  /** How the lens draws (CATCH_LENS_BRIGHTNESS, CATCH_DOT_X, CATCH_DOT_Y); sent as each socket is taken. Unset, the lens keeps its own defaults. */
+  lensStyle?: LensStyle
   /** The model client the detectors and the jogger writer call (P1a on). */
   model?: ModelClient
   /** Where phone notifications go (P2a on); without one, the phone page's history is the only way promises reach the phone. */
@@ -455,6 +457,8 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     })
     // Every socket starts muted on the lens, so its microphone never opens during a pause (the operator's answer 3): say to listen, unless paused.
     if (!paused) send({ type: 'listening', on: true })
+    // Readability pass: the lens's brightness and the dot's place, tunable on the glasses without a new package.
+    if (opts.lensStyle) send({ type: 'style', style: opts.lensStyle })
     function openStream(): void {
       retry = undefined
       if (!opts.stt || closed || paused) return
@@ -589,6 +593,23 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
  * Anything else is refused, so a typo never silently leaves the operator's
  * choice undone.
  */
+/**
+ * CATCH_LENS_BRIGHTNESS (0..4), CATCH_DOT_X and CATCH_DOT_Y (pixels on the
+ * 576 x 288 canvas): how the lens draws. With none set there is no style and
+ * the lens keeps its defaults; a value that is not a number is refused.
+ */
+export function lensStyleFromEnv(env: Record<string, string | undefined>): LensStyle | undefined {
+  const read = (name: string, fallback: number) => {
+    const raw = env[name]?.trim()
+    if (!raw) return fallback
+    const n = Number(raw)
+    if (!Number.isFinite(n)) throw new Error(`${name} must be a number, got ${JSON.stringify(env[name])}`)
+    return n
+  }
+  if (!['CATCH_LENS_BRIGHTNESS', 'CATCH_DOT_X', 'CATCH_DOT_Y'].some((k) => env[k]?.trim())) return undefined
+  return { brightness: read('CATCH_LENS_BRIGHTNESS', 1), dot: { x: read('CATCH_DOT_X', 552), y: read('CATCH_DOT_Y', 0) } }
+}
+
 export function pauseFromEnv(value: string | undefined): boolean {
   const v = (value ?? '').trim().toLowerCase()
   if (v === '' || v === 'off') return false

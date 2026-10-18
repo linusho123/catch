@@ -16,7 +16,24 @@ import type { SpeechToText, SttStream, SttWord } from './types.ts'
 
 export const DEEPGRAM_LISTEN = 'wss://api.deepgram.com/v1/listen'
 
-export function deepgramUrl(): string {
+/** At most this many keyterms go to Deepgram (nova-3's keyterm prompting has a cap). */
+export const MAX_KEYTERMS = 100
+
+/**
+ * CATCH_KEYTERMS: a comma list of words Deepgram should listen for, such as
+ * the names the wearer expects to hear, so it mishears them less (nova-3
+ * keyterm prompting). Trimmed, blanks and repeats dropped, at most 100.
+ */
+export function keytermsFromEnv(value: string | undefined): string[] {
+  const seen = new Set<string>()
+  for (const raw of (value ?? '').split(',')) {
+    const term = raw.trim()
+    if (term && !seen.has(term)) seen.add(term)
+  }
+  return [...seen].slice(0, MAX_KEYTERMS)
+}
+
+export function deepgramUrl(opts: { keyterms?: readonly string[] } = {}): string {
   const params = new URLSearchParams({
     model: 'nova-3',
     language: 'en',
@@ -33,7 +50,11 @@ export function deepgramUrl(): string {
     diarize: 'true',
     // Opt out of Deepgram's model-improvement retention (D76: nothing survives).
     mip_opt_out: 'true',
+    // Readability pass: Deepgram's smart formatting (punctuation, capitals,
+    // numbers) on top of punctuate, so names and sentences read better.
+    smart_format: 'true',
   })
+  for (const term of opts.keyterms ?? []) params.append('keyterm', term)
   return `${DEEPGRAM_LISTEN}?${params}`
 }
 
@@ -102,11 +123,13 @@ export interface DeepgramOptions {
   url?: string
   /** Where the KeepAlive timer's time comes from; the system clock by default. */
   clock?: Clock
+  /** Words Deepgram should listen for (CATCH_KEYTERMS); ignored when `url` is given. */
+  keyterms?: readonly string[]
 }
 
 export function deepgram(apiKey: string, opts: DeepgramOptions = {}): SpeechToText {
   if (!apiKey) throw new Error('DEEPGRAM_API_KEY is not set')
-  const url = opts.url ?? deepgramUrl()
+  const url = opts.url ?? deepgramUrl({ keyterms: opts.keyterms })
   const clock = opts.clock ?? systemClock
   return {
     name: 'deepgram',
