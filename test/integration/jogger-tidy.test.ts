@@ -14,6 +14,7 @@ import { VirtualClock } from '../harness/clock.ts'
 import { NotificationCapture } from '../harness/notifications.ts'
 import { pcmAt } from '../harness/player.ts'
 import { find, rows } from '../harness/store-reader.ts'
+import { audioProtocols } from '../../shared/audio-token.ts'
 
 // P7: a kept conversation's tidy pass on the running server. Tidied, its
 // answer is the jogger stored; failed, or still out when D116's thirty seconds
@@ -81,7 +82,7 @@ async function keptConversation(tidy: () => Promise<string>, minutes = 0) {
   const tidies: TidyOutcome[] = []
   server.events.on('modelError', ({ error }) => modelErrors.push(error))
   server.events.on('joggerTidy', ({ outcome }) => tidies.push(outcome))
-  const socket = new WebSocket(`${server.url.replace(/^http/, 'ws')}/audio?token=${TOKEN}&lens=jogger-tidy`)
+  const socket = new WebSocket(`${server.url.replace(/^http/, 'ws')}/audio?lens=jogger-tidy`, audioProtocols(TOKEN))
   sockets.push(socket)
   const views: LensView[] = []
   let acks = 0

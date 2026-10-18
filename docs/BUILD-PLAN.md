@@ -355,7 +355,7 @@ The plan's second revision follows four rulings, each signed by the visionary th
 2. **D118** amends D104: the thread before the promises; the Beta uploaded in P1b; the shipping phase (PS) before the iPhone app.
 3. **D119** amends D95: the provider's speaker labels as the split's fallback, for "the wearer or not" only, behind the same interface as the loudness split.
 4. **D120**: with automatic detection off, a tap on the bare dot opens the held page with the thread line first; one scenario in `dropped-thread.feature`, bound in P3.
-5. **D125** amends D119 (**drafted, awaiting signature**): the Even SDK's per-frame speaker role becomes the first wearer signal, with loudness and the provider's labels behind it, each still answering only "the wearer or not". Declined: D119 stands, and P0a builds two implementations instead of three.
+5. **D125** amends D119 (**signed 2026-10-17 as D127**): the Even SDK's per-frame speaker role becomes the first wearer signal, with loudness and the provider's labels behind it, each still answering only "the wearer or not". Declined: D119 stands, and P0a builds two implementations instead of three.
 
 ## Ruled 2026-10-17 at the start of the build (D126)
 

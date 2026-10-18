@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import type { EvenAppBridge } from '@evenrealities/even_hub_sdk'
+import { AUDIO_PROTOCOL, tokenFromProtocol } from '../../../shared/audio-token.ts'
 import { boot, hasEvenBridge } from './boot.ts'
 import { startLens } from './lens.ts'
 import type { Phone, PhoneOptions } from './phone.ts'
@@ -14,15 +15,18 @@ import type { Phone, PhoneOptions } from './phone.ts'
 // /audio" is read from what was dialled, not from a flag the page keeps.
 
 const opened: string[] = []
+/** The subprotocols each socket offered, beside its URL in `opened`. */
+const offered: (string | string[] | undefined)[] = []
 const RealWebSocket = globalThis.WebSocket
 
 class RecordingSocket extends EventTarget {
   static readonly OPEN = 1
   readyState = 0
   binaryType = 'blob'
-  constructor(url: string) {
+  constructor(url: string, protocols?: string | string[]) {
     super()
     opened.push(url)
+    offered.push(protocols)
   }
   send(): void {}
   close(): void {
@@ -33,6 +37,7 @@ class RecordingSocket extends EventTarget {
 
 beforeEach(() => {
   opened.length = 0
+  offered.length = 0
   ;(globalThis as { WebSocket: unknown }).WebSocket = RecordingSocket
 })
 afterEach(() => {
@@ -106,6 +111,31 @@ describe('the plugin page with no Even bridge (a plain browser tab)', () => {
     })
     expect(opened.filter((u) => u.includes('/audio')), 'the lens opened /audio').toHaveLength(1)
     expect(booted.lens).toBeDefined()
+    await booted.lens!.stop()
+  })
+
+  it('dials /audio with the shared token as a subprotocol, never in its URL (PH)', async () => {
+    const token = 'q+3/Zk9xP0aB7cD/Ee+FfGgHh1Ii2Jj3Kk4Ll5Mm6N0='
+    const booted = await boot({
+      window: { flutter_inappwebview: { callHandler: async () => null } },
+      phoneRoot: root,
+      status: null,
+      server: 'ws://localhost:8080',
+      token,
+      startPhone: phoneStub().startPhone,
+      startLens,
+      waitForBridge: stubBridge().wait,
+      bridgeWaitMs: 50,
+    })
+    const i = opened.findIndex((u) => u.includes('/audio'))
+    expect(i).toBeGreaterThanOrEqual(0)
+    const url = new URL(opened[i]!)
+    expect(url.searchParams.has('token')).toBe(false)
+    expect(opened[i]).not.toContain(encodeURIComponent(token))
+    expect(opened[i]).not.toContain(token)
+    const protocols = offered[i] as string[]
+    expect(protocols[0]).toBe(AUDIO_PROTOCOL)
+    expect(protocols.slice(1).map(tokenFromProtocol)).toEqual([token])
     await booted.lens!.stop()
   })
 

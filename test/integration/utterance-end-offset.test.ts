@@ -8,6 +8,7 @@ import { createSplit } from '../../server/src/split/split.ts'
 import type { SpeechToText, SttStream, SttWord } from '../../server/src/stt/types.ts'
 import type { LensView, ServerMessage } from '../../shared/lens-protocol.ts'
 import { encodeFrame } from '../../shared/wire.ts'
+import { audioProtocols } from '../../shared/audio-token.ts'
 
 // test-gap-1 (PT): the provider's UtteranceEnd names a time on its own
 // stream's clock, which starts again near 0 when a lost stream is reopened.
@@ -65,7 +66,7 @@ describe("the provider's utterance end after a stream is reopened (PT, test-gap-
   it('is moved onto the session timeline by the new stream\'s zero, so it ends the promise it follows and no other', async () => {
     const views: { at: number; view: LensView }[] = []
     const acked = new Set<number>()
-    const socket = new WebSocket(`${server.url.replace(/^http/, 'ws')}/audio?token=${TOKEN}`)
+    const socket = new WebSocket(`${server.url.replace(/^http/, 'ws')}/audio`, audioProtocols(TOKEN))
     socket.on('message', (raw) => {
       const msg = JSON.parse(String(raw)) as ServerMessage
       if (msg.type === 'show') views.push({ at: clock.now(), view: msg.view })

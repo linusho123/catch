@@ -1,10 +1,13 @@
+import { randomBytes } from 'node:crypto'
 import { existsSync, mkdtempSync } from 'node:fs'
+import { request } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import WebSocket from 'ws'
 import { MAX_AUDIO_MESSAGE_BYTES, startServer, type RunningServer } from '../../server/src/app.ts'
+import { AUDIO_PROTOCOL, TOKEN_PROTOCOL_PREFIX, audioProtocols, tokenProtocol } from '../../shared/audio-token.ts'
 import { encodeFrame } from '../../shared/wire.ts'
 
 // The server skeleton, started once for this file: the health endpoint, the
@@ -21,17 +24,27 @@ beforeAll(async () => {
 })
 afterAll(() => server.close())
 
-const audioUrl = (token?: string) =>
-  `${server.url.replace('http', 'ws')}/audio${token === undefined ? '' : `?token=${encodeURIComponent(token)}`}`
+const audioUrl = (at: RunningServer = server) => `${at.url.replace('http', 'ws')}/audio`
 
-/** Opens /audio and reports how the server answered: open, refused with an HTTP status, or an error. */
-function connect(token?: string): Promise<{ opened: boolean; status?: number; socket: WebSocket }> {
-  const socket = new WebSocket(audioUrl(token))
+/**
+ * Opens /audio as the lens does, the token as a subprotocol (PH), and reports
+ * how the server answered: open, refused with an HTTP status, or an error.
+ * `url` and `protocols` stand in for a client that does it some other way.
+ */
+function connect(
+  token?: string,
+  how: { url?: string; protocols?: string[]; at?: RunningServer } = {},
+): Promise<{ opened: boolean; status?: number; body?: string; socket: WebSocket }> {
+  const socket = new WebSocket(how.url ?? audioUrl(how.at), how.protocols ?? (token === undefined ? [] : audioProtocols(token)))
   return new Promise((resolve, reject) => {
     socket.on('open', () => resolve({ opened: true, socket }))
     socket.on('unexpected-response', (_req, res) => {
-      resolve({ opened: false, status: res.statusCode, socket })
-      socket.terminate()
+      let body = ''
+      res.on('data', (chunk: Buffer) => (body += chunk.toString()))
+      res.on('end', () => {
+        resolve({ opened: false, status: res.statusCode, body, socket })
+        socket.terminate()
+      })
     })
     socket.on('error', (err) => {
       if (socket.readyState !== WebSocket.CLOSED) reject(err)
@@ -39,8 +52,37 @@ function connect(token?: string): Promise<{ opened: boolean; status?: number; so
   })
 }
 
+/** A WebSocket upgrade by hand, with `protocol` as its Sec-WebSocket-Protocol header; resolves the HTTP status it was answered with. */
+function rawUpgrade(protocol: string): Promise<number> {
+  const { hostname, port } = new URL(server.url)
+  return new Promise((resolve, reject) => {
+    const req = request({
+      hostname,
+      port,
+      path: '/audio',
+      headers: {
+        connection: 'Upgrade',
+        upgrade: 'websocket',
+        'sec-websocket-version': '13',
+        'sec-websocket-key': randomBytes(16).toString('base64'),
+        'sec-websocket-protocol': protocol,
+      },
+    })
+    req.on('response', (res) => {
+      res.resume()
+      resolve(res.statusCode ?? 0)
+    })
+    req.on('upgrade', (_res, socket) => {
+      socket.destroy()
+      resolve(101)
+    })
+    req.on('error', reject)
+    req.end()
+  })
+}
+
 function exchange(messages: Uint8Array[]): Promise<unknown[]> {
-  const socket = new WebSocket(audioUrl(TOKEN))
+  const socket = new WebSocket(audioUrl(), audioProtocols(TOKEN))
   const replies: unknown[] = []
   return new Promise((resolve, reject) => {
     socket.on('open', () => messages.forEach((m) => socket.send(m)))
@@ -96,6 +138,78 @@ describe('the server skeleton', () => {
     const right = await connect(TOKEN)
     expect(right.opened).toBe(true)
     right.socket.close()
+  })
+
+  it('takes the token only as a subprotocol: the right token in ?token= alone is refused (PH)', async () => {
+    const inUrl = await connect(undefined, { url: `${audioUrl()}?token=${encodeURIComponent(TOKEN)}` })
+    expect(inUrl).toMatchObject({ opened: false, status: 401 })
+    // The lens's way, with the query the old lens sent beside it, still opens: the query is never read.
+    const both = await connect(TOKEN, { url: `${audioUrl()}?token=not-the-token&lens=x` })
+    expect(both.opened).toBe(true)
+    both.socket.close()
+  })
+
+  it('echoes the plain protocol, never the one carrying the token, so a browser accepts the handshake (PH)', async () => {
+    const lens = await connect(TOKEN)
+    expect(lens.socket.protocol).toBe(AUDIO_PROTOCOL)
+    lens.socket.close()
+    // Whatever the order offered, the answer is the plain protocol when there is one.
+    const reversed = await connect(undefined, { protocols: [tokenProtocol(TOKEN), AUDIO_PROTOCOL] })
+    expect(reversed.socket.protocol).toBe(AUDIO_PROTOCOL)
+    reversed.socket.close()
+    // A client that offers the token protocol alone gets that one back (a browser fails a handshake that echoes none).
+    const alone = await connect(undefined, { protocols: [tokenProtocol(TOKEN)] })
+    expect(alone.opened).toBe(true)
+    expect(alone.socket.protocol).toBe(tokenProtocol(TOKEN))
+    alone.socket.close()
+    // The plain protocol alone carries no token.
+    expect(await connect(undefined, { protocols: [AUDIO_PROTOCOL] })).toMatchObject({ opened: false, status: 401 })
+  })
+
+  it('takes a rotated base64 token with + / = on /audio and on the phone API (PH)', async () => {
+    const rotated = `${randomBytes(32).toString('base64').slice(0, 40)}+/a=`
+    expect(rotated).toMatch(/[+/=]/)
+    const at = await startServer({ port: 0, host: '127.0.0.1', dbPath: join(mkdtempSync(join(tmpdir(), 'catch-rotated-')), 'catch.db'), audioToken: rotated })
+    try {
+      const lens = await connect(rotated, { at })
+      expect(lens.opened).toBe(true)
+      lens.socket.close()
+      // One character off is another token.
+      expect(await connect(rotated.replace('+/a=', '+/b='), { at })).toMatchObject({ opened: false, status: 401 })
+      const phone = await fetch(`${at.url}/phone/history`, { headers: { authorization: `Bearer ${rotated}` } })
+      expect(phone.status).toBe(200)
+      expect((await fetch(`${at.url}/phone/history`)).status).toBe(401)
+    } finally {
+      await at.close()
+    }
+  })
+
+  it('refuses a handshake it cannot read without falling over, and says nothing of the token offered (PH)', async () => {
+    const said: string[] = []
+    const spies = (['log', 'warn', 'error'] as const).map((level) => vi.spyOn(console, level).mockImplementation((...args: unknown[]) => void said.push(args.map(String).join(' '))))
+    try {
+      const wrong = 'wrong+token/value=='
+      const refused = await connect(wrong)
+      expect(refused).toMatchObject({ opened: false, status: 401 })
+      expect(refused.body).not.toContain(wrong)
+      expect(refused.body).not.toContain(tokenProtocol(wrong))
+      // Raw upgrades a browser would never send: a header ws cannot parse, a token protocol that is not base64url, an empty one.
+      for (const header of ['catch, catch', 'not a token', 'catch.!!!', 'catch.', `catch.${'A'.repeat(4000)}`]) {
+        expect(await rawUpgrade(header), header.slice(0, 20)).toBeGreaterThanOrEqual(400)
+      }
+      expect((await fetch(`${server.url}/health`)).status).toBe(200)
+      const right = await connect(TOKEN)
+      expect(right.opened).toBe(true)
+      right.socket.close()
+      // test-gap-1: the token in none of its forms, raw, as its subprotocol, or as the
+      // base64url after `catch.` (a logged Sec-WebSocket-Protocol header decodes straight back).
+      const forms = [wrong, TOKEN].flatMap((token) => [token, tokenProtocol(token), tokenProtocol(token).slice(TOKEN_PROTOCOL_PREFIX.length)])
+      for (const line of said) {
+        for (const form of forms) expect(line, 'a log line carries the token').not.toContain(form)
+      }
+    } finally {
+      for (const spy of spies) spy.mockRestore()
+    }
   })
 
   it('refuses to start without an audio token', async () => {

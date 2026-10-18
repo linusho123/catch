@@ -1,10 +1,18 @@
 import WebSocket from 'ws'
+import { systemClock, type Clock, type TimerHandle } from '../../../shared/clock.ts'
 import type { SpeechToText, SttStream, SttWord } from './types.ts'
 
 // Deepgram streaming (D126): PCM s16le 16 kHz mono in, word timings with
 // diarization labels out. The key is DEEPGRAM_API_KEY, a Fly secret; it never
 // ships in the lens. No test calls this socket: the lanes run on fixtures, and
 // the live provider runs only by hand behind CATCH_REAL_STT=1.
+//
+// Deepgram closes a stream that has had no audio for about ten seconds. The
+// lens streams a frame every 100 ms, but a WebView the phone backgrounds can
+// stall for longer, so while no PCM has gone out for KEEPALIVE_MS the adapter
+// sends Deepgram's {"type":"KeepAlive"}, and again every KEEPALIVE_MS until
+// audio flows (PH). The timer runs on the injected clock, is set only while
+// the socket is open, and is cleared as the stream closes, from either side.
 
 export const DEEPGRAM_LISTEN = 'wss://api.deepgram.com/v1/listen'
 
@@ -83,14 +91,23 @@ function toWords(words: DeepgramWord[], isFinal: boolean): SttWord[] {
  */
 export const MAX_PENDING_BYTES = 5 * 16000 * 2
 
+/** How long the stream may go without PCM before a KeepAlive is sent, and the gap between KeepAlives after it (PH). */
+export const KEEPALIVE_MS = 5000
+
+/** Deepgram's KeepAlive message: holds a stream open through a gap in the audio. */
+export const KEEPALIVE_MESSAGE = JSON.stringify({ type: 'KeepAlive' })
+
 export interface DeepgramOptions {
   /** The listen URL; a loopback stand-in in tests. Defaults to deepgramUrl(). */
   url?: string
+  /** Where the KeepAlive timer's time comes from; the system clock by default. */
+  clock?: Clock
 }
 
 export function deepgram(apiKey: string, opts: DeepgramOptions = {}): SpeechToText {
   if (!apiKey) throw new Error('DEEPGRAM_API_KEY is not set')
   const url = opts.url ?? deepgramUrl()
+  const clock = opts.clock ?? systemClock
   return {
     name: 'deepgram',
     open(onWords, onError, onOpen, onUtteranceEnd): SttStream {
@@ -99,14 +116,32 @@ export function deepgram(apiKey: string, opts: DeepgramOptions = {}): SpeechToTe
       let pendingBytes = 0
       let overflowReported = false
       let closing = false
+      // KeepAlive, KEEPALIVE_MS after the last PCM sent and every KEEPALIVE_MS after that while none is (PH).
+      let keepAlive: TimerHandle | undefined
+      const stopKeepAlive = () => {
+        if (keepAlive) clock.clearTimeout(keepAlive)
+        keepAlive = undefined
+      }
+      const armKeepAlive = () => {
+        stopKeepAlive()
+        if (closing || socket.readyState !== WebSocket.OPEN) return
+        keepAlive = clock.setTimeout(() => {
+          keepAlive = undefined
+          if (closing || socket.readyState !== WebSocket.OPEN) return
+          socket.send(KEEPALIVE_MESSAGE)
+          armKeepAlive()
+        }, KEEPALIVE_MS)
+      }
       socket.on('open', () => {
         for (const chunk of pending.splice(0)) socket.send(chunk)
         pendingBytes = 0
+        armKeepAlive()
         onOpen?.()
       })
       // Deepgram drops idle or failed streams; audio after that would vanish
       // without a sound, so an unexpected close is an error (M7).
       socket.on('close', (code, reason) => {
+        stopKeepAlive()
         if (closing) return
         const why = reason.toString()
         onError(new Error(`Deepgram closed the stream (code ${code}${why ? `, ${why}` : ''})`))
@@ -130,6 +165,7 @@ export function deepgram(apiKey: string, opts: DeepgramOptions = {}): SpeechToTe
         sendPcm(pcm) {
           if (socket.readyState === WebSocket.OPEN) {
             socket.send(pcm)
+            armKeepAlive()
           } else if (socket.readyState === WebSocket.CONNECTING) {
             pending.push(pcm)
             pendingBytes += pcm.byteLength
@@ -149,6 +185,7 @@ export function deepgram(apiKey: string, opts: DeepgramOptions = {}): SpeechToTe
         },
         close() {
           closing = true
+          stopKeepAlive()
           if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: 'CloseStream' }))
           else socket.terminate()
         },

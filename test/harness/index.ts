@@ -11,6 +11,7 @@ import { speedFromEnv, VirtualClock } from './clock.ts'
 import { modelForTests } from './model.ts'
 import { NotificationCapture } from './notifications.ts'
 import { FixtureRun, FixtureStt } from './player.ts'
+import { audioProtocols } from '../../shared/audio-token.ts'
 
 // The test harness, one per test worker: the server started once on a
 // throwaway store, the fixture clock it and the lens both read, the Even host
@@ -153,7 +154,7 @@ async function start(): Promise<Harness> {
       server = await serve()
     },
     async signInOtherAccount() {
-      const socket = new WebSocket(`${server.url.replace(/^http/, 'ws')}/audio?token=${OTHER_HARNESS_TOKEN}&lens=other-account`)
+      const socket = new WebSocket(`${server.url.replace(/^http/, 'ws')}/audio?lens=other-account`, audioProtocols(OTHER_HARNESS_TOKEN))
       others.push(socket)
       await new Promise<void>((resolve, reject) => {
         socket.on('message', (data) => {

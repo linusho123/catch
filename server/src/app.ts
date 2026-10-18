@@ -4,6 +4,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import type { AddressInfo } from 'node:net'
 import { WebSocketServer } from 'ws'
 import { systemClock, type Clock, type TimerHandle } from '../../shared/clock.ts'
+import { AUDIO_PROTOCOL, offeredTokens, tokenFromProtocol } from '../../shared/audio-token.ts'
 import { parseLensMessage, type LensView, type ServerMessage } from '../../shared/lens-protocol.ts'
 import { decodeFrame, type AudioFrame } from '../../shared/wire.ts'
 import { writeKeptJogger, type TidyOutcome } from './catch/jogger.ts'
@@ -44,9 +45,13 @@ import type { SpeechToText, SttStream, SttWord } from './stt/types.ts'
 // the phone.
 //
 // /audio is public on Fly, so it takes only clients that carry the shared token
-// (operator ruling 2026-10-17): the lens sends it as `?token=` (a browser
-// WebSocket cannot set headers), built in from VITE_CATCH_TOKEN; the server's
-// copy is the Fly secret CATCH_AUDIO_TOKEN. Neither is ever committed.
+// (operator ruling 2026-10-17): the lens sends it as a WebSocket subprotocol
+// (PH, shared/audio-token.ts: a browser WebSocket cannot set headers, and a
+// token in the URL ends up in logs), built in from VITE_CATCH_TOKEN; the
+// server reads it from Sec-WebSocket-Protocol, compares its digest in
+// constant time, answers with the plain `catch` protocol, and never reads
+// `?token=`. The server's copy is the Fly secret CATCH_AUDIO_TOKEN. Neither is
+// ever committed.
 //
 // The phone page (D130) reads the history and each conversation's screen from
 // the phone API under /phone/ (phone/api.ts), with the same token, and ticks
@@ -150,11 +155,34 @@ const digest = (s: string) => createHash('sha256').update(s).digest()
 
 const params = (req: IncomingMessage) => new URL(req.url ?? '/', 'http://localhost').searchParams
 
-function carriesToken(req: IncomingMessage, expected: readonly Buffer[]): boolean {
-  const given = params(req).get('token')
-  if (given === null) return false
+/** Whether `given` is one of the accounts' shared tokens, compared by digest in constant time. */
+const isToken = (given: string, expected: readonly Buffer[]) => {
   const d = digest(given)
   return expected.some((e) => timingSafeEqual(d, e))
+}
+
+/**
+ * The shared token a handshake carries, if the server takes it: read only from
+ * its subprotocols (PH, shared/audio-token.ts), never from `?token=`.
+ */
+function tokenOf(req: IncomingMessage, expected: readonly Buffer[]): string | undefined {
+  const header = req.headers['sec-websocket-protocol']
+  return offeredTokens(typeof header === 'string' ? header : undefined).find((given) => isToken(given, expected))
+}
+
+/**
+ * The subprotocol the server answers with: `catch` when offered, so the answer
+ * never carries the token; otherwise the token's own (a browser fails a
+ * handshake whose answer names none it offered). verifyClient has already
+ * checked the token.
+ */
+function chosenProtocol(protocols: Set<string>, expected: readonly Buffer[]): string | false {
+  if (protocols.has(AUDIO_PROTOCOL)) return AUDIO_PROTOCOL
+  for (const p of protocols) {
+    const given = tokenFromProtocol(p)
+    if (given !== undefined && isToken(given, expected)) return p
+  }
+  return false
 }
 
 /**
@@ -307,14 +335,16 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     server: http,
     path: '/audio',
     maxPayload: MAX_AUDIO_MESSAGE_BYTES,
-    verifyClient: (info, done) => (carriesToken(info.req, expectedTokens) ? done(true) : done(false, 401, 'Unauthorized')),
+    // A refusal says only 401; it never quotes the protocols offered (PH).
+    verifyClient: (info, done) => (tokenOf(info.req, expectedTokens) !== undefined ? done(true) : done(false, 401, 'Unauthorized')),
+    handleProtocols: (protocols) => chosenProtocol(protocols, expectedTokens),
   })
   wss.on('connection', (socket, req) => {
     const session = ++sessions
     const send = (msg: ServerMessage) => {
       if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(msg))
     }
-    const wearer = wearerOf(params(req).get('token') ?? '')
+    const wearer = wearerOf(tokenOf(req, expectedTokens) ?? '')
     const lens = wearers.get(wearer) ?? makeSession(wearer)
     wearers.set(wearer, lens)
 
