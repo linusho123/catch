@@ -260,7 +260,7 @@ interface Feed {
 
 const CORS = {
   'access-control-allow-origin': '*',
-  'access-control-allow-methods': 'GET, PUT, DELETE, OPTIONS',
+  'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'access-control-allow-headers': 'content-type, authorization',
 }
 
@@ -299,6 +299,13 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
    * memory, a jogger still being written for it is cancelled, and the file is
    * scrubbed. Another wearer's is refused and nothing changes.
    */
+  // The phone page's End conversation (the Even OS keeps long-press on the real G2): a long-press, from the phone.
+  const endConversationNow = (wearer: string): boolean => {
+    const session = wearers.get(wearer)
+    if (!session?.conversationOpen) return false
+    session.longPress()
+    return true
+  }
   const deleteConversation = (wearer: string, id: number) => {
     const outcome = history.delete(wearer, id, () => waiting.removeConversation(wearer, id))
     if (outcome !== 'deleted') return outcome
@@ -389,7 +396,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       res.end(JSON.stringify({ ok: true, store: 'sqlite', schema: store.schemaVersion() }))
       return
     }
-    if (phoneRoute(req, res, { history, expected: expectedTokens, headers: CORS, remove: deleteConversation })) return
+    if (phoneRoute(req, res, { history, expected: expectedTokens, headers: CORS, remove: deleteConversation, end: endConversationNow })) return
     res.writeHead(404, CORS).end()
   })
 

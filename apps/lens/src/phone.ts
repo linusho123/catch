@@ -1,6 +1,7 @@
 import {
   PHONE_CONVERSATION_PATH,
   PHONE_DONE_SUFFIX,
+  PHONE_END_PATH,
   PHONE_HISTORY_PATH,
   PHONE_JOGGER_SUFFIX,
   PHONE_PROMISE_PATH,
@@ -82,7 +83,18 @@ export interface Phone {
    * (the second tap); settles once the server has answered (or failed to).
    */
   remove(id: number): Promise<void>
+  /**
+   * Ends the open conversation now, as a long-press does (the Even OS keeps
+   * long-press on the real G2), then shows the history; settles once the
+   * history has been drawn. A conversation is listed once its promises are in.
+   */
+  endConversation(): Promise<void>
 }
+
+/** The history's button that ends the open conversation (the glasses' long-press is the Even OS's). */
+export const END_CONVERSATION = 'End conversation'
+/** What the history says while an ended conversation's promises are still being judged. */
+export const ENDING_NOTE = 'Ending… it shows here in a few seconds.'
 
 /** The http(s) origin a ws(s) server origin shares a host with. */
 export function httpOrigin(server: string): string {
@@ -143,7 +155,7 @@ export function historyMarkup(history: HistoryResponse, now: number): string {
     days.length === 0
       ? '<p class="empty">Nothing yet. A conversation shows up here when it ends with a promise or is kept.</p>'
       : days.map((d) => `<section class="day"><h2>${esc(d.label)}</h2><ul>${d.rows.map(row).join('')}</ul></section>`).join('')
-  return `<main class="phone history"><header><h1>Catch</h1><p class="open-total">${openOf(history.open)}</p></header>${body}</main>`
+  return `<main class="phone history"><header><h1>Catch</h1><p class="open-total">${openOf(history.open)}</p><button type="button" class="end" data-end>${END_CONVERSATION}</button></header>${body}</main>`
 }
 
 function promiseItem(p: PhonePromise): string {
@@ -360,6 +372,20 @@ export function startPhone(opts: PhoneOptions): Phone {
     return next()
   }
 
+  /** POSTs the end, then draws the history; once more a few seconds later, when the conversation's promises are in. */
+  async function endConversation(): Promise<void> {
+    try {
+      await fetch(`${origin}${PHONE_END_PATH}`, { method: 'POST', headers: auth })
+    } catch {
+      // Unreachable: the history says so when it is drawn.
+    }
+    await go(history)
+    if (root.innerHTML.includes('class="empty"')) root.innerHTML = root.innerHTML.replace(/<p class="empty">[^<]*<\/p>/, `<p class="empty">${ENDING_NOTE}</p>`)
+    setTimeout(() => {
+      if (shown === undefined && root.innerHTML.includes('phone history')) void go(history)
+    }, 4000)
+  }
+
   const phone: Phone = {
     home: () => go(history),
     open: (id) => go(() => conversation(id)),
@@ -372,6 +398,7 @@ export function startPhone(opts: PhoneOptions): Phone {
     refresh: () => screen(),
     tick,
     remove,
+    endConversation,
   }
 
   root.addEventListener('click', ({ target }) => {
@@ -388,6 +415,7 @@ export function startPhone(opts: PhoneOptions): Phone {
     else if (conversation) void phone.open(Number(conversation))
     else if (kept) void phone.jogger(Number(kept))
     else if (t.closest?.('[data-home]')) void phone.home()
+    else if (t.closest?.('[data-end]')) void phone.endConversation()
   })
   return phone
 }

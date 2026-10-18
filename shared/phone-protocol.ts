@@ -11,6 +11,8 @@
 // the wearer (`owed`) in P5, and `done` by a tick on the phone page (P7, D133).
 
 export const PHONE_HISTORY_PATH = '/phone/history'
+/** POST: ends the wearer's open conversation now, as a long-press does (D52); the Even OS keeps long-press on the real G2. Answers `{ ended }`. */
+export const PHONE_END_PATH = '/phone/end'
 /**
  * GET /phone/conversations/<id>: the conversation's screen.
  * DELETE /phone/conversations/<id>: deletes it, everything with it (D134),

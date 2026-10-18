@@ -1,6 +1,6 @@
 import { createHash, timingSafeEqual } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { PHONE_CONVERSATION_PATH, PHONE_DONE_SUFFIX, PHONE_HISTORY_PATH, PHONE_JOGGER_SUFFIX, PHONE_PROMISE_PATH } from '../../../shared/phone-protocol.ts'
+import { PHONE_CONVERSATION_PATH, PHONE_DONE_SUFFIX, PHONE_HISTORY_PATH, PHONE_JOGGER_SUFFIX, PHONE_PROMISE_PATH, PHONE_END_PATH } from '../../../shared/phone-protocol.ts'
 import type { DeleteOutcome, History } from './history.ts'
 
 // The phone API (D130): the plugin's phone page reads the history (D100), one
@@ -41,11 +41,14 @@ export function phoneRoute(
     headers: Record<string, string>
     /** Deletes one of the wearer's conversations, everything with it (D134, app.ts). */
     remove: (wearer: string, id: number) => DeleteOutcome
+    /** Ends the wearer's open conversation now, as a long-press does; whether one was open. */
+    end?: (wearer: string) => boolean
   },
 ): boolean {
   const path = new URL(req.url ?? '/', 'http://localhost').pathname
   const tick = path.startsWith(PHONE_PROMISE_PATH)
-  if (path !== PHONE_HISTORY_PATH && !path.startsWith(PHONE_CONVERSATION_PATH) && !tick) return false
+  const ending = path === PHONE_END_PATH
+  if (path !== PHONE_HISTORY_PATH && !path.startsWith(PHONE_CONVERSATION_PATH) && !tick && !ending) return false
   const json = (status: number, body: unknown) => {
     res.writeHead(status, { ...opts.headers, 'content-type': 'application/json', 'cache-control': 'no-store' })
     res.end(JSON.stringify(body))
@@ -53,7 +56,7 @@ export function phoneRoute(
   const rest = path.slice(PHONE_CONVERSATION_PATH.length)
   const jogger = !tick && path.startsWith(PHONE_CONVERSATION_PATH) && rest.endsWith(PHONE_JOGGER_SUFFIX)
   // A conversation's screen is also where it is deleted (D134); the history and the jogger are read only.
-  const allowed = tick ? ['PUT'] : path.startsWith(PHONE_CONVERSATION_PATH) && !jogger ? ['GET', 'DELETE'] : ['GET']
+  const allowed = ending ? ['POST'] : tick ? ['PUT'] : path.startsWith(PHONE_CONVERSATION_PATH) && !jogger ? ['GET', 'DELETE'] : ['GET']
   if (!allowed.includes(req.method ?? '')) {
     res.writeHead(405, { ...opts.headers, allow: allowed.join(', ') }).end()
     return true
@@ -64,6 +67,10 @@ export function phoneRoute(
     return true
   }
   const wearer = wearerOf(token)
+  if (ending) {
+    json(200, { ended: opts.end?.(wearer) ?? false })
+    return true
+  }
   if (tick) {
     const promise = path.slice(PHONE_PROMISE_PATH.length)
     const id = promise.endsWith(PHONE_DONE_SUFFIX) ? promise.slice(0, -PHONE_DONE_SUFFIX.length) : ''
