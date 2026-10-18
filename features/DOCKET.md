@@ -1081,3 +1081,10 @@ D132 2026-10-17 [V] amends D87
   serves: N3
   touches: D87 D88 D57
 # the visionary at the P2a questions, Saturday evening: in the promises outline's first row Dev says "come and meet Priya" and Priya then says "Hi, I'm Priya"; under D87 she became `Priya (2)`. Chosen: "Same person". Road not taken: change the row to show `Priya (2)`. Same evening: the Gemini key is free tier; the README discloses that free-tier content may be used by Google to improve its models.
+
+D133 2026-10-18 [V] amends D130
+  resp: the phone's screens come back, inside Even Hub: the plugin's own page, which the Even app shows on the phone, carries the history (D100), the conversation screen with its YOU and OWED TO YOU sections (D98) and the jogger (D99), in place of the cut SwiftUI app; the iPhone rows of the screen outlines in `phone-handoff.feature` bind against that page; tick-off on the phone (D39) returns on that page, for the wearer's promises and the ones owed to the wearer; the website stays cut; keep and the jogger (`P4`) and promises owed to the wearer (`P5`) are required and in the demo build; pause (`P6`) stays out of it [V]
+  -> structural
+  serves: N4 N8
+  touches: D130 D39 D98 D100 D115
+# the visionary, early Sunday, asked which phase ticks off completed promises; told it was cut by D126 and kept cut by D130, chose to bring it back on the plugin's phone page, built right after the latency phase. The same night, as a `chosen` change with no ruling: a second model pass that tidies a kept conversation's jogger before it is stored, never adding anything not said.
