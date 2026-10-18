@@ -1,0 +1,363 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "kept-gap",
+  "variant": "other-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "Morning, Marcus.",
+      "span": 0.3
+    },
+    {
+      "at": 6,
+      "who": "Marcus",
+      "text": "We moved the API to GraphQL last month.",
+      "terms": [
+        "GraphQL"
+      ],
+      "span": 1.38
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "How did the migration go?",
+      "ask": "migration",
+      "span": 0.84
+    },
+    {
+      "at": 100,
+      "who": "Marcus",
+      "text": "The Redis cache was the hard part.",
+      "span": 1.2
+    },
+    {
+      "at": 270,
+      "who": "wearer",
+      "text": "Sorry, I lost you for a bit.",
+      "span": 1.2
+    },
+    {
+      "gap": 1,
+      "who": "Marcus",
+      "text": "No problem. Next we try gRPC streaming.",
+      "terms": [
+        "gRPC"
+      ],
+      "span": 1.2
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Sounds good.",
+      "span": 0.3
+    }
+  ],
+  "words": [
+    {
+      "text": "Morning,",
+      "start": 0,
+      "end": 0.126,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "Marcus.",
+      "start": 0.186,
+      "end": 0.3,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "We",
+      "start": 6,
+      "end": 6.091,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "moved",
+      "start": 6.151,
+      "end": 6.289,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 6.349,
+      "end": 6.455,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 1
+    },
+    {
+      "text": "API",
+      "start": 6.515,
+      "end": 6.622,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 1
+    },
+    {
+      "text": "to",
+      "start": 6.682,
+      "end": 6.773,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "GraphQL",
+      "start": 6.833,
+      "end": 7.001,
+      "role": "other",
+      "loudness": -14,
+      "speaker": 1
+    },
+    {
+      "text": "last",
+      "start": 7.061,
+      "end": 7.183,
+      "role": "other",
+      "loudness": -15,
+      "speaker": 1
+    },
+    {
+      "text": "month.",
+      "start": 7.243,
+      "end": 7.38,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 1
+    },
+    {
+      "text": "How",
+      "start": 8.38,
+      "end": 8.485,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "did",
+      "start": 8.545,
+      "end": 8.65,
+      "role": "wearer",
+      "loudness": -25.1,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 8.71,
+      "end": 8.815,
+      "role": "wearer",
+      "loudness": -26.6,
+      "speaker": 0
+    },
+    {
+      "text": "migration",
+      "start": 8.875,
+      "end": 9.07,
+      "role": "wearer",
+      "loudness": -24.7,
+      "speaker": 0
+    },
+    {
+      "text": "go?",
+      "start": 9.13,
+      "end": 9.22,
+      "role": "wearer",
+      "loudness": -26.3,
+      "speaker": 0
+    },
+    {
+      "text": "The",
+      "start": 100,
+      "end": 100.107,
+      "role": "other",
+      "loudness": -14.2,
+      "speaker": 1
+    },
+    {
+      "text": "Redis",
+      "start": 100.167,
+      "end": 100.304,
+      "role": "other",
+      "loudness": -13.6,
+      "speaker": 1
+    },
+    {
+      "text": "cache",
+      "start": 100.364,
+      "end": 100.502,
+      "role": "other",
+      "loudness": -14.5,
+      "speaker": 1
+    },
+    {
+      "text": "was",
+      "start": 100.562,
+      "end": 100.669,
+      "role": "other",
+      "loudness": -13.5,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 100.729,
+      "end": 100.836,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 1
+    },
+    {
+      "text": "hard",
+      "start": 100.896,
+      "end": 101.018,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 1
+    },
+    {
+      "text": "part.",
+      "start": 101.078,
+      "end": 101.2,
+      "role": "other",
+      "loudness": -14.5,
+      "speaker": 1
+    },
+    {
+      "text": "Sorry,",
+      "start": 270,
+      "end": 270.158,
+      "role": "wearer",
+      "loudness": -26.7,
+      "speaker": 0
+    },
+    {
+      "text": "I",
+      "start": 270.218,
+      "end": 270.305,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "lost",
+      "start": 270.365,
+      "end": 270.505,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 270.565,
+      "end": 270.687,
+      "role": "wearer",
+      "loudness": -26.6,
+      "speaker": 0
+    },
+    {
+      "text": "for",
+      "start": 270.747,
+      "end": 270.87,
+      "role": "wearer",
+      "loudness": -26.3,
+      "speaker": 0
+    },
+    {
+      "text": "a",
+      "start": 270.93,
+      "end": 271.017,
+      "role": "wearer",
+      "loudness": -26.7,
+      "speaker": 0
+    },
+    {
+      "text": "bit.",
+      "start": 271.077,
+      "end": 271.2,
+      "role": "wearer",
+      "loudness": -27.2,
+      "speaker": 0
+    },
+    {
+      "text": "No",
+      "start": 272.2,
+      "end": 272.285,
+      "role": "other",
+      "loudness": -13.3,
+      "speaker": 1
+    },
+    {
+      "text": "problem.",
+      "start": 272.345,
+      "end": 272.502,
+      "role": "other",
+      "loudness": -12.8,
+      "speaker": 1
+    },
+    {
+      "text": "Next",
+      "start": 272.562,
+      "end": 272.676,
+      "role": "other",
+      "loudness": -15.4,
+      "speaker": 1
+    },
+    {
+      "text": "we",
+      "start": 272.736,
+      "end": 272.821,
+      "role": "other",
+      "loudness": -13.6,
+      "speaker": 1
+    },
+    {
+      "text": "try",
+      "start": 272.881,
+      "end": 272.981,
+      "role": "other",
+      "loudness": -14.4,
+      "speaker": 1
+    },
+    {
+      "text": "gRPC",
+      "start": 273.041,
+      "end": 273.155,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "streaming.",
+      "start": 273.215,
+      "end": 273.4,
+      "role": "other",
+      "loudness": -14,
+      "speaker": 1
+    },
+    {
+      "text": "Sounds",
+      "start": 274.4,
+      "end": 274.533,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "good.",
+      "start": 274.593,
+      "end": 274.7,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    }
+  ]
+}

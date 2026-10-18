@@ -188,6 +188,9 @@ export async function playTo(w: LensWorld, t: number): Promise<void> {
 export async function fastForward(w: LensWorld, t: number): Promise<void> {
   const run = w.run!
   const skip = async (to: number) => {
+    // Whatever the clock has already passed is played first, late and in order, never jumped over (P4: a long
+    // fixture takes the clock a moment to load, and without this its opening words were skipped unheard).
+    await run.playTo(nowSec(w))
     // The frame carrying the last word said is played before the jump, so the provider has heard it.
     const said = run.fixture.words.filter((wd) => wd.end <= nowSec(w) + 1e-9).at(-1)
     if (said && run.frameEnd(said.end) > nowSec(w)) await run.playTo(Math.min(to, run.frameEnd(said.end)))

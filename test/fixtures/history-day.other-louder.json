@@ -1,0 +1,417 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "history-day",
+  "variant": "other-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "Hey, got a minute?",
+      "span": 0.66
+    },
+    {
+      "at": 2.5,
+      "who": "Marcus",
+      "text": "Hi, I'm Marcus.",
+      "span": 0.48
+    },
+    {
+      "at": 12,
+      "who": "Marcus",
+      "text": "We moved the build to Bazel.",
+      "terms": [
+        "Bazel"
+      ],
+      "span": 1.02
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Nice, that should help.",
+      "span": 0.66
+    },
+    {
+      "at": 61500,
+      "who": "wearer",
+      "text": "Morning, good to see you.",
+      "span": 0.84
+    },
+    {
+      "at": 61502.5,
+      "who": "Priya",
+      "text": "Hi, I'm Priya.",
+      "span": 0.48
+    },
+    {
+      "at": 61506,
+      "who": "wearer",
+      "text": "I'll send you the slides.",
+      "span": 0.84
+    },
+    {
+      "at": 79800,
+      "who": "wearer",
+      "text": "Hey, how did it go?",
+      "span": 0.84
+    },
+    {
+      "at": 79802.5,
+      "who": "Dev",
+      "text": "Hi, I'm Dev.",
+      "span": 0.48
+    },
+    {
+      "at": 79806,
+      "who": "wearer",
+      "text": "I'll call you on Monday.",
+      "span": 0.84
+    }
+  ],
+  "words": [
+    {
+      "text": "Hey,",
+      "start": 0,
+      "end": 0.116,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "got",
+      "start": 0.176,
+      "end": 0.292,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "a",
+      "start": 0.352,
+      "end": 0.434,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "minute?",
+      "start": 0.494,
+      "end": 0.66,
+      "role": "wearer",
+      "loudness": -27.4,
+      "speaker": 0
+    },
+    {
+      "text": "Hi,",
+      "start": 2.5,
+      "end": 2.598,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "I'm",
+      "start": 2.658,
+      "end": 2.756,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "Marcus.",
+      "start": 2.816,
+      "end": 2.98,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 1
+    },
+    {
+      "text": "We",
+      "start": 12,
+      "end": 12.094,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 1
+    },
+    {
+      "text": "moved",
+      "start": 12.154,
+      "end": 12.295,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 12.355,
+      "end": 12.464,
+      "role": "other",
+      "loudness": -14.6,
+      "speaker": 1
+    },
+    {
+      "text": "build",
+      "start": 12.524,
+      "end": 12.665,
+      "role": "other",
+      "loudness": -12.7,
+      "speaker": 1
+    },
+    {
+      "text": "to",
+      "start": 12.725,
+      "end": 12.819,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "Bazel.",
+      "start": 12.879,
+      "end": 13.02,
+      "role": "other",
+      "loudness": -13.9,
+      "speaker": 1
+    },
+    {
+      "text": "Nice,",
+      "start": 14.02,
+      "end": 14.133,
+      "role": "wearer",
+      "loudness": -26.2,
+      "speaker": 0
+    },
+    {
+      "text": "that",
+      "start": 14.193,
+      "end": 14.306,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "should",
+      "start": 14.366,
+      "end": 14.507,
+      "role": "wearer",
+      "loudness": -26.5,
+      "speaker": 0
+    },
+    {
+      "text": "help.",
+      "start": 14.567,
+      "end": 14.68,
+      "role": "wearer",
+      "loudness": -25.5,
+      "speaker": 0
+    },
+    {
+      "text": "Morning,",
+      "start": 61500,
+      "end": 61500.169,
+      "role": "wearer",
+      "loudness": -26.7,
+      "speaker": 0
+    },
+    {
+      "text": "good",
+      "start": 61500.229,
+      "end": 61500.352,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "to",
+      "start": 61500.412,
+      "end": 61500.505,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "see",
+      "start": 61500.565,
+      "end": 61500.672,
+      "role": "wearer",
+      "loudness": -26.6,
+      "speaker": 0
+    },
+    {
+      "text": "you.",
+      "start": 61500.732,
+      "end": 61500.84,
+      "role": "wearer",
+      "loudness": -26.3,
+      "speaker": 0
+    },
+    {
+      "text": "Hi,",
+      "start": 61502.5,
+      "end": 61502.603,
+      "role": "other",
+      "loudness": -13.3,
+      "speaker": 2
+    },
+    {
+      "text": "I'm",
+      "start": 61502.663,
+      "end": 61502.766,
+      "role": "other",
+      "loudness": -12.8,
+      "speaker": 2
+    },
+    {
+      "text": "Priya.",
+      "start": 61502.826,
+      "end": 61502.98,
+      "role": "other",
+      "loudness": -15.4,
+      "speaker": 2
+    },
+    {
+      "text": "I'll",
+      "start": 61506,
+      "end": 61506.108,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "send",
+      "start": 61506.168,
+      "end": 61506.291,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 61506.351,
+      "end": 61506.458,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 61506.518,
+      "end": 61506.626,
+      "role": "wearer",
+      "loudness": -26,
+      "speaker": 0
+    },
+    {
+      "text": "slides.",
+      "start": 61506.686,
+      "end": 61506.84,
+      "role": "wearer",
+      "loudness": -24.8,
+      "speaker": 0
+    },
+    {
+      "text": "Hey,",
+      "start": 79800,
+      "end": 79800.127,
+      "role": "wearer",
+      "loudness": -25.2,
+      "speaker": 0
+    },
+    {
+      "text": "how",
+      "start": 79800.187,
+      "end": 79800.315,
+      "role": "wearer",
+      "loudness": -24.9,
+      "speaker": 0
+    },
+    {
+      "text": "did",
+      "start": 79800.375,
+      "end": 79800.502,
+      "role": "wearer",
+      "loudness": -26.9,
+      "speaker": 0
+    },
+    {
+      "text": "it",
+      "start": 79800.562,
+      "end": 79800.671,
+      "role": "wearer",
+      "loudness": -25.1,
+      "speaker": 0
+    },
+    {
+      "text": "go?",
+      "start": 79800.731,
+      "end": 79800.84,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "Hi,",
+      "start": 79802.5,
+      "end": 79802.614,
+      "role": "other",
+      "loudness": -13.3,
+      "speaker": 3
+    },
+    {
+      "text": "I'm",
+      "start": 79802.674,
+      "end": 79802.787,
+      "role": "other",
+      "loudness": -15.1,
+      "speaker": 3
+    },
+    {
+      "text": "Dev.",
+      "start": 79802.847,
+      "end": 79802.98,
+      "role": "other",
+      "loudness": -12.9,
+      "speaker": 3
+    },
+    {
+      "text": "I'll",
+      "start": 79806,
+      "end": 79806.111,
+      "role": "wearer",
+      "loudness": -26.2,
+      "speaker": 0
+    },
+    {
+      "text": "call",
+      "start": 79806.171,
+      "end": 79806.297,
+      "role": "wearer",
+      "loudness": -27.2,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 79806.357,
+      "end": 79806.467,
+      "role": "wearer",
+      "loudness": -25.1,
+      "speaker": 0
+    },
+    {
+      "text": "on",
+      "start": 79806.527,
+      "end": 79806.622,
+      "role": "wearer",
+      "loudness": -26.4,
+      "speaker": 0
+    },
+    {
+      "text": "Monday.",
+      "start": 79806.682,
+      "end": 79806.84,
+      "role": "wearer",
+      "loudness": -26.4,
+      "speaker": 0
+    }
+  ]
+}

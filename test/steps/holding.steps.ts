@@ -4,6 +4,7 @@ import { findIntroductions } from '../../server/src/catch/introductions.ts'
 import { wearerOf } from '../../server/src/phone/api.ts'
 import { HARNESS_TOKEN } from '../harness/index.ts'
 import { linesOf } from '../harness/notifications.ts'
+import { keepNow, keptWithin, phoneShows, storedJogger, type JoggerWorld } from './jogger-world.ts'
 import {
   begin,
   CANVAS,
@@ -40,9 +41,9 @@ import {
 // `no promises yet`; the owed line is P5's, so "A swipe down turns to the
 // promises page" stays scenario-scoped wip with that step unbound), and the
 // conversation's end on the lens and, from P2a, on the phone: the
-// notification capture is the phone (D126). Scrolling is P10's; the keep in
-// "A long-press ends the conversation now" is P4's, so that scenario stays
-// wip with its keep steps unbound. Every "sees" and every "a tap shows" is
+// notification capture is the phone (D126). Scrolling is P10's; "A long-press
+// ends the conversation now" binds its keep and the kept notification in P4
+// (jogger-world.ts). Every "sees" and every "a tap shows" is
 // read from the bridge stub's record on fixture time (lens-world.ts), every
 // "the phone" from the capture's record. The default split,
 // loudness (D126), on the wearer-louder fixtures (D127); the session's own
@@ -104,7 +105,7 @@ async function threeIntroductions(w: LensWorld, fixture: string): Promise<void> 
   w.heldBefore = ['Priya', 'Marcus', 'Dana']
 }
 
-const holding: Definer<LensWorld> = (reg) => {
+const holding: Definer<LensWorld & JoggerWorld> = (reg) => {
   // D43
   reg.define(/^in this conversation Priya, Marcus and Dana have each introduced themselves$/, async (w) => {
     await begin(w)
@@ -293,13 +294,33 @@ const holding: Definer<LensWorld> = (reg) => {
     expect(Math.abs(late), `the notification came ${late} ms off the tenth minute`).toBeLessThanOrEqual(SLACK_MS)
   })
 
-  // D52's phone half (P2a); the keep and its notification are P4's.
+  // D52's phone half (P2a): the promise notification, beside the kept one (P4).
   reg.define(/^the phone shows the promise notification within thirty seconds$/, async (w) => {
     const h = w.h!
-    await waitFor(w, () => (h.notifications.phone(ACCOUNT).length > 0 ? true : undefined), 30_000)
-    const got = h.notifications.phone(ACCOUNT)
+    await waitFor(w, () => (phoneShows(w).promises.length > 0 ? true : undefined), 30_000)
+    const got = phoneShows(w).promises
     expect(got.map((c) => linesOf(c.notification)), "the account holder's phone").toEqual([['Catch', 'Send Dev the deck tonight']])
     expect(got[0]!.at - w.pressedAt!, 'within thirty seconds of the long-press').toBeLessThanOrEqual(30_000)
+    expect(h.notifications.received.filter((c) => c.to !== ACCOUNT), 'no other phone').toEqual([])
+  })
+
+  // D52's keep (P4): kept during the conversation; its notification within thirty seconds of the long-press (D116).
+  reg.define(/^Priya introduced herself, and the wearer swiped up and tapped to keep the conversation$/, async (w) => {
+    const h = w.h!
+    const run = w.run!
+    const priya = lineIn(run, "Hi, I'm Priya.")
+    expect(priya.words.every((wd) => wd.role === 'other'), 'Priya introduces herself').toBe(true)
+    expect(linesShown(h, w.dotSince!, h.clock.now()).map((l) => l.text)[0], 'Priya was caught').toBe('Priya')
+    await keepNow(w)
+  })
+
+  reg.define(/^the phone shows the kept-conversation notification within thirty seconds$/, async (w) => {
+    const n = await keptWithin(w, 30_000)
+    expect(linesOf(n.notification), 'the kept notification names the conversation by who was caught').toEqual(['Catch', 'Kept: conversation with Priya'])
+    // It came with its jogger: the store holds one for the conversation it opens.
+    expect(storedJogger(w, Number(n.notification.data?.conversation))?.length, 'the jogger is written').toBeGreaterThan(0)
+    // The promise notification came first: the kept one waits for its jogger.
+    expect(phoneShows(w).promises[0]!.at).toBeLessThanOrEqual(n.at)
   })
 
   // D43, D112: the promises page (P2a; the owed line after them is P5's).

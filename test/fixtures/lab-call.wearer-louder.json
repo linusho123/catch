@@ -1,0 +1,705 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "lab-call",
+  "variant": "wearer-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "Hi, thanks for taking the call.",
+      "span": 1.02
+    },
+    {
+      "at": 2.5,
+      "who": "Ana",
+      "text": "Hi, I'm Ana.",
+      "span": 0.48
+    },
+    {
+      "at": 60,
+      "who": "Ana",
+      "text": "My lab designs proteins with diffusion models.",
+      "terms": [
+        "diffusion models"
+      ],
+      "span": 1.2
+    },
+    {
+      "at": 90,
+      "who": "wearer",
+      "text": "How do you validate the designs?",
+      "ask": "validate",
+      "span": 1.02
+    },
+    {
+      "gap": 1,
+      "who": "Ana",
+      "text": "We screen them with AlphaFold, then cryo-EM.",
+      "terms": [
+        "AlphaFold",
+        "cryo-EM"
+      ],
+      "span": 1.2
+    },
+    {
+      "at": 300,
+      "who": "wearer",
+      "text": "What would my first project be?",
+      "ask": "project",
+      "span": 1.02
+    },
+    {
+      "gap": 1,
+      "who": "Ana",
+      "text": "Extending our equivariant transformer to small molecules.",
+      "terms": [
+        "equivariant transformer"
+      ],
+      "span": 1.2
+    },
+    {
+      "at": 600,
+      "who": "wearer",
+      "text": "Is there funding for the summer?",
+      "ask": "funding",
+      "span": 1.02
+    },
+    {
+      "gap": 1,
+      "who": "Ana",
+      "text": "Yes, from our NSF grant.",
+      "span": 0.84
+    },
+    {
+      "at": 900,
+      "who": "wearer",
+      "text": "What should I read first?",
+      "ask": "read",
+      "span": 0.84
+    },
+    {
+      "gap": 1,
+      "who": "Ana",
+      "text": "Start with our paper on inverse folding.",
+      "terms": [
+        "inverse folding"
+      ],
+      "span": 1.2
+    },
+    {
+      "at": 1180,
+      "who": "wearer",
+      "text": "I'll send you my transcript by Friday.",
+      "span": 1.2
+    },
+    {
+      "gap": 1,
+      "who": "Ana",
+      "text": "Great, talk soon.",
+      "span": 0.48
+    }
+  ],
+  "words": [
+    {
+      "text": "Hi,",
+      "start": 0,
+      "end": 0.09,
+      "role": "wearer",
+      "loudness": -13,
+      "speaker": 0
+    },
+    {
+      "text": "thanks",
+      "start": 0.15,
+      "end": 0.3,
+      "role": "wearer",
+      "loudness": -10.8,
+      "speaker": 0
+    },
+    {
+      "text": "for",
+      "start": 0.36,
+      "end": 0.465,
+      "role": "wearer",
+      "loudness": -11,
+      "speaker": 0
+    },
+    {
+      "text": "taking",
+      "start": 0.525,
+      "end": 0.675,
+      "role": "wearer",
+      "loudness": -11.7,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 0.735,
+      "end": 0.84,
+      "role": "wearer",
+      "loudness": -10.6,
+      "speaker": 0
+    },
+    {
+      "text": "call.",
+      "start": 0.9,
+      "end": 1.02,
+      "role": "wearer",
+      "loudness": -11.3,
+      "speaker": 0
+    },
+    {
+      "text": "Hi,",
+      "start": 2.5,
+      "end": 2.614,
+      "role": "other",
+      "loudness": -27.2,
+      "speaker": 1
+    },
+    {
+      "text": "I'm",
+      "start": 2.674,
+      "end": 2.787,
+      "role": "other",
+      "loudness": -27.2,
+      "speaker": 1
+    },
+    {
+      "text": "Ana.",
+      "start": 2.847,
+      "end": 2.98,
+      "role": "other",
+      "loudness": -28.9,
+      "speaker": 1
+    },
+    {
+      "text": "My",
+      "start": 60,
+      "end": 60.075,
+      "role": "other",
+      "loudness": -28.9,
+      "speaker": 1
+    },
+    {
+      "text": "lab",
+      "start": 60.135,
+      "end": 60.223,
+      "role": "other",
+      "loudness": -28.7,
+      "speaker": 1
+    },
+    {
+      "text": "designs",
+      "start": 60.283,
+      "end": 60.421,
+      "role": "other",
+      "loudness": -26.6,
+      "speaker": 1
+    },
+    {
+      "text": "proteins",
+      "start": 60.481,
+      "end": 60.631,
+      "role": "other",
+      "loudness": -29.1,
+      "speaker": 1
+    },
+    {
+      "text": "with",
+      "start": 60.691,
+      "end": 60.792,
+      "role": "other",
+      "loudness": -28.5,
+      "speaker": 1
+    },
+    {
+      "text": "diffusion",
+      "start": 60.852,
+      "end": 61.015,
+      "role": "other",
+      "loudness": -28.4,
+      "speaker": 1
+    },
+    {
+      "text": "models.",
+      "start": 61.075,
+      "end": 61.2,
+      "role": "other",
+      "loudness": -27.8,
+      "speaker": 1
+    },
+    {
+      "text": "How",
+      "start": 90,
+      "end": 90.101,
+      "role": "wearer",
+      "loudness": -12,
+      "speaker": 0
+    },
+    {
+      "text": "do",
+      "start": 90.161,
+      "end": 90.247,
+      "role": "wearer",
+      "loudness": -13.4,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 90.307,
+      "end": 90.408,
+      "role": "wearer",
+      "loudness": -13.2,
+      "speaker": 0
+    },
+    {
+      "text": "validate",
+      "start": 90.468,
+      "end": 90.641,
+      "role": "wearer",
+      "loudness": -10.7,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 90.701,
+      "end": 90.802,
+      "role": "wearer",
+      "loudness": -12,
+      "speaker": 0
+    },
+    {
+      "text": "designs?",
+      "start": 90.862,
+      "end": 91.02,
+      "role": "wearer",
+      "loudness": -12.8,
+      "speaker": 0
+    },
+    {
+      "text": "We",
+      "start": 92.02,
+      "end": 92.1,
+      "role": "other",
+      "loudness": -27.9,
+      "speaker": 1
+    },
+    {
+      "text": "screen",
+      "start": 92.16,
+      "end": 92.293,
+      "role": "other",
+      "loudness": -26.9,
+      "speaker": 1
+    },
+    {
+      "text": "them",
+      "start": 92.353,
+      "end": 92.46,
+      "role": "other",
+      "loudness": -28.3,
+      "speaker": 1
+    },
+    {
+      "text": "with",
+      "start": 92.52,
+      "end": 92.627,
+      "role": "other",
+      "loudness": -29.3,
+      "speaker": 1
+    },
+    {
+      "text": "AlphaFold,",
+      "start": 92.687,
+      "end": 92.86,
+      "role": "other",
+      "loudness": -28.8,
+      "speaker": 1
+    },
+    {
+      "text": "then",
+      "start": 92.92,
+      "end": 93.027,
+      "role": "other",
+      "loudness": -26.9,
+      "speaker": 1
+    },
+    {
+      "text": "cryo-EM.",
+      "start": 93.087,
+      "end": 93.22,
+      "role": "other",
+      "loudness": -29,
+      "speaker": 1
+    },
+    {
+      "text": "What",
+      "start": 300,
+      "end": 300.118,
+      "role": "wearer",
+      "loudness": -12,
+      "speaker": 0
+    },
+    {
+      "text": "would",
+      "start": 300.178,
+      "end": 300.31,
+      "role": "wearer",
+      "loudness": -10.9,
+      "speaker": 0
+    },
+    {
+      "text": "my",
+      "start": 300.37,
+      "end": 300.458,
+      "role": "wearer",
+      "loudness": -13,
+      "speaker": 0
+    },
+    {
+      "text": "first",
+      "start": 300.518,
+      "end": 300.65,
+      "role": "wearer",
+      "loudness": -11.2,
+      "speaker": 0
+    },
+    {
+      "text": "project",
+      "start": 300.71,
+      "end": 300.872,
+      "role": "wearer",
+      "loudness": -11.8,
+      "speaker": 0
+    },
+    {
+      "text": "be?",
+      "start": 300.932,
+      "end": 301.02,
+      "role": "wearer",
+      "loudness": -10.6,
+      "speaker": 0
+    },
+    {
+      "text": "Extending",
+      "start": 302.02,
+      "end": 302.16,
+      "role": "other",
+      "loudness": -28,
+      "speaker": 1
+    },
+    {
+      "text": "our",
+      "start": 302.22,
+      "end": 302.295,
+      "role": "other",
+      "loudness": -26.8,
+      "speaker": 1
+    },
+    {
+      "text": "equivariant",
+      "start": 302.355,
+      "end": 302.517,
+      "role": "other",
+      "loudness": -29.5,
+      "speaker": 1
+    },
+    {
+      "text": "transformer",
+      "start": 302.577,
+      "end": 302.738,
+      "role": "other",
+      "loudness": -26.7,
+      "speaker": 1
+    },
+    {
+      "text": "to",
+      "start": 302.798,
+      "end": 302.863,
+      "role": "other",
+      "loudness": -28.9,
+      "speaker": 1
+    },
+    {
+      "text": "small",
+      "start": 302.923,
+      "end": 303.02,
+      "role": "other",
+      "loudness": -28.3,
+      "speaker": 1
+    },
+    {
+      "text": "molecules.",
+      "start": 303.08,
+      "end": 303.22,
+      "role": "other",
+      "loudness": -27.9,
+      "speaker": 1
+    },
+    {
+      "text": "Is",
+      "start": 600,
+      "end": 600.086,
+      "role": "wearer",
+      "loudness": -10.5,
+      "speaker": 0
+    },
+    {
+      "text": "there",
+      "start": 600.146,
+      "end": 600.276,
+      "role": "wearer",
+      "loudness": -11.4,
+      "speaker": 0
+    },
+    {
+      "text": "funding",
+      "start": 600.336,
+      "end": 600.494,
+      "role": "wearer",
+      "loudness": -12.6,
+      "speaker": 0
+    },
+    {
+      "text": "for",
+      "start": 600.554,
+      "end": 600.655,
+      "role": "wearer",
+      "loudness": -13.3,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 600.715,
+      "end": 600.816,
+      "role": "wearer",
+      "loudness": -10.6,
+      "speaker": 0
+    },
+    {
+      "text": "summer?",
+      "start": 600.876,
+      "end": 601.02,
+      "role": "wearer",
+      "loudness": -12.5,
+      "speaker": 0
+    },
+    {
+      "text": "Yes,",
+      "start": 602.02,
+      "end": 602.131,
+      "role": "other",
+      "loudness": -28,
+      "speaker": 1
+    },
+    {
+      "text": "from",
+      "start": 602.191,
+      "end": 602.317,
+      "role": "other",
+      "loudness": -27.9,
+      "speaker": 1
+    },
+    {
+      "text": "our",
+      "start": 602.377,
+      "end": 602.487,
+      "role": "other",
+      "loudness": -27,
+      "speaker": 1
+    },
+    {
+      "text": "NSF",
+      "start": 602.547,
+      "end": 602.658,
+      "role": "other",
+      "loudness": -26.9,
+      "speaker": 1
+    },
+    {
+      "text": "grant.",
+      "start": 602.718,
+      "end": 602.86,
+      "role": "other",
+      "loudness": -28.6,
+      "speaker": 1
+    },
+    {
+      "text": "What",
+      "start": 900,
+      "end": 900.12,
+      "role": "wearer",
+      "loudness": -12.3,
+      "speaker": 0
+    },
+    {
+      "text": "should",
+      "start": 900.18,
+      "end": 900.33,
+      "role": "wearer",
+      "loudness": -12.3,
+      "speaker": 0
+    },
+    {
+      "text": "I",
+      "start": 900.39,
+      "end": 900.465,
+      "role": "wearer",
+      "loudness": -10.8,
+      "speaker": 0
+    },
+    {
+      "text": "read",
+      "start": 900.525,
+      "end": 900.645,
+      "role": "wearer",
+      "loudness": -13.4,
+      "speaker": 0
+    },
+    {
+      "text": "first?",
+      "start": 900.705,
+      "end": 900.84,
+      "role": "wearer",
+      "loudness": -12.3,
+      "speaker": 0
+    },
+    {
+      "text": "Start",
+      "start": 901.84,
+      "end": 901.964,
+      "role": "other",
+      "loudness": -27.6,
+      "speaker": 1
+    },
+    {
+      "text": "with",
+      "start": 902.024,
+      "end": 902.134,
+      "role": "other",
+      "loudness": -27.5,
+      "speaker": 1
+    },
+    {
+      "text": "our",
+      "start": 902.194,
+      "end": 902.29,
+      "role": "other",
+      "loudness": -26.6,
+      "speaker": 1
+    },
+    {
+      "text": "paper",
+      "start": 902.35,
+      "end": 902.474,
+      "role": "other",
+      "loudness": -27,
+      "speaker": 1
+    },
+    {
+      "text": "on",
+      "start": 902.534,
+      "end": 902.617,
+      "role": "other",
+      "loudness": -26.5,
+      "speaker": 1
+    },
+    {
+      "text": "inverse",
+      "start": 902.677,
+      "end": 902.829,
+      "role": "other",
+      "loudness": -27,
+      "speaker": 1
+    },
+    {
+      "text": "folding.",
+      "start": 902.889,
+      "end": 903.04,
+      "role": "other",
+      "loudness": -28.6,
+      "speaker": 1
+    },
+    {
+      "text": "I'll",
+      "start": 1180,
+      "end": 1180.101,
+      "role": "wearer",
+      "loudness": -12.8,
+      "speaker": 0
+    },
+    {
+      "text": "send",
+      "start": 1180.161,
+      "end": 1180.277,
+      "role": "wearer",
+      "loudness": -11.6,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 1180.337,
+      "end": 1180.439,
+      "role": "wearer",
+      "loudness": -13.4,
+      "speaker": 0
+    },
+    {
+      "text": "my",
+      "start": 1180.499,
+      "end": 1180.586,
+      "role": "wearer",
+      "loudness": -13.3,
+      "speaker": 0
+    },
+    {
+      "text": "transcript",
+      "start": 1180.646,
+      "end": 1180.848,
+      "role": "wearer",
+      "loudness": -13.2,
+      "speaker": 0
+    },
+    {
+      "text": "by",
+      "start": 1180.908,
+      "end": 1180.995,
+      "role": "wearer",
+      "loudness": -11.4,
+      "speaker": 0
+    },
+    {
+      "text": "Friday.",
+      "start": 1181.055,
+      "end": 1181.2,
+      "role": "wearer",
+      "loudness": -11.5,
+      "speaker": 0
+    },
+    {
+      "text": "Great,",
+      "start": 1182.2,
+      "end": 1182.33,
+      "role": "other",
+      "loudness": -27.9,
+      "speaker": 1
+    },
+    {
+      "text": "talk",
+      "start": 1182.39,
+      "end": 1182.505,
+      "role": "other",
+      "loudness": -27.5,
+      "speaker": 1
+    },
+    {
+      "text": "soon.",
+      "start": 1182.565,
+      "end": 1182.68,
+      "role": "other",
+      "loudness": -28.4,
+      "speaker": 1
+    }
+  ]
+}

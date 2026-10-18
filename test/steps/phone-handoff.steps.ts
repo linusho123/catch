@@ -7,8 +7,25 @@ import { History } from '../../server/src/phone/history.ts'
 import type { Store } from '../../server/src/store.ts'
 import { HARNESS_TOKEN, OTHER_HARNESS_TOKEN } from '../harness/index.ts'
 import { linesOf, type Captured } from '../harness/notifications.ts'
-import { isHistory, openPhone, rowsOn, type PhoneScreen } from '../harness/phone.ts'
+import { isHistory, joggerLinkOn, openPhone, rowsOn, type PhoneScreen } from '../harness/phone.ts'
 import { find, rows, tables } from '../harness/store-reader.ts'
+import {
+  expectFlat,
+  expectInOrder,
+  expectTermsBold,
+  heard,
+  isKeptNotification,
+  KEEP_PROMPT,
+  keepNow,
+  keptWithin,
+  longPressNow,
+  openKept,
+  phoneShows,
+  readJogger,
+  startSkipping,
+  storedJogger,
+  type JoggerWorld,
+} from './jogger-world.ts'
 import {
   begin,
   fastForward,
@@ -48,10 +65,18 @@ import {
 // first line of the body is the promises), never the server's own record.
 // "The team, reading the server" reads the SQLite file directly
 // (test/harness/store-reader.ts) and its raw bytes, never the API whose job is
-// to delete. Bound in full: D51, D76, D79. Bound in part, with the rest
-// unbound and the scenario held in wip: D117 (its owed line is P5's), D28 (its
-// "opens in full" needs both owed promises, P5's), D114 (its kept
-// conversation and kept notification are P4's).
+// to delete. Bound in full: D51, D76, D79, and from P4 D114 (the kept
+// conversation's notification waits with the promise one). Bound in part,
+// with the rest unbound and the scenario held in wip: D117 (its owed line is
+// P5's), D28 (its "opens in full" needs both owed promises, P5's).
+//
+// P4 binds the iPhone rows of the history and jogger outlines against the
+// phone page (D130), with steps that match only the "iPhone app" surface: the
+// website rows stay unbound and the outlines in wip (D126). The history is
+// played through the whole pipeline, a kept conversation yesterday and two
+// with promises today, on a clock set to the day; the jogger is opened
+// through the page's own links, history row, conversation screen, "Kept
+// conversation ›", and read against the store (jogger-world.ts).
 
 const V = 'wearer-louder'
 
@@ -101,7 +126,7 @@ function expectedLine(summaries: string[]): string {
   return all.length === 1 ? all[0]! : `${all.slice(0, -1).join(', ')} and ${all.at(-1)}`
 }
 
-interface HandoffWorld extends PhoneWorld {
+interface HandoffWorld extends PhoneWorld, JoggerWorld {
   /** The wearer's promises as the lens showed them (`promised · <summary>`), in order. */
   promised?: string[]
   /** The names the conversation caught, as the lens showed them. */
@@ -111,6 +136,8 @@ interface HandoffWorld extends PhoneWorld {
   conversationsBefore?: number
   /** D114: when the phone came back on. */
   backAt?: number
+  /** D100: the history's three conversations as the lens caught them: names, promises, and the clock at their start. */
+  day?: { names: string[]; promised: string[]; at: number }[]
 }
 
 /** The lens's lines since the scenario's fixture began: the promise summaries, and the names. */
@@ -139,6 +166,13 @@ async function longPress(w: LensWorld): Promise<void> {
   await playTo(w, nowSec(w) + 0.2)
   h.host.push('sysEvent', { eventType: 10, eventSource: 1 })
   await playTo(w, nowSec(w) + SLACK_MS / 1000)
+}
+
+/** The kept conversation's notification apart: the one promise notification the account holder's phone shows. */
+function thePromiseNotification(w: LensWorld): Captured {
+  const { promises } = phoneShows(w)
+  expect(promises.map((c) => linesOf(c.notification)), "the account holder's phone shows one promise notification").toHaveLength(1)
+  return promises[0]!
 }
 
 /** The one notification the account holder's phone shows, and nothing on any other phone. */
@@ -248,7 +282,27 @@ const phoneHandoff: Definer<HandoffWorld> = (reg) => {
     expect(visible(page).map((c) => c.content)).toEqual([String(textArg)])
   })
 
-  // D114, the promise half (the kept conversation, its Given, and its notification are P4's and stay unbound).
+  // D114: a kept conversation with promises ends while the phone is off (P4 keeps it).
+  reg.define(/^a kept conversation with held promises has ended while the wearer's phone is off$/, async (w) => {
+    const h = await begin(w)
+    const run = await startSkipping(w, `handoff.${V}`, 4)
+    expect(linesShown(h, w.dotSince!, h.clock.now()).map((l) => l.text), 'Dev was caught').toEqual(['Dev'])
+    await keepNow(w)
+    h.notifications.reachable = false
+    await playTo(w, run.fixture.words.at(-1)!.end + PROMISE_DONE_S)
+    const { promised } = lensLines(w)
+    expect(promised, 'the promises held, seen on the lens').toEqual(['send Dev the deck tonight', 'introduce Dev to Sam'])
+    w.promised = promised
+    await longPressNow(w)
+    // It has ended, kept, and its jogger is written (read from the store): both notifications are due. The
+    // server has tried the phone with the first, and the phone was off; nothing reached it.
+    const keptRow = () => (rows(h.dbPath, 'conversations') as { id: number; kept: number }[]).find((c) => c.kept === 1)
+    await waitFor(w, () => (keptRow() && storedJogger(w, keptRow()!.id) ? true : undefined), 30_000)
+    expect(storedJogger(w, keptRow()?.id ?? -1)?.length, 'the kept conversation\'s jogger is written').toBeGreaterThan(0)
+    expect(h.notifications.refused.some((c) => !isKeptNotification(c)), 'the promise notification was due, and the phone was off').toBe(true)
+    expect(h.notifications.received, 'nothing reached the phone').toEqual([])
+  })
+
   reg.define(/^the phone comes back on three hours later$/, async (w) => {
     const h = w.h!
     expect(h.notifications.reachable, 'the phone was off').toBe(false)
@@ -261,12 +315,147 @@ const phoneHandoff: Definer<HandoffWorld> = (reg) => {
   })
 
   reg.define(/^the phone shows the promise notification then, with every promise intact$/, async (w) => {
-    const h = w.h!
-    await waitFor(w, () => (h.notifications.phone(ACCOUNT).length > 0 ? true : undefined), NOTIFY_RETRY_MS + SLACK_MS)
-    const n = theNotification(w)
+    await waitFor(w, () => (phoneShows(w).promises.length > 0 ? true : undefined), NOTIFY_RETRY_MS + SLACK_MS)
+    const n = thePromiseNotification(w)
     expect(n.at - w.backAt!, 'it came once the phone was back on').toBeGreaterThanOrEqual(0)
     expect(n.at - w.backAt!, 'it came then').toBeLessThanOrEqual(NOTIFY_RETRY_MS + SLACK_MS)
     expect(promiseLineOf(n), 'every promise intact').toBe(expectedLine(w.promised!))
+  })
+
+  reg.define(/^the phone shows the kept-conversation notification then, with the jogger intact$/, async (w) => {
+    const h = w.h!
+    await waitFor(w, () => (phoneShows(w).kept.length > 0 ? true : undefined), NOTIFY_RETRY_MS + SLACK_MS)
+    const n = await keptWithin(w, Infinity)
+    expect(linesOf(n.notification)).toEqual(['Catch', 'Kept: conversation with Dev'])
+    expect(n.at - w.backAt!, 'it came once the phone was back on').toBeGreaterThanOrEqual(0)
+    expect(n.at - w.backAt!, 'it came then').toBeLessThanOrEqual(NOTIFY_RETRY_MS + SLACK_MS)
+    // Every notification that was due, none dropped and none twice: the promise one, then the kept one.
+    expect(h.notifications.phone(ACCOUNT).map((c) => isKeptNotification(c)), 'the phone shows the promise notification, then the kept one').toEqual([false, true])
+    // Opened, the jogger is all there: the store's, with the wearer's promises among it.
+    const jogger = await openKept(w)
+    const bullets = jogger.bullets.map((b) => b.text)
+    for (const p of w.promised!) expect(bullets, `the promise "${p}" is in the jogger`).toContain(`You promised: ${p}`)
+    expect(bullets.length, 'more than the promises').toBeGreaterThan(w.promised!.length)
+  })
+
+  // D99, the iPhone row (the website row is cut, D126): the jogger, opened through the phone page's own links.
+  reg.define(/^a kept conversation with Ana has a jogger$/, async (w) => {
+    const h = await begin(w)
+    const run = await startSkipping(w, `lab-call.${V}`, 7)
+    expect(linesShown(h, w.dotSince!, h.clock.now()).map((l) => l.text), 'Ana introduced herself').toEqual(['Ana'])
+    await keepNow(w)
+    const end = 1500
+    const last = run.fixture.words.filter((wd) => wd.end <= end).at(-1)!
+    await fastForward(w, last.end + PROMISE_DONE_S)
+    await fastForward(w, end)
+    w.promised = lensLines(w).promised
+    await longPressNow(w)
+    await keptWithin(w, 30_000)
+  })
+
+  reg.define(/^the wearer opens that jogger on the iPhone app$/, async (w) => {
+    const h = w.h!
+    const id = w.kept!.notification.data!.conversation!
+    const { phone, record } = await openPhone({ server: h.server.url, token: HARNESS_TOKEN, clock: h.clock })
+    await phone.home()
+    const row = rowsOn(record.innerHTML).find((r) => r.conversation === id)
+    expect(row, 'the kept conversation is on the history').toBeDefined()
+    expect([row!.names, row!.kept], 'its row: Ana, kept').toEqual(['Ana', true])
+    const drawn = record.screens.length
+    record.tap('data-conversation', id)
+    await waitFor(w, () => (record.screens.length > drawn ? true : undefined))
+    expect(joggerLinkOn(record.innerHTML), 'the conversation screen links to the jogger: "Kept conversation ›"').toBe(id)
+    const linked = record.screens.length
+    record.tap('data-jogger', id)
+    await waitFor(w, () => (record.screens.length > linked ? true : undefined))
+    readJogger(w, record.innerHTML, Number(id))
+  })
+
+  reg.define(/^the wearer sees one flat list of bullets in the order things came up, with the technical terms in bold$/, (w) => {
+    const jogger = w.jogger!
+    const lines = w.run!.fixture.lines
+    expectFlat(jogger, heard(lines), lines.length)
+    expectInOrder(jogger, lines, w.promised)
+    expectTermsBold(jogger, lines)
+  })
+
+  // D100, the iPhone row (the website row is cut, D126): three conversations played through the pipeline.
+  reg.define(/^today two conversations produced promises, at 9:05 am and 2:10 pm, and yesterday one conversation was kept$/, async (w) => {
+    const h = await begin(w)
+    // Fixture second 0 is yesterday at 4:00 pm, in the phone's own time zone: the clock is set there.
+    const yesterday4pm = new Date(2026, 9, 16, 16, 0, 0).getTime()
+    h.clock.advance(yesterday4pm - h.clock.now())
+    const run = await startSkipping(w, `history-day.${V}`, 7)
+    const day: { names: string[]; promised: string[]; at: number }[] = []
+    const lensSince = (from: number) => linesShown(h, from, h.clock.now()).map((l) => l.text)
+    // Yesterday: Marcus, kept; quiet ends it ten minutes after the wearer last spoke (D92).
+    expect(lensSince(w.dotSince!), 'Marcus was caught').toEqual(['Marcus'])
+    await keepNow(w)
+    const starts = [0, 61_500, 79_800]
+    for (const [i, start] of starts.entries()) {
+      const from = run.at(start)
+      if (start > nowSec(w)) await fastForward(w, start)
+      const said = run.fixture.words.filter((wd) => wd.start >= start && wd.start < (starts[i + 1] ?? Infinity))
+      await fastForward(w, said.at(-1)!.end + PROMISE_DONE_S)
+      const lines = lensSince(from)
+      // The names are the lines that are neither a promise nor the keep's own (D40, D111).
+      const keepLines = [KEEP_PROMPT, 'kept', 'already kept']
+      day.push({ names: lines.filter((l) => !l.startsWith('promised · ') && !keepLines.includes(l)), promised: lines.filter((l) => l.startsWith('promised · ')), at: from })
+      // The wearer says nothing more: ten minutes on, the conversation has ended.
+      const lastWearer = said.filter((wd) => wd.role === 'wearer').at(-1)!
+      await fastForward(w, lastWearer.end + 600 + SLACK_MS / 1000)
+    }
+    expect(day.map((d) => [d.names, d.promised.length]), 'Marcus kept with nothing promised; Priya and Dev, each with a promise').toEqual([
+      [['Marcus'], 0],
+      [['Priya'], 1],
+      [['Dev'], 1],
+    ])
+    // The kept one has its jogger, and its notification came (D24).
+    await waitFor(w, () => (phoneShows(w).kept.length > 0 ? true : undefined))
+    expect(phoneShows(w).kept, 'the kept conversation produced its notification').toHaveLength(1)
+    expect(phoneShows(w).promises, 'each conversation with a promise produced its notification').toHaveLength(2)
+    w.day = day
+  })
+
+  reg.define(/^the wearer opens Catch on the iPhone app$/, async (w) => {
+    const h = w.h!
+    const { phone, record } = await openPhone({ server: h.server.url, token: HARNESS_TOKEN, clock: h.clock })
+    await phone.home()
+    w.phoneScreen = record.screens.at(-1)
+    expect(w.phoneScreen && isHistory(w.phoneScreen.markup), 'the phone page shows the history').toBe(true)
+  })
+
+  reg.define(/^the wearer sees the 2:10 pm conversation above the 9:05 am one under TODAY$/, (w) => {
+    const rows = rowsOn(w.phoneScreen!.markup)
+    const afternoon = rows.findIndex((r) => r.time === '2:10 pm')
+    const morning = rows.findIndex((r) => r.time === '9:05 am')
+    expect(afternoon, `no 2:10 pm row: ${JSON.stringify(rows)}`).toBeGreaterThanOrEqual(0)
+    expect(morning, `no 9:05 am row: ${JSON.stringify(rows)}`).toBeGreaterThanOrEqual(0)
+    expect(afternoon, 'the 2:10 pm conversation sits above the 9:05 am one').toBeLessThan(morning)
+    expect([rows[afternoon]!.day, rows[morning]!.day]).toEqual(['TODAY', 'TODAY'])
+    // The rows are those conversations: each begins as its conversation began, within its first minute.
+    for (const [row, d] of [[rows[afternoon]!, w.day![2]!], [rows[morning]!, w.day![1]!]] as const) {
+      expect(row.at - d.at, `the ${row.time} row starts ${row.at - d.at} ms after its conversation`).toBeGreaterThanOrEqual(-1000)
+      expect(row.at - d.at).toBeLessThan(60_000)
+    }
+  })
+
+  reg.define(/^the wearer sees the kept conversation under YESTERDAY with a kept mark$/, (w) => {
+    const rows = rowsOn(w.phoneScreen!.markup)
+    const kept = rows.filter((r) => r.kept)
+    expect(kept.map((r) => [r.day, r.names, r.time]), 'one row with a kept mark: yesterday, Marcus, 4:00 pm').toEqual([['YESTERDAY', 'Marcus', '4:00 pm']])
+    expect(rows.filter((r) => r.day === 'YESTERDAY'), 'yesterday holds that row only').toEqual(kept)
+  })
+
+  reg.define(/^the wearer sees, on each row, the names caught, the time, and the count of open promises$/, (w) => {
+    const rows = rowsOn(w.phoneScreen!.markup)
+    const [marcus, priya, dev] = w.day!
+    const open = (d: { promised: string[] }) => (d.promised.length > 0 ? `${d.promised.length} open` : 'all done')
+    expect(rows.map((r) => [r.day, r.names, r.time, r.open])).toEqual([
+      ['TODAY', dev!.names.join(', '), '2:10 pm', open(dev!)],
+      ['TODAY', priya!.names.join(', '), '9:05 am', open(priya!)],
+      ['YESTERDAY', marcus!.names.join(', '), '4:00 pm', open(marcus!)],
+    ])
   })
 
   // D76

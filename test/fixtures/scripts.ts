@@ -16,6 +16,14 @@ export interface ScriptLine {
   text: string
   /** Force the line's total duration in seconds (a one-second "mm-hm"). */
   span?: number
+  /**
+   * P4, the jogger's far side: the technical terms said in this line, word for
+   * word, that a jogger must set in bold (D24, D99); and, for a question, a
+   * word a jogger bullet covering it must carry ("the questions raised").
+   * Annotations for the steps only: they never reach the server.
+   */
+  terms?: string[]
+  ask?: string
 }
 
 /** The wearer opens, Priya introduces herself at second 3, the wearer answers. */
@@ -94,6 +102,54 @@ const SMALL_TALK: ScriptLine[] = (() => {
     lines.push(i === 0 ? { at: 0, who, text } : { gap: 1, who, text })
   }
   return lines
+})()
+
+/**
+ * P4: brisk speech. The keep and jogger fixtures are long conversations whose
+ * every word the player must play at the fixture clock's speed, while only
+ * their words (never their timing) reach the model, so their lines are spoken
+ * at about six words a second to keep the scenarios cheap.
+ */
+function brisk(lines: ScriptLine[]): ScriptLine[] {
+  return lines.map((l) => {
+    const words = l.text.split(/\s+/).length
+    return l.span === undefined ? { ...l, span: Math.round((0.12 * words + 0.06 * (words - 1)) * 100) / 100 } : l
+  })
+}
+
+/**
+ * P4, the jogger's three-hour workshop (D74, D116): Dana opens, then one
+ * specific every eighteen minutes, each its own technical term, with the
+ * wearer answering in a word between them at least every ten minutes so quiet
+ * never ends it (D92). Sparse on purpose: every word is played, the silences
+ * skipped, so three hours stay cheap.
+ */
+const WORKSHOP: ScriptLine[] = (() => {
+  const specifics: [text: string, term: string][] = [
+    ['First, every service runs on Kubernetes.', 'Kubernetes'],
+    ['We package each one with Helm charts.', 'Helm charts'],
+    ['Traffic between them goes through Istio.', 'Istio'],
+    ['New versions ship as canary deployments.', 'canary deployments'],
+    ['Metrics are scraped by Prometheus.', 'Prometheus'],
+    ['Traces are collected with OpenTelemetry.', 'OpenTelemetry'],
+    ['Dashboards live in Grafana.', 'Grafana'],
+    ['Secrets are stored in Vault.', 'Vault'],
+    ['Each quarter we run chaos engineering drills.', 'chaos engineering'],
+    ['Load spikes are handled by horizontal autoscaling.', 'horizontal autoscaling'],
+  ]
+  const lines: ScriptLine[] = [
+    { at: 0, who: 'wearer', text: 'Morning, is this the platform workshop?' },
+    { at: 3, who: 'Dana', text: "Hi, I'm Dana. Welcome, let's begin." },
+  ]
+  specifics.forEach(([text, term], i) => {
+    const at = 300 + i * 1080
+    lines.push({ at, who: 'Dana', text, terms: [term] })
+    lines.push({ gap: 1, who: 'wearer', text: 'Got it.' })
+    lines.push({ at: at + 540, who: 'wearer', text: 'Okay.' })
+  })
+  lines.push({ at: 10_740, who: 'Dana', text: "That's everything, thanks for staying." })
+  lines.push({ gap: 1, who: 'wearer', text: 'Thanks, Dana.' })
+  return brisk(lines)
 })()
 
 export const SCRIPTS: Record<string, ScriptLine[]> = {
@@ -227,8 +283,9 @@ export const SCRIPTS: Record<string, ScriptLine[]> = {
   // quiet never ends it), Priya at the start, the promise; the long-press
   // comes at 1200 s. Then Dana introduces herself before the wearer speaks
   // (no conversation is open, so she is not caught), the wearer speaks, and
-  // Marcus introduces himself in the new conversation.
-  'long-press': [
+  // Marcus introduces himself in the new conversation. Brisk (P4): it is
+  // played to its twentieth minute, kept, and its jogger written.
+  'long-press': brisk([
     { at: 0, who: 'wearer', text: 'Hey Dev, thanks for making the time.' },
     { at: 3, who: 'Priya', text: "Hi, I'm Priya." },
     { gap: 1, who: 'wearer', text: "Dev, I'll send you the deck tonight." },
@@ -243,7 +300,7 @@ export const SCRIPTS: Record<string, ScriptLine[]> = {
     { at: 1203, who: 'Dana', text: "Hi, I'm Dana." },
     { at: 1209, who: 'wearer', text: 'Oh, hello again.' },
     { at: 1212, who: 'Marcus', text: "Hi, I'm Marcus." },
-  ],
+  ]),
   // The operator's P1b carry (a): the wearer gives their name, Priya
   // introduces herself, the lens loses its socket at about 6 s and comes back;
   // then Marcus names the wearer and himself.
@@ -364,6 +421,80 @@ export const SCRIPTS: Record<string, ScriptLine[]> = {
     { at: 5, who: 'wearer', text: "I'll send you the deck tonight." },
     { at: 10, who: 'wearer:Ana', text: "My turn with the glasses. I'll intro you to Sam." },
   ],
+
+  // P4, keep and the jogger (D40-D42, D54, D24, D62, D74, D116, D53, D99).
+
+  // D41: the wearer and Dev talk; the scenario swipes up at second 3; Dev asks
+  // the wearer something at second 5 and they talk on for forty seconds, the
+  // wearer finishing every sentence (no thread) and promising nothing.
+  'keep-distraction': brisk([
+    { at: 0, who: 'wearer', text: 'Morning, Dev.' },
+    { gap: 0.6, who: 'Dev', text: 'Morning!' },
+    { at: 5, who: 'Dev', text: 'Quick question, when does the new schedule come out?' },
+    { gap: 0.8, who: 'wearer', text: 'Next week, as far as I know.' },
+    { at: 20, who: 'Dev', text: 'Okay, and does it change the Friday review?' },
+    { gap: 0.8, who: 'wearer', text: 'No, that stays at noon.' },
+    { at: 38, who: 'Dev', text: 'Good, the team will be glad.' },
+    { gap: 0.8, who: 'wearer', text: 'Me too.' },
+  ]),
+  // D24, D99: a twenty-five-minute call with Ana about joining her lab. The
+  // scenario keeps it at second 7 and long-presses at 25:00; the wearer speaks
+  // at least every ten minutes, so quiet never ends it (D92).
+  'lab-call': brisk([
+    { at: 0, who: 'wearer', text: 'Hi, thanks for taking the call.' },
+    { at: 2.5, who: 'Ana', text: "Hi, I'm Ana." },
+    { at: 60, who: 'Ana', text: 'My lab designs proteins with diffusion models.', terms: ['diffusion models'] },
+    { at: 90, who: 'wearer', text: 'How do you validate the designs?', ask: 'validate' },
+    { gap: 1, who: 'Ana', text: 'We screen them with AlphaFold, then cryo-EM.', terms: ['AlphaFold', 'cryo-EM'] },
+    { at: 300, who: 'wearer', text: 'What would my first project be?', ask: 'project' },
+    { gap: 1, who: 'Ana', text: 'Extending our equivariant transformer to small molecules.', terms: ['equivariant transformer'] },
+    { at: 600, who: 'wearer', text: 'Is there funding for the summer?', ask: 'funding' },
+    { gap: 1, who: 'Ana', text: 'Yes, from our NSF grant.' },
+    { at: 900, who: 'wearer', text: 'What should I read first?', ask: 'read' },
+    { gap: 1, who: 'Ana', text: 'Start with our paper on inverse folding.', terms: ['inverse folding'] },
+    { at: 1180, who: 'wearer', text: "I'll send you my transcript by Friday." },
+    { gap: 1, who: 'Ana', text: 'Great, talk soon.' },
+  ]),
+  // D62: a two-minute chat at a booth, kept at second 7, long-pressed at 2:00.
+  'booth-chat': brisk([
+    { at: 0, who: 'wearer', text: 'Hi, what are you showing here?' },
+    { at: 2.5, who: 'Marcus', text: "Hi, I'm Marcus." },
+    { at: 15, who: 'Marcus', text: 'This rig maps rooms with lidar.', terms: ['lidar'] },
+    { at: 40, who: 'wearer', text: 'How accurate is it?', ask: 'accura' },
+    { gap: 1, who: 'Marcus', text: 'About two centimeters, thanks to SLAM.', terms: ['SLAM'] },
+    { at: 100, who: 'wearer', text: 'Nice, good luck with it.' },
+  ]),
+  // D74, D116: a three-hour workshop, kept at second 7, long-pressed at 3:00:00.
+  workshop: WORKSHOP,
+  // D53: kept at second 4; Catch cannot hear from second 20 to second 260 (the
+  // scenario drops the speech-to-text provider and brings it back), and what
+  // Marcus says meanwhile is never heard; the scenario long-presses at 300 s.
+  'kept-gap': brisk([
+    { at: 0, who: 'wearer', text: 'Morning, Marcus.' },
+    { at: 6, who: 'Marcus', text: 'We moved the API to GraphQL last month.', terms: ['GraphQL'] },
+    { gap: 1, who: 'wearer', text: 'How did the migration go?', ask: 'migration' },
+    { at: 100, who: 'Marcus', text: 'The Redis cache was the hard part.' },
+    { at: 270, who: 'wearer', text: 'Sorry, I lost you for a bit.' },
+    { gap: 1, who: 'Marcus', text: 'No problem. Next we try gRPC streaming.', terms: ['gRPC'] },
+    { gap: 1, who: 'wearer', text: 'Sounds good.' },
+  ]),
+  // D100, the history on the phone: three conversations in one day and a
+  // bit. Fixture second 0 is yesterday at 4:00 pm (the scenario sets the
+  // clock there): Marcus, kept at second 7; quiet ends it at 4:10. Today at
+  // 9:05 am (17 h 5 min on) Priya, with a promise; at 2:10 pm (22 h 10 min
+  // on) Dev, with a promise; quiet ends each.
+  'history-day': brisk([
+    { at: 0, who: 'wearer', text: 'Hey, got a minute?' },
+    { at: 2.5, who: 'Marcus', text: "Hi, I'm Marcus." },
+    { at: 12, who: 'Marcus', text: 'We moved the build to Bazel.', terms: ['Bazel'] },
+    { gap: 1, who: 'wearer', text: 'Nice, that should help.' },
+    { at: 61_500, who: 'wearer', text: 'Morning, good to see you.' },
+    { at: 61_502.5, who: 'Priya', text: "Hi, I'm Priya." },
+    { at: 61_506, who: 'wearer', text: "I'll send you the slides." },
+    { at: 79_800, who: 'wearer', text: 'Hey, how did it go?' },
+    { at: 79_802.5, who: 'Dev', text: "Hi, I'm Dev." },
+    { at: 79_806, who: 'wearer', text: "I'll call you on Monday." },
+  ]),
 }
 
 export const VARIANTS = ['wearer-louder', 'other-louder'] as const

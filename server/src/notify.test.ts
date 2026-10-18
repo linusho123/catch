@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { VirtualClock } from '../../test/harness/clock.ts'
-import { cutLine, listOf, NOTIFICATION_LINE_CHARS, NOTIFY_RETRY_MS, Outbox, promiseNotification, type Notifier, type PhoneNotification } from './notify.ts'
+import { cutLine, keptNotification, listOf, NOTIFICATION_LINE_CHARS, NOTIFY_RETRY_MS, Outbox, promiseNotification, type Notifier, type PhoneNotification } from './notify.ts'
 
 // The notification semantics on their own (D28, D51, D114, D117).
 
@@ -26,6 +26,19 @@ describe('the promise notification', () => {
     expect(long.startsWith(cut.slice(0, -1))).toBe(true)
     expect(cut).not.toMatch(/[ ,]…$/)
     expect(cutLine('Send Dev the deck')).toBe('Send Dev the deck')
+  })
+})
+
+describe('the kept notification (D24)', () => {
+  it('names the conversation by who was caught, and opens its jogger', () => {
+    expect(keptNotification(7, ['Ana'], 0)).toEqual({ title: 'Catch', body: 'Kept: conversation with Ana', data: { conversation: '7', screen: 'jogger' } })
+    expect(keptNotification(7, ['Priya', 'Marcus', 'Dana'], 0).body).toBe('Kept: conversation with Priya, Marcus and Dana')
+  })
+
+  it('names the time it began, in the wearer\'s zone, when nobody was caught', () => {
+    const at = Date.UTC(2026, 9, 17, 21, 10)
+    expect(keptNotification(7, [], at, 'America/Los_Angeles').body).toBe('Kept: conversation at 2:10 pm')
+    expect(keptNotification(7, [], at, 'UTC').body).toBe('Kept: conversation at 9:10 pm')
   })
 })
 

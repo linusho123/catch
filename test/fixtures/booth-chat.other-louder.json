@@ -1,0 +1,293 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "booth-chat",
+  "variant": "other-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "Hi, what are you showing here?",
+      "span": 1.02
+    },
+    {
+      "at": 2.5,
+      "who": "Marcus",
+      "text": "Hi, I'm Marcus.",
+      "span": 0.48
+    },
+    {
+      "at": 15,
+      "who": "Marcus",
+      "text": "This rig maps rooms with lidar.",
+      "terms": [
+        "lidar"
+      ],
+      "span": 1.02
+    },
+    {
+      "at": 40,
+      "who": "wearer",
+      "text": "How accurate is it?",
+      "ask": "accura",
+      "span": 0.66
+    },
+    {
+      "gap": 1,
+      "who": "Marcus",
+      "text": "About two centimeters, thanks to SLAM.",
+      "terms": [
+        "SLAM"
+      ],
+      "span": 1.02
+    },
+    {
+      "at": 100,
+      "who": "wearer",
+      "text": "Nice, good luck with it.",
+      "span": 0.84
+    }
+  ],
+  "words": [
+    {
+      "text": "Hi,",
+      "start": 0,
+      "end": 0.092,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "what",
+      "start": 0.152,
+      "end": 0.274,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "are",
+      "start": 0.334,
+      "end": 0.442,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 0.502,
+      "end": 0.609,
+      "role": "wearer",
+      "loudness": -27.4,
+      "speaker": 0
+    },
+    {
+      "text": "showing",
+      "start": 0.669,
+      "end": 0.837,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "here?",
+      "start": 0.897,
+      "end": 1.02,
+      "role": "wearer",
+      "loudness": -24.5,
+      "speaker": 0
+    },
+    {
+      "text": "Hi,",
+      "start": 2.5,
+      "end": 2.598,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "I'm",
+      "start": 2.658,
+      "end": 2.756,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "Marcus.",
+      "start": 2.816,
+      "end": 2.98,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 1
+    },
+    {
+      "text": "This",
+      "start": 15,
+      "end": 15.118,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 1
+    },
+    {
+      "text": "rig",
+      "start": 15.178,
+      "end": 15.28,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 1
+    },
+    {
+      "text": "maps",
+      "start": 15.34,
+      "end": 15.458,
+      "role": "other",
+      "loudness": -14.6,
+      "speaker": 1
+    },
+    {
+      "text": "rooms",
+      "start": 15.518,
+      "end": 15.65,
+      "role": "other",
+      "loudness": -12.7,
+      "speaker": 1
+    },
+    {
+      "text": "with",
+      "start": 15.71,
+      "end": 15.828,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "lidar.",
+      "start": 15.888,
+      "end": 16.02,
+      "role": "other",
+      "loudness": -13.9,
+      "speaker": 1
+    },
+    {
+      "text": "How",
+      "start": 40,
+      "end": 40.108,
+      "role": "wearer",
+      "loudness": -26.2,
+      "speaker": 0
+    },
+    {
+      "text": "accurate",
+      "start": 40.168,
+      "end": 40.354,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "is",
+      "start": 40.414,
+      "end": 40.507,
+      "role": "wearer",
+      "loudness": -26.5,
+      "speaker": 0
+    },
+    {
+      "text": "it?",
+      "start": 40.567,
+      "end": 40.66,
+      "role": "wearer",
+      "loudness": -25.5,
+      "speaker": 0
+    },
+    {
+      "text": "About",
+      "start": 41.66,
+      "end": 41.778,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 1
+    },
+    {
+      "text": "two",
+      "start": 41.838,
+      "end": 41.929,
+      "role": "other",
+      "loudness": -13.8,
+      "speaker": 1
+    },
+    {
+      "text": "centimeters,",
+      "start": 41.989,
+      "end": 42.186,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 1
+    },
+    {
+      "text": "thanks",
+      "start": 42.246,
+      "end": 42.377,
+      "role": "other",
+      "loudness": -14.6,
+      "speaker": 1
+    },
+    {
+      "text": "to",
+      "start": 42.437,
+      "end": 42.515,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "SLAM.",
+      "start": 42.575,
+      "end": 42.68,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 1
+    },
+    {
+      "text": "Nice,",
+      "start": 100,
+      "end": 100.126,
+      "role": "wearer",
+      "loudness": -25.3,
+      "speaker": 0
+    },
+    {
+      "text": "good",
+      "start": 100.186,
+      "end": 100.313,
+      "role": "wearer",
+      "loudness": -24.8,
+      "speaker": 0
+    },
+    {
+      "text": "luck",
+      "start": 100.373,
+      "end": 100.499,
+      "role": "wearer",
+      "loudness": -27.4,
+      "speaker": 0
+    },
+    {
+      "text": "with",
+      "start": 100.559,
+      "end": 100.685,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "it.",
+      "start": 100.745,
+      "end": 100.84,
+      "role": "wearer",
+      "loudness": -26.4,
+      "speaker": 0
+    }
+  ]
+}

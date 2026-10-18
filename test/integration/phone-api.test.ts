@@ -7,7 +7,7 @@ import { wearerOf } from '../../server/src/phone/api.ts'
 import { History } from '../../server/src/phone/history.ts'
 import { systemClock } from '../../shared/clock.ts'
 import type { HistoryResponse } from '../../shared/phone-protocol.ts'
-import { isHistory, openPhone, rowsOn, sectionsOn } from '../harness/phone.ts'
+import { isHistory, isJogger, joggerLinkOn, joggerOn, openPhone, rowsOn, sectionsOn } from '../harness/phone.ts'
 
 // The phone API on a real server, and the phone page drawing from it (D130).
 // The conversations are written into the store the way the server writes one
@@ -27,7 +27,8 @@ beforeAll(async () => {
   const me = wearerOf(TOKEN)
   history.record(me, { startedAt: at(9, 5), endedAt: at(9, 40), names: ['Dev'], you: ['Send Dev the deck tonight', 'Introduce Dev to Sam'], owed: ['Dev sends the agenda'], kept: false })
   history.record(me, { startedAt: at(14, 10), endedAt: at(14, 30), names: ['Priya'], you: ['Send Priya the link'], owed: [], kept: false })
-  history.record(me, { startedAt: at(16, 0, 16), endedAt: at(17, 0, 16), names: ['Ana'], you: [], owed: [], kept: true })
+  const ana = history.record(me, { startedAt: at(16, 0, 16), endedAt: at(17, 0, 16), names: ['Ana'], you: [], owed: [], kept: true })!
+  history.recordJogger(ana, ['Her lab uses **diffusion models**.', '4 minutes not heard'])
   history.record(wearerOf('someone else'), { startedAt: at(15, 0), endedAt: at(15, 5), names: ['Zed'], you: ['Not yours'], owed: [], kept: false })
 })
 afterAll(() => server.close())
@@ -66,6 +67,20 @@ describe('the phone API', () => {
     expect((await get('/phone/conversations/nope', TOKEN)).status).toBe(404)
   })
 
+  it("answers a kept conversation's jogger (D99), and nothing for one with none or another wearer's", async () => {
+    const { conversations } = (await (await get('/phone/history', TOKEN)).json()) as HistoryResponse
+    const ana = conversations.find((c) => c.kept)!
+    const res = await get(`/phone/conversations/${ana.id}/jogger`, TOKEN)
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ id: ana.id, startedAt: at(16, 0, 16), endedAt: at(17, 0, 16), names: ['Ana'], bullets: ['Her lab uses **diffusion models**.', '4 minutes not heard'] })
+    expect((await (await get(`/phone/conversations/${ana.id}`, TOKEN)).json()).jogger).toBe(true)
+    const dev = conversations.find((c) => c.names.includes('Dev'))!
+    expect((await (await get(`/phone/conversations/${dev.id}`, TOKEN)).json()).jogger).toBe(false)
+    expect((await get(`/phone/conversations/${dev.id}/jogger`, TOKEN)).status).toBe(404)
+    expect((await get(`/phone/conversations/${ana.id}/jogger`, 'wrong')).status).toBe(401)
+    expect((await get(`/phone/conversations/${ana.id}/jogger`, wearerOf('x'))).status).toBe(401)
+  })
+
   it('is read-only, and lets a page on another origin send the token', async () => {
     const post = await fetch(`${server.url}/phone/history`, { method: 'POST', headers: { authorization: `Bearer ${TOKEN}` } })
     expect(post.status).toBe(405)
@@ -92,5 +107,35 @@ describe('the phone page on the API', () => {
     ])
     await phone.home()
     expect(isHistory(record.innerHTML)).toBe(true)
+  })
+})
+
+describe("the phone page's jogger (D99)", () => {
+  it('opens from the conversation screen\'s "Kept conversation ›", and from a kept notification: the names and the length, then one list with the terms in bold', async () => {
+    const { phone, record } = await openPhone({ server: server.url, token: TOKEN, clock: { ...systemClock, now: () => at(18, 0) } })
+    await phone.home()
+    const ana = rowsOn(record.innerHTML).find((r) => r.kept)!
+    await phone.open(Number(ana.conversation))
+    expect(joggerLinkOn(record.innerHTML)).toBe(ana.conversation)
+    record.tap('data-jogger', ana.conversation)
+    for (let i = 0; i < 20 && !isJogger(record.innerHTML); i++) await new Promise((r) => setTimeout(r, 5))
+    expect(joggerOn(record.innerHTML)).toEqual({
+      names: 'Ana',
+      length: '1 h',
+      lists: 1,
+      headings: [],
+      bullets: [
+        { text: 'Her lab uses diffusion models.', bold: ['diffusion models'] },
+        { text: '4 minutes not heard', bold: [] },
+      ],
+    })
+    await phone.home()
+    await phone.openNotification({ conversation: ana.conversation, screen: 'jogger' })
+    expect(isJogger(record.innerHTML)).toBe(true)
+    await phone.openNotification({ conversation: ana.conversation })
+    expect(sectionsOn(record.innerHTML).map((s) => s.title), 'a promise notification opens the conversation screen').toEqual(['YOU', 'OWED TO YOU'])
+    const dev = rowsOn((await phone.home(), record.innerHTML)).find((r) => r.names === 'Dev')!
+    await phone.open(Number(dev.conversation))
+    expect(joggerLinkOn(record.innerHTML), 'no jogger, no link').toBeUndefined()
   })
 })

@@ -12,6 +12,8 @@
 
 export const PHONE_HISTORY_PATH = '/phone/history'
 export const PHONE_CONVERSATION_PATH = '/phone/conversations/'
+/** GET /phone/conversations/<id>/jogger: a kept conversation's jogger (D99). */
+export const PHONE_JOGGER_SUFFIX = '/jogger'
 
 /** One promise on a conversation's screen. */
 export interface PhonePromise {
@@ -50,4 +52,17 @@ export interface ConversationResponse {
   you: PhonePromise[]
   /** The promises owed to the wearer, in the order made (P5). */
   owed: PhonePromise[]
+  /** Whether a jogger has been written for it: the screen links to it, "Kept conversation ›" (D99). */
+  jogger: boolean
+}
+
+/** GET /phone/conversations/<id>/jogger: a kept conversation's jogger (D99). */
+export interface JoggerResponse {
+  id: number
+  startedAt: number
+  endedAt: number
+  /** The names caught, for the header with the length (D99). */
+  names: string[]
+  /** One flat list, in the order things came up; technical terms set off as `**term**`. */
+  bullets: string[]
 }

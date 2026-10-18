@@ -6,12 +6,13 @@ import { WebSocketServer } from 'ws'
 import { systemClock, type Clock, type TimerHandle } from '../../shared/clock.ts'
 import { parseLensMessage, type LensView, type ServerMessage } from '../../shared/lens-protocol.ts'
 import { decodeFrame, type AudioFrame } from '../../shared/wire.ts'
+import { writeJogger } from './catch/jogger.ts'
 import { command, PromiseDetector } from './catch/promises.ts'
 import { Session } from './catch/session.ts'
 import { Transcript } from './catch/transcript.ts'
 import type { ModelClient } from './llm/client.ts'
 import { SafeModelError } from './llm/errors.ts'
-import { Outbox, promiseNotification, type Notifier } from './notify.ts'
+import { keptNotification, Outbox, promiseNotification, type Notifier } from './notify.ts'
 import { phoneRoute, wearerOf } from './phone/api.ts'
 import { History } from './phone/history.ts'
 import { createSplit, type WearerSplit } from './split/split.ts'
@@ -57,6 +58,17 @@ import type { SpeechToText, SttStream, SttWord } from './stt/types.ts'
 // transcript left in the store as it starts, and forgetWearers does the same
 // (fix round, risk-1; P9's resume replaces this rule). Nothing the server
 // logs about a model pass quotes the conversation (head-log-1).
+//
+// A kept conversation (P4): as it ends, its history row is written kept, its
+// promise notification (if any) is queued, and its jogger is written from the
+// transcript the session hands on (catch/jogger.ts, D24, D99). The store's
+// copy of the transcript is already gone by then (D76); the words live only
+// in that pass until the jogger is stored, and then go too. Once stored, the
+// kept notification is queued behind the promise one, and waits for the
+// phone the same way (D114). A pass that fails is reported (modelError) and
+// leaves the conversation kept with no jogger; a pass still out when the
+// wearers are forgotten or the server closes is cancelled, and its answer
+// touches nothing.
 
 export interface ServerOptions {
   port: number
@@ -83,6 +95,8 @@ export interface ServerOptions {
   model?: ModelClient
   /** Where phone notifications go (P2a on); without one, the phone page's history is the only way promises reach the phone. */
   notifier?: Notifier
+  /** The wearer's time zone (CATCH_TIME_ZONE), for a kept notification that names the time because no name was caught; the server's own when unset. */
+  timeZone?: string
   /**
    * Further accounts' shared tokens, each its own wearer (D79). Production
    * serves one account and passes none; the test harness signs a second
@@ -178,6 +192,12 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   const outbox = opts.notifier ? new Outbox(opts.notifier, clock) : undefined
   const promises = opts.model ? new PromiseDetector(opts.model) : undefined
   let sessions = 0
+  /** Joggers being written, each cancelled when the wearers are forgotten or the server closes. */
+  const writing = new Set<AbortController>()
+  const stopJoggers = () => {
+    for (const abort of writing) abort.abort()
+    writing.clear()
+  }
   /** One session per wearer, keyed by the digest of the shared token their lens carries (D79). */
   const wearers = new Map<string, Session>()
 
@@ -227,13 +247,32 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
           console.error(`a conversation's end could not be recorded: ${loggable(error)}`)
           events.emit('endError', { at: clock.now(), error })
         },
-        transcript: { add: (word) => transcript.add(wearer, word), delete: () => transcript.delete(wearer) },
-        // P4 gives the history the keep, P5 the owed promises.
-        onEnd: ({ promises: said, ...ended }) => {
+        transcript: { add: (word) => transcript.add(wearer, word), words: () => transcript.words(wearer), delete: () => transcript.delete(wearer) },
+        // P5 gives the history the owed promises.
+        onEnd: ({ promises: said, promiseTimes, kept, transcript: words, gaps, ...ended }) => {
           const you = said.map(command)
-          const id = history.record(wearer, { ...ended, you, owed: [], kept: false })
+          const id = history.record(wearer, { ...ended, you, owed: [], kept })
           const notification = promiseNotification(id, you)
           if (notification) outbox?.enqueue(wearer, notification)
+          if (!kept || id === undefined) return
+          if (!opts.model) {
+            console.error('a kept conversation ended with no model to write its jogger (GEMINI_API_KEY is not set)')
+            return
+          }
+          const abort = new AbortController()
+          writing.add(abort)
+          writeJogger(opts.model, { names: ended.names, transcript: words, promises: said, promiseTimes, gaps }, { signal: abort.signal })
+            .then((jogger) => {
+              if (abort.signal.aborted) return
+              history.recordJogger(id, jogger.bullets)
+              outbox?.enqueue(wearer, keptNotification(id, ended.names, ended.startedAt, opts.timeZone))
+            })
+            .catch((error: unknown) => {
+              if (abort.signal.aborted) return
+              console.error(`a kept conversation's jogger could not be written: ${loggable(error)}`)
+              events.emit('modelError', { at: clock.now(), error })
+            })
+            .finally(() => writing.delete(abort))
         },
       })
     wearers.set(wearer, lens)
@@ -306,6 +345,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         if (msg?.type === 'touch' && msg.gesture === 'tap') lens.tap()
         if (msg?.type === 'touch' && msg.gesture === 'long-press') lens.longPress()
         if (msg?.type === 'touch' && msg.gesture === 'swipe-down') lens.swipeDown()
+        if (msg?.type === 'touch' && msg.gesture === 'swipe-up') lens.swipeUp()
         return
       }
       try {
@@ -334,6 +374,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     forgetWearers() {
       for (const session of wearers.values()) session.close()
       wearers.clear()
+      stopJoggers()
       outbox?.forget()
       // As at a start (risk-1): the forgotten sessions' conversations have ended, and their transcripts go.
       transcript.purge()
@@ -345,6 +386,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       // No session hands anything on after this (a deferred end, a quiet timer), so nothing touches the store once it is closed (risk-3).
       for (const session of wearers.values()) session.close()
       wearers.clear()
+      stopJoggers()
       outbox?.close()
       for (const client of wss.clients) client.terminate()
       await new Promise<void>((resolve) => wss.close(() => resolve()))

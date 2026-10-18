@@ -6,6 +6,7 @@ import { runFeatures, type Definer, type WipEntry } from 'gherkin-node-test/vite
 import { afterScenario, closeHarness } from './steps/lens-world.ts'
 import droppedThread from './steps/dropped-thread.steps.ts'
 import holding from './steps/holding.steps.ts'
+import keptConversations from './steps/kept-conversations.steps.ts'
 import names from './steps/names.steps.ts'
 import phoneHandoff from './steps/phone-handoff.steps.ts'
 import promises from './steps/promises.steps.ts'
@@ -26,33 +27,28 @@ const FEATURE_DIR = join(ROOT, 'features')
 // The wip register: features (or scenarios) not yet bound. It only shrinks.
 const WIP: WipEntry[] = [
   // P1b binds D43's names page, D31 and the dismissal; P2a the promises page
-  // (D112) and the phone's half of the quiet end. These wait: the owed line on
-  // the promises page for P5, the keep in the long-press end for P4 (its phone
-  // half is bound), scrolling for P10.
+  // (D112) and the phone's half of the quiet end; P4 the keep in the
+  // long-press end. These wait: the owed line on the promises page for P5,
+  // scrolling for P10.
   {
     feature: 'holding',
-    scenarios: [
-      'A swipe down turns to the promises page',
-      'Thirty names scroll before the promises page',
-      'A long-press ends the conversation now',
-    ],
+    scenarios: ['A swipe down turns to the promises page', 'Thirty names scroll before the promises page'],
   },
-  'kept-conversations',
+  // P4 binds the keep and the jogger; the restart waits for P9 (D73).
+  { feature: 'kept-conversations', scenarios: ['Everything survives a restart mid-conversation'] },
   // P2b′ (D130) binds the phone page's "nothing to keep" scenario; P2a binds D51,
   // D76 and D79 in full, and the bound halves of D117 (its owed line waits for
-  // P5), D28 (its "opens in full" needs both owed promises, P5) and D114 (its
-  // kept conversation, P4). The rest waits: the jogger row for P4; the tick-off outlines and
-  // every website row are cut (D126, D130). "The home lists conversations newest
-  // first on the <surface>": its iPhone row is lifted in P4 (after P2a's promises
-  // and P4's keep), with steps that match only the "iPhone app" surface; this
-  // scenario-scoped entry stays while its website row is unbound, because the
-  // website row is deferred by D126 (operator answer 3).
+  // P5) and D28 (its "opens in full" needs both owed promises, P5); P4 binds
+  // D114 in full (its kept half) and the iPhone rows of the history and jogger
+  // outlines, with steps that match only the "iPhone app" surface. The
+  // tick-off outlines and every website row are cut (D126, D130); the history
+  // and jogger outlines stay scenario-scoped wip while their website rows are
+  // unbound (deferred by D126, operator answer 3).
   {
     feature: 'phone-handoff',
     scenarios: [
       'One notification carries both lines',
       'A long list is cut off and opens in full',
-      'Notifications wait for an unreachable phone',
       "Ticking off a promise removes it from the conversation's screen on the <surface>",
       'An owed promise can be ticked off the same way on the <surface>',
       'The home lists conversations newest first on the <surface>',
@@ -87,6 +83,7 @@ const WIP: WipEntry[] = [
 const definers: Record<string, Definer<any>> = {
   'dropped-thread': droppedThread,
   holding,
+  'kept-conversations': keptConversations,
   names,
   'phone-handoff': phoneHandoff,
   promises,

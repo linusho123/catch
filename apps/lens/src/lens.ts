@@ -252,6 +252,10 @@ export async function startLens(opts: LensOptions): Promise<Lens> {
     if (textType === OsEventTypeList.SCROLL_BOTTOM_EVENT || sysType === OsEventTypeList.SCROLL_BOTTOM_EVENT) {
       sendToServer({ type: 'touch', gesture: 'swipe-down' })
     }
+    // A swipe up (the SDK's scroll toward the top) asks to keep the conversation (D40).
+    if (textType === OsEventTypeList.SCROLL_TOP_EVENT || sysType === OsEventTypeList.SCROLL_TOP_EVENT) {
+      sendToServer({ type: 'touch', gesture: 'swipe-up' })
+    }
   })
 
   return { connected, stop }

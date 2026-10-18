@@ -1,9 +1,11 @@
 import {
   PHONE_CONVERSATION_PATH,
   PHONE_HISTORY_PATH,
+  PHONE_JOGGER_SUFFIX,
   type ConversationResponse,
   type HistoryResponse,
   type HistoryRow,
+  type JoggerResponse,
   type PhonePromise,
 } from '../../../shared/phone-protocol.ts'
 
@@ -15,8 +17,12 @@ import {
 // YOU, never the owed ones: operator answer 2); and one
 // conversation's screen (D98), its names and time on top, then YOU and OWED TO
 // YOU, each promise with a tick box. Tick-off on the phone is cut (D126,
-// D130), so the boxes are drawn and inert. The jogger link and screen come
-// with the keep (P4).
+// D130), so the boxes are drawn and inert. A kept conversation's screen links
+// to its jogger, "Kept conversation ›" (P4), the third screen (D99): the names
+// and the length on top, then one flat list of bullets in the order things
+// came up, the technical terms in bold. A notification opened on the phone
+// opens the screen its data names: the jogger for a kept one, the
+// conversation's screen for the promises (`openNotification`).
 //
 // Everything comes from the server's read-only phone API
 // (shared/phone-protocol.ts), with the shared token. Each screen is drawn by
@@ -45,6 +51,10 @@ export interface Phone {
   home(): Promise<void>
   /** Settles when the conversation's screen has been drawn (or its failure has). */
   open(id: number): Promise<void>
+  /** Settles when the kept conversation's jogger has been drawn (or its failure has). */
+  jogger(id: number): Promise<void>
+  /** A notification opened on the phone: the screen its data names (the jogger for a kept conversation, else the conversation's screen). */
+  openNotification(data: Record<string, string> | undefined): Promise<void>
   /** Re-draws the screen last asked for, from the server again: the page coming back into view (fix round, M5). */
   refresh(): Promise<void>
 }
@@ -130,6 +140,31 @@ export function conversationMarkup(c: ConversationResponse, now: number): string
     `<p class="when">${esc(day.charAt(0) + day.slice(1).toLowerCase())} · ${timeTag(c.startedAt)}</p></header>` +
     section('you', 'YOU', c.you) +
     section('owed', 'OWED TO YOU', c.owed) +
+    (c.jogger ? `<button type="button" class="jogger-link" data-jogger="${c.id}">Kept conversation ›</button>` : '') +
+    '</main>'
+  )
+}
+
+/** "25 min", "3 h", "3 h 5 min": a conversation's length for the jogger's header (D99). */
+export function lengthOf(ms: number): string {
+  const minutes = Math.max(1, Math.round(ms / 60_000))
+  if (minutes < 60) return `${minutes} min`
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  return m === 0 ? `${h} h` : `${h} h ${m} min`
+}
+
+/** A bullet's text, escaped, with its `**term**` spans set in bold. */
+const bulletHtml = (text: string) => esc(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+
+/** A kept conversation's jogger (D99): the names and the length on top, then one flat list of bullets. */
+export function joggerMarkup(j: JoggerResponse): string {
+  return (
+    '<main class="phone jogger">' +
+    `<header><button type="button" class="back" data-conversation="${j.id}">‹ Conversation</button>` +
+    `<h1 class="names">${esc(namesOf(j.names))}</h1>` +
+    `<p class="length">${lengthOf(j.endedAt - j.startedAt)}</p></header>` +
+    `<ul class="bullets">${j.bullets.map((b) => `<li>${bulletHtml(b)}</li>`).join('')}</ul>` +
     '</main>'
   )
 }
@@ -163,19 +198,28 @@ export function startPhone(opts: PhoneOptions): Phone {
 
   const history = () => show<HistoryResponse>(PHONE_HISTORY_PATH, (h) => historyMarkup(h, now()))
   const conversation = (id: number) => show<ConversationResponse>(`${PHONE_CONVERSATION_PATH}${id}`, (c) => conversationMarkup(c, now()))
+  const jogger = (id: number) => show<JoggerResponse>(`${PHONE_CONVERSATION_PATH}${id}${PHONE_JOGGER_SUFFIX}`, joggerMarkup)
   // The screen last asked for, which a refresh asks for again.
   let screen: () => Promise<void> = history
 
   const phone: Phone = {
     home: () => (screen = history)(),
     open: (id) => (screen = () => conversation(id))(),
+    jogger: (id) => (screen = () => jogger(id))(),
+    openNotification: (data) => {
+      const id = Number(data?.conversation)
+      if (!Number.isInteger(id)) return phone.home()
+      return data?.screen === 'jogger' ? phone.jogger(id) : phone.open(id)
+    },
     refresh: () => screen(),
   }
 
   root.addEventListener('click', ({ target }) => {
     const t = target as Closest
     const conversation = t.closest?.('[data-conversation]')?.getAttribute('data-conversation')
+    const kept = t.closest?.('[data-jogger]')?.getAttribute('data-jogger')
     if (conversation) void phone.open(Number(conversation))
+    else if (kept) void phone.jogger(Number(kept))
     else if (t.closest?.('[data-home]')) void phone.home()
   })
   return phone

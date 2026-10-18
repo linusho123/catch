@@ -35,6 +35,12 @@ describe('the promises page (D43, D112)', () => {
 
   it('sends a swipe down to the server as a touch, and nothing it does not know', () => {
     expect(parseLensMessage('{"type":"touch","gesture":"swipe-down"}')).toEqual({ type: 'touch', gesture: 'swipe-down' })
-    expect(parseLensMessage('{"type":"touch","gesture":"swipe-up"}')).toBeNull()
+    expect(parseLensMessage('{"type":"touch","gesture":"swipe-left"}')).toBeNull()
+  })
+})
+
+describe('the keep (D40)', () => {
+  it('sends a swipe up to the server as a touch', () => {
+    expect(parseLensMessage('{"type":"touch","gesture":"swipe-up"}')).toEqual({ type: 'touch', gesture: 'swipe-up' })
   })
 })

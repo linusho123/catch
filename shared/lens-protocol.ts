@@ -35,12 +35,13 @@ export type ServerMessage =
 
 /**
  * A tap; a long-press ends the conversation now (D52); a swipe down turns the
- * names page to the promises page (D43). Double-tap is Even's exit and never
- * leaves the lens.
+ * names page to the promises page (D43) and declines the keep prompt (D40); a
+ * swipe up asks to keep the conversation (D40). Double-tap is Even's exit and
+ * never leaves the lens.
  */
-export type Gesture = 'tap' | 'long-press' | 'swipe-down'
+export type Gesture = 'tap' | 'long-press' | 'swipe-down' | 'swipe-up'
 
-const GESTURES: readonly string[] = ['tap', 'long-press', 'swipe-down'] satisfies Gesture[]
+const GESTURES: readonly string[] = ['tap', 'long-press', 'swipe-down', 'swipe-up'] satisfies Gesture[]
 
 /** Lens to server. */
 export type LensMessage = { type: 'touch'; gesture: Gesture }

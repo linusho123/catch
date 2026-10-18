@@ -106,3 +106,35 @@ export async function openPhone(opts: { server: string; token: string; clock: Cl
   const phone = startPhone({ root: record, server: opts.server, token: opts.token, now: () => opts.clock.now() })
   return { phone, record }
 }
+
+/** Whether the screen is a kept conversation's jogger (D99). */
+export const isJogger = (markup: string) => markup.startsWith('<main class="phone jogger">')
+
+export interface JoggerBullet {
+  /** The bullet as the wearer reads it, bold or not. */
+  text: string
+  /** The spans set in bold, in order. */
+  bold: string[]
+}
+
+/** A jogger screen as the wearer reads it: its header, its lists, its headings, and each bullet with its bold. */
+export function joggerOn(markup: string): { names: string; length: string; lists: number; headings: string[]; bullets: JoggerBullet[] } {
+  const header = markup.match(/<header>(.*?)<\/header>/)?.[1] ?? ''
+  const body = markup.slice(markup.indexOf('</header>') + '</header>'.length)
+  const list = body.match(/<ul class="bullets">(.*?)<\/ul>/)?.[1] ?? ''
+  return {
+    names: text(header.match(/<h1 class="names">(.*?)<\/h1>/)?.[1] ?? ''),
+    length: text(header.match(/<p class="length">(.*?)<\/p>/)?.[1] ?? ''),
+    lists: [...body.matchAll(/<(ul|ol)\b/g)].length,
+    headings: [...body.matchAll(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/g)].map((h) => text(h[1]!)),
+    bullets: [...list.matchAll(/<li>(.*?)<\/li>/g)].map((li) => ({
+      text: text(li[1]!),
+      bold: [...li[1]!.matchAll(/<strong>(.*?)<\/strong>/g)].map((b) => text(b[1]!)),
+    })),
+  }
+}
+
+/** Whether a conversation screen links to its jogger, "Kept conversation ›" (D99), and the conversation it opens. */
+export function joggerLinkOn(markup: string): string | undefined {
+  return markup.match(/<button type="button" class="jogger-link" data-jogger="(\d+)">Kept conversation ›<\/button>/)?.[1]
+}

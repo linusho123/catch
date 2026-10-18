@@ -1,0 +1,1100 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "workshop",
+  "variant": "other-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "Morning, is this the platform workshop?",
+      "span": 1.02
+    },
+    {
+      "at": 3,
+      "who": "Dana",
+      "text": "Hi, I'm Dana. Welcome, let's begin.",
+      "span": 1.02
+    },
+    {
+      "at": 300,
+      "who": "Dana",
+      "text": "First, every service runs on Kubernetes.",
+      "terms": [
+        "Kubernetes"
+      ],
+      "span": 1.02
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Got it.",
+      "span": 0.3
+    },
+    {
+      "at": 840,
+      "who": "wearer",
+      "text": "Okay.",
+      "span": 0.12
+    },
+    {
+      "at": 1380,
+      "who": "Dana",
+      "text": "We package each one with Helm charts.",
+      "terms": [
+        "Helm charts"
+      ],
+      "span": 1.2
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Got it.",
+      "span": 0.3
+    },
+    {
+      "at": 1920,
+      "who": "wearer",
+      "text": "Okay.",
+      "span": 0.12
+    },
+    {
+      "at": 2460,
+      "who": "Dana",
+      "text": "Traffic between them goes through Istio.",
+      "terms": [
+        "Istio"
+      ],
+      "span": 1.02
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Got it.",
+      "span": 0.3
+    },
+    {
+      "at": 3000,
+      "who": "wearer",
+      "text": "Okay.",
+      "span": 0.12
+    },
+    {
+      "at": 3540,
+      "who": "Dana",
+      "text": "New versions ship as canary deployments.",
+      "terms": [
+        "canary deployments"
+      ],
+      "span": 1.02
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Got it.",
+      "span": 0.3
+    },
+    {
+      "at": 4080,
+      "who": "wearer",
+      "text": "Okay.",
+      "span": 0.12
+    },
+    {
+      "at": 4620,
+      "who": "Dana",
+      "text": "Metrics are scraped by Prometheus.",
+      "terms": [
+        "Prometheus"
+      ],
+      "span": 0.84
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Got it.",
+      "span": 0.3
+    },
+    {
+      "at": 5160,
+      "who": "wearer",
+      "text": "Okay.",
+      "span": 0.12
+    },
+    {
+      "at": 5700,
+      "who": "Dana",
+      "text": "Traces are collected with OpenTelemetry.",
+      "terms": [
+        "OpenTelemetry"
+      ],
+      "span": 0.84
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Got it.",
+      "span": 0.3
+    },
+    {
+      "at": 6240,
+      "who": "wearer",
+      "text": "Okay.",
+      "span": 0.12
+    },
+    {
+      "at": 6780,
+      "who": "Dana",
+      "text": "Dashboards live in Grafana.",
+      "terms": [
+        "Grafana"
+      ],
+      "span": 0.66
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Got it.",
+      "span": 0.3
+    },
+    {
+      "at": 7320,
+      "who": "wearer",
+      "text": "Okay.",
+      "span": 0.12
+    },
+    {
+      "at": 7860,
+      "who": "Dana",
+      "text": "Secrets are stored in Vault.",
+      "terms": [
+        "Vault"
+      ],
+      "span": 0.84
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Got it.",
+      "span": 0.3
+    },
+    {
+      "at": 8400,
+      "who": "wearer",
+      "text": "Okay.",
+      "span": 0.12
+    },
+    {
+      "at": 8940,
+      "who": "Dana",
+      "text": "Each quarter we run chaos engineering drills.",
+      "terms": [
+        "chaos engineering"
+      ],
+      "span": 1.2
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Got it.",
+      "span": 0.3
+    },
+    {
+      "at": 9480,
+      "who": "wearer",
+      "text": "Okay.",
+      "span": 0.12
+    },
+    {
+      "at": 10020,
+      "who": "Dana",
+      "text": "Load spikes are handled by horizontal autoscaling.",
+      "terms": [
+        "horizontal autoscaling"
+      ],
+      "span": 1.2
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Got it.",
+      "span": 0.3
+    },
+    {
+      "at": 10560,
+      "who": "wearer",
+      "text": "Okay.",
+      "span": 0.12
+    },
+    {
+      "at": 10740,
+      "who": "Dana",
+      "text": "That's everything, thanks for staying.",
+      "span": 0.84
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Thanks, Dana.",
+      "span": 0.3
+    }
+  ],
+  "words": [
+    {
+      "text": "Morning,",
+      "start": 0,
+      "end": 0.141,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "is",
+      "start": 0.201,
+      "end": 0.279,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "this",
+      "start": 0.339,
+      "end": 0.441,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 0.501,
+      "end": 0.591,
+      "role": "wearer",
+      "loudness": -27.4,
+      "speaker": 0
+    },
+    {
+      "text": "platform",
+      "start": 0.651,
+      "end": 0.806,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "workshop?",
+      "start": 0.866,
+      "end": 1.02,
+      "role": "wearer",
+      "loudness": -24.5,
+      "speaker": 0
+    },
+    {
+      "text": "Hi,",
+      "start": 3,
+      "end": 3.09,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "I'm",
+      "start": 3.15,
+      "end": 3.24,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "Dana.",
+      "start": 3.3,
+      "end": 3.42,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 1
+    },
+    {
+      "text": "Welcome,",
+      "start": 3.48,
+      "end": 3.645,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 1
+    },
+    {
+      "text": "let's",
+      "start": 3.705,
+      "end": 3.825,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "begin.",
+      "start": 3.885,
+      "end": 4.02,
+      "role": "other",
+      "loudness": -14,
+      "speaker": 1
+    },
+    {
+      "text": "First,",
+      "start": 300,
+      "end": 300.114,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 1
+    },
+    {
+      "text": "every",
+      "start": 300.174,
+      "end": 300.287,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 1
+    },
+    {
+      "text": "service",
+      "start": 300.347,
+      "end": 300.486,
+      "role": "other",
+      "loudness": -14.6,
+      "speaker": 1
+    },
+    {
+      "text": "runs",
+      "start": 300.546,
+      "end": 300.647,
+      "role": "other",
+      "loudness": -12.7,
+      "speaker": 1
+    },
+    {
+      "text": "on",
+      "start": 300.707,
+      "end": 300.783,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "Kubernetes.",
+      "start": 300.843,
+      "end": 301.02,
+      "role": "other",
+      "loudness": -13.9,
+      "speaker": 1
+    },
+    {
+      "text": "Got",
+      "start": 302.02,
+      "end": 302.149,
+      "role": "wearer",
+      "loudness": -26.2,
+      "speaker": 0
+    },
+    {
+      "text": "it.",
+      "start": 302.209,
+      "end": 302.32,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "Okay.",
+      "start": 840,
+      "end": 840.12,
+      "role": "wearer",
+      "loudness": -26.7,
+      "speaker": 0
+    },
+    {
+      "text": "We",
+      "start": 1380,
+      "end": 1380.087,
+      "role": "other",
+      "loudness": -13.3,
+      "speaker": 1
+    },
+    {
+      "text": "package",
+      "start": 1380.147,
+      "end": 1380.306,
+      "role": "other",
+      "loudness": -12.8,
+      "speaker": 1
+    },
+    {
+      "text": "each",
+      "start": 1380.366,
+      "end": 1380.482,
+      "role": "other",
+      "loudness": -15.4,
+      "speaker": 1
+    },
+    {
+      "text": "one",
+      "start": 1380.542,
+      "end": 1380.643,
+      "role": "other",
+      "loudness": -13.6,
+      "speaker": 1
+    },
+    {
+      "text": "with",
+      "start": 1380.703,
+      "end": 1380.819,
+      "role": "other",
+      "loudness": -14.4,
+      "speaker": 1
+    },
+    {
+      "text": "Helm",
+      "start": 1380.879,
+      "end": 1380.995,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "charts.",
+      "start": 1381.055,
+      "end": 1381.2,
+      "role": "other",
+      "loudness": -14,
+      "speaker": 1
+    },
+    {
+      "text": "Got",
+      "start": 1382.2,
+      "end": 1382.329,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "it.",
+      "start": 1382.389,
+      "end": 1382.5,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "Okay.",
+      "start": 1920,
+      "end": 1920.12,
+      "role": "wearer",
+      "loudness": -25.2,
+      "speaker": 0
+    },
+    {
+      "text": "Traffic",
+      "start": 2460,
+      "end": 2460.137,
+      "role": "other",
+      "loudness": -13.3,
+      "speaker": 1
+    },
+    {
+      "text": "between",
+      "start": 2460.197,
+      "end": 2460.333,
+      "role": "other",
+      "loudness": -15.1,
+      "speaker": 1
+    },
+    {
+      "text": "them",
+      "start": 2460.393,
+      "end": 2460.492,
+      "role": "other",
+      "loudness": -12.9,
+      "speaker": 1
+    },
+    {
+      "text": "goes",
+      "start": 2460.552,
+      "end": 2460.652,
+      "role": "other",
+      "loudness": -13.8,
+      "speaker": 1
+    },
+    {
+      "text": "through",
+      "start": 2460.712,
+      "end": 2460.848,
+      "role": "other",
+      "loudness": -15.4,
+      "speaker": 1
+    },
+    {
+      "text": "Istio.",
+      "start": 2460.908,
+      "end": 2461.02,
+      "role": "other",
+      "loudness": -14.8,
+      "speaker": 1
+    },
+    {
+      "text": "Got",
+      "start": 2462.02,
+      "end": 2462.149,
+      "role": "wearer",
+      "loudness": -26.2,
+      "speaker": 0
+    },
+    {
+      "text": "it.",
+      "start": 2462.209,
+      "end": 2462.32,
+      "role": "wearer",
+      "loudness": -27.2,
+      "speaker": 0
+    },
+    {
+      "text": "Okay.",
+      "start": 3000,
+      "end": 3000.12,
+      "role": "wearer",
+      "loudness": -27,
+      "speaker": 0
+    },
+    {
+      "text": "New",
+      "start": 3540,
+      "end": 3540.087,
+      "role": "other",
+      "loudness": -12.6,
+      "speaker": 1
+    },
+    {
+      "text": "versions",
+      "start": 3540.147,
+      "end": 3540.296,
+      "role": "other",
+      "loudness": -12.6,
+      "speaker": 1
+    },
+    {
+      "text": "ship",
+      "start": 3540.356,
+      "end": 3540.455,
+      "role": "other",
+      "loudness": -12.7,
+      "speaker": 1
+    },
+    {
+      "text": "as",
+      "start": 3540.515,
+      "end": 3540.59,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "canary",
+      "start": 3540.65,
+      "end": 3540.774,
+      "role": "other",
+      "loudness": -13.3,
+      "speaker": 1
+    },
+    {
+      "text": "deployments.",
+      "start": 3540.834,
+      "end": 3541.02,
+      "role": "other",
+      "loudness": -15.2,
+      "speaker": 1
+    },
+    {
+      "text": "Got",
+      "start": 3542.02,
+      "end": 3542.149,
+      "role": "wearer",
+      "loudness": -27.4,
+      "speaker": 0
+    },
+    {
+      "text": "it.",
+      "start": 3542.209,
+      "end": 3542.32,
+      "role": "wearer",
+      "loudness": -26.7,
+      "speaker": 0
+    },
+    {
+      "text": "Okay.",
+      "start": 4080,
+      "end": 4080.12,
+      "role": "wearer",
+      "loudness": -24.5,
+      "speaker": 0
+    },
+    {
+      "text": "Metrics",
+      "start": 4620,
+      "end": 4620.135,
+      "role": "other",
+      "loudness": -15,
+      "speaker": 1
+    },
+    {
+      "text": "are",
+      "start": 4620.195,
+      "end": 4620.28,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 1
+    },
+    {
+      "text": "scraped",
+      "start": 4620.34,
+      "end": 4620.475,
+      "role": "other",
+      "loudness": -15,
+      "speaker": 1
+    },
+    {
+      "text": "by",
+      "start": 4620.535,
+      "end": 4620.609,
+      "role": "other",
+      "loudness": -15.3,
+      "speaker": 1
+    },
+    {
+      "text": "Prometheus.",
+      "start": 4620.669,
+      "end": 4620.84,
+      "role": "other",
+      "loudness": -15.1,
+      "speaker": 1
+    },
+    {
+      "text": "Got",
+      "start": 4621.84,
+      "end": 4621.969,
+      "role": "wearer",
+      "loudness": -25.4,
+      "speaker": 0
+    },
+    {
+      "text": "it.",
+      "start": 4622.029,
+      "end": 4622.14,
+      "role": "wearer",
+      "loudness": -25.7,
+      "speaker": 0
+    },
+    {
+      "text": "Okay.",
+      "start": 5160,
+      "end": 5160.12,
+      "role": "wearer",
+      "loudness": -25,
+      "speaker": 0
+    },
+    {
+      "text": "Traces",
+      "start": 5700,
+      "end": 5700.109,
+      "role": "other",
+      "loudness": -12.6,
+      "speaker": 1
+    },
+    {
+      "text": "are",
+      "start": 5700.169,
+      "end": 5700.245,
+      "role": "other",
+      "loudness": -14,
+      "speaker": 1
+    },
+    {
+      "text": "collected",
+      "start": 5700.305,
+      "end": 5700.447,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 1
+    },
+    {
+      "text": "with",
+      "start": 5700.507,
+      "end": 5700.595,
+      "role": "other",
+      "loudness": -15.2,
+      "speaker": 1
+    },
+    {
+      "text": "OpenTelemetry.",
+      "start": 5700.655,
+      "end": 5700.84,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 1
+    },
+    {
+      "text": "Got",
+      "start": 5701.84,
+      "end": 5701.969,
+      "role": "wearer",
+      "loudness": -26.2,
+      "speaker": 0
+    },
+    {
+      "text": "it.",
+      "start": 5702.029,
+      "end": 5702.14,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "Okay.",
+      "start": 6240,
+      "end": 6240.12,
+      "role": "wearer",
+      "loudness": -25.2,
+      "speaker": 0
+    },
+    {
+      "text": "Dashboards",
+      "start": 6780,
+      "end": 6780.172,
+      "role": "other",
+      "loudness": -14.6,
+      "speaker": 1
+    },
+    {
+      "text": "live",
+      "start": 6780.232,
+      "end": 6780.331,
+      "role": "other",
+      "loudness": -13.2,
+      "speaker": 1
+    },
+    {
+      "text": "in",
+      "start": 6780.391,
+      "end": 6780.465,
+      "role": "other",
+      "loudness": -12.9,
+      "speaker": 1
+    },
+    {
+      "text": "Grafana.",
+      "start": 6780.525,
+      "end": 6780.66,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 1
+    },
+    {
+      "text": "Got",
+      "start": 6781.66,
+      "end": 6781.789,
+      "role": "wearer",
+      "loudness": -27.4,
+      "speaker": 0
+    },
+    {
+      "text": "it.",
+      "start": 6781.849,
+      "end": 6781.96,
+      "role": "wearer",
+      "loudness": -27.3,
+      "speaker": 0
+    },
+    {
+      "text": "Okay.",
+      "start": 7320,
+      "end": 7320.12,
+      "role": "wearer",
+      "loudness": -26.6,
+      "speaker": 0
+    },
+    {
+      "text": "Secrets",
+      "start": 7860,
+      "end": 7860.153,
+      "role": "other",
+      "loudness": -14.4,
+      "speaker": 1
+    },
+    {
+      "text": "are",
+      "start": 7860.213,
+      "end": 7860.311,
+      "role": "other",
+      "loudness": -15,
+      "speaker": 1
+    },
+    {
+      "text": "stored",
+      "start": 7860.371,
+      "end": 7860.511,
+      "role": "other",
+      "loudness": -14.5,
+      "speaker": 1
+    },
+    {
+      "text": "in",
+      "start": 7860.571,
+      "end": 7860.654,
+      "role": "other",
+      "loudness": -13.8,
+      "speaker": 1
+    },
+    {
+      "text": "Vault.",
+      "start": 7860.714,
+      "end": 7860.84,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 1
+    },
+    {
+      "text": "Got",
+      "start": 7861.84,
+      "end": 7861.969,
+      "role": "wearer",
+      "loudness": -26.7,
+      "speaker": 0
+    },
+    {
+      "text": "it.",
+      "start": 7862.029,
+      "end": 7862.14,
+      "role": "wearer",
+      "loudness": -27.3,
+      "speaker": 0
+    },
+    {
+      "text": "Okay.",
+      "start": 8400,
+      "end": 8400.12,
+      "role": "wearer",
+      "loudness": -26.9,
+      "speaker": 0
+    },
+    {
+      "text": "Each",
+      "start": 8940,
+      "end": 8940.102,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 1
+    },
+    {
+      "text": "quarter",
+      "start": 8940.162,
+      "end": 8940.302,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 1
+    },
+    {
+      "text": "we",
+      "start": 8940.362,
+      "end": 8940.438,
+      "role": "other",
+      "loudness": -15.3,
+      "speaker": 1
+    },
+    {
+      "text": "run",
+      "start": 8940.498,
+      "end": 8940.587,
+      "role": "other",
+      "loudness": -12.5,
+      "speaker": 1
+    },
+    {
+      "text": "chaos",
+      "start": 8940.647,
+      "end": 8940.762,
+      "role": "other",
+      "loudness": -14.4,
+      "speaker": 1
+    },
+    {
+      "text": "engineering",
+      "start": 8940.822,
+      "end": 8941.013,
+      "role": "other",
+      "loudness": -14.2,
+      "speaker": 1
+    },
+    {
+      "text": "drills.",
+      "start": 8941.073,
+      "end": 8941.2,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 1
+    },
+    {
+      "text": "Got",
+      "start": 8942.2,
+      "end": 8942.329,
+      "role": "wearer",
+      "loudness": -25.7,
+      "speaker": 0
+    },
+    {
+      "text": "it.",
+      "start": 8942.389,
+      "end": 8942.5,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "Okay.",
+      "start": 9480,
+      "end": 9480.12,
+      "role": "wearer",
+      "loudness": -24.9,
+      "speaker": 0
+    },
+    {
+      "text": "Load",
+      "start": 10020,
+      "end": 10020.095,
+      "role": "other",
+      "loudness": -15.5,
+      "speaker": 1
+    },
+    {
+      "text": "spikes",
+      "start": 10020.155,
+      "end": 10020.273,
+      "role": "other",
+      "loudness": -13.9,
+      "speaker": 1
+    },
+    {
+      "text": "are",
+      "start": 10020.333,
+      "end": 10020.416,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 1
+    },
+    {
+      "text": "handled",
+      "start": 10020.476,
+      "end": 10020.606,
+      "role": "other",
+      "loudness": -14,
+      "speaker": 1
+    },
+    {
+      "text": "by",
+      "start": 10020.666,
+      "end": 10020.737,
+      "role": "other",
+      "loudness": -14.5,
+      "speaker": 1
+    },
+    {
+      "text": "horizontal",
+      "start": 10020.797,
+      "end": 10020.963,
+      "role": "other",
+      "loudness": -13.3,
+      "speaker": 1
+    },
+    {
+      "text": "autoscaling.",
+      "start": 10021.023,
+      "end": 10021.2,
+      "role": "other",
+      "loudness": -13.6,
+      "speaker": 1
+    },
+    {
+      "text": "Got",
+      "start": 10022.2,
+      "end": 10022.329,
+      "role": "wearer",
+      "loudness": -25,
+      "speaker": 0
+    },
+    {
+      "text": "it.",
+      "start": 10022.389,
+      "end": 10022.5,
+      "role": "wearer",
+      "loudness": -25.5,
+      "speaker": 0
+    },
+    {
+      "text": "Okay.",
+      "start": 10560,
+      "end": 10560.12,
+      "role": "wearer",
+      "loudness": -25,
+      "speaker": 0
+    },
+    {
+      "text": "That's",
+      "start": 10740,
+      "end": 10740.106,
+      "role": "other",
+      "loudness": -13.6,
+      "speaker": 1
+    },
+    {
+      "text": "everything,",
+      "start": 10740.166,
+      "end": 10740.331,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 1
+    },
+    {
+      "text": "thanks",
+      "start": 10740.391,
+      "end": 10740.508,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 1
+    },
+    {
+      "text": "for",
+      "start": 10740.568,
+      "end": 10740.651,
+      "role": "other",
+      "loudness": -13.5,
+      "speaker": 1
+    },
+    {
+      "text": "staying.",
+      "start": 10740.711,
+      "end": 10740.84,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 1
+    },
+    {
+      "text": "Thanks,",
+      "start": 10741.84,
+      "end": 10741.973,
+      "role": "wearer",
+      "loudness": -25.4,
+      "speaker": 0
+    },
+    {
+      "text": "Dana.",
+      "start": 10742.033,
+      "end": 10742.14,
+      "role": "wearer",
+      "loudness": -24.9,
+      "speaker": 0
+    }
+  ]
+}

@@ -31,7 +31,7 @@ const CONVERSATION: ConversationResponse = {
   owed: [
     { id: 10, text: 'Dev sends the agenda', done: false },
     { id: 11, text: 'Dev intros you to Kim', done: false },
-  ],
+  ],  jogger: false,
 }
 
 describe('the history screen (D100)', () => {

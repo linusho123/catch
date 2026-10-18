@@ -10,7 +10,7 @@
 {"file":"features/holding.feature","title":"A held page dismisses on its own [1]","status":"passed"}
 {"file":"features/holding.feature","title":"A held page dismisses on its own [2]","status":"passed"}
 {"file":"features/holding.feature","title":"A held page dismisses on its own [3]","status":"passed"}
-{"file":"features/holding.feature","title":"A long-press ends the conversation now","status":"unbound"}
+{"file":"features/holding.feature","title":"A long-press ends the conversation now","status":"passed"}
 {"file":"features/holding.feature","title":"A swipe down turns to the promises page","status":"unbound"}
 {"file":"features/holding.feature","title":"A tap shows the names page","status":"passed"}
 {"file":"features/holding.feature","title":"Nothing held shows an empty page","status":"passed"}
@@ -18,18 +18,18 @@
 {"file":"features/holding.feature","title":"Quiet ends a conversation at ten minutes [2]","status":"passed"}
 {"file":"features/holding.feature","title":"The promises page with nothing promised","status":"passed"}
 {"file":"features/holding.feature","title":"Thirty names scroll before the promises page","status":"unbound"}
-{"file":"features/kept-conversations.feature","title":"A kept call produces a jogger","status":"unbound"}
-{"file":"features/kept-conversations.feature","title":"A kept conversation of any length gets a jogger [1]","status":"unbound"}
-{"file":"features/kept-conversations.feature","title":"A kept conversation of any length gets a jogger [2]","status":"unbound"}
-{"file":"features/kept-conversations.feature","title":"A kept conversation of any length gets a jogger [3]","status":"unbound"}
-{"file":"features/kept-conversations.feature","title":"A swipe down declines without keeping","status":"unbound"}
-{"file":"features/kept-conversations.feature","title":"A swipe up asks whether to keep the conversation","status":"unbound"}
-{"file":"features/kept-conversations.feature","title":"A tap keeps the conversation","status":"unbound"}
+{"file":"features/kept-conversations.feature","title":"A kept call produces a jogger","status":"passed"}
+{"file":"features/kept-conversations.feature","title":"A kept conversation of any length gets a jogger [1]","status":"passed"}
+{"file":"features/kept-conversations.feature","title":"A kept conversation of any length gets a jogger [2]","status":"passed"}
+{"file":"features/kept-conversations.feature","title":"A kept conversation of any length gets a jogger [3]","status":"passed"}
+{"file":"features/kept-conversations.feature","title":"A swipe down declines without keeping","status":"passed"}
+{"file":"features/kept-conversations.feature","title":"A swipe up asks whether to keep the conversation","status":"passed"}
+{"file":"features/kept-conversations.feature","title":"A tap keeps the conversation","status":"passed"}
 {"file":"features/kept-conversations.feature","title":"Everything survives a restart mid-conversation","status":"unbound"}
-{"file":"features/kept-conversations.feature","title":"Swiping up again shows already kept","status":"unbound"}
-{"file":"features/kept-conversations.feature","title":"The jogger admits missed time without saying when","status":"unbound"}
-{"file":"features/kept-conversations.feature","title":"The prompt returns after a catch line","status":"unbound"}
-{"file":"features/kept-conversations.feature","title":"The prompt waits through a distraction","status":"unbound"}
+{"file":"features/kept-conversations.feature","title":"Swiping up again shows already kept","status":"passed"}
+{"file":"features/kept-conversations.feature","title":"The jogger admits missed time without saying when","status":"passed"}
+{"file":"features/kept-conversations.feature","title":"The prompt returns after a catch line","status":"passed"}
+{"file":"features/kept-conversations.feature","title":"The prompt waits through a distraction","status":"passed"}
 {"file":"features/names.feature","title":"A re-introduction later in the conversation keeps one entry","status":"passed"}
 {"file":"features/names.feature","title":"A repeated name inside the window [1]","status":"passed"}
 {"file":"features/names.feature","title":"A repeated name inside the window [2]","status":"passed"}
@@ -43,11 +43,11 @@
 {"file":"features/phone-handoff.feature","title":"An owed promise can be ticked off the same way on the website [2]","status":"unbound"}
 {"file":"features/phone-handoff.feature","title":"An unkept conversation's transcript is deleted everywhere","status":"passed"}
 {"file":"features/phone-handoff.feature","title":"No promises means no notification","status":"passed"}
-{"file":"features/phone-handoff.feature","title":"Notifications wait for an unreachable phone","status":"unbound"}
+{"file":"features/phone-handoff.feature","title":"Notifications wait for an unreachable phone","status":"passed"}
 {"file":"features/phone-handoff.feature","title":"One notification carries both lines","status":"unbound"}
-{"file":"features/phone-handoff.feature","title":"The home lists conversations newest first on the iPhone app [1]","status":"unbound"}
+{"file":"features/phone-handoff.feature","title":"The home lists conversations newest first on the iPhone app [1]","status":"passed"}
 {"file":"features/phone-handoff.feature","title":"The home lists conversations newest first on the website [2]","status":"unbound"}
-{"file":"features/phone-handoff.feature","title":"The jogger reads the same on the iPhone app [1]","status":"unbound"}
+{"file":"features/phone-handoff.feature","title":"The jogger reads the same on the iPhone app [1]","status":"passed"}
 {"file":"features/phone-handoff.feature","title":"The jogger reads the same on the website [2]","status":"unbound"}
 {"file":"features/phone-handoff.feature","title":"Ticking off a promise removes it from the conversation's screen on the iPhone app [1]","status":"unbound"}
 {"file":"features/phone-handoff.feature","title":"Ticking off a promise removes it from the conversation's screen on the website [2]","status":"unbound"}

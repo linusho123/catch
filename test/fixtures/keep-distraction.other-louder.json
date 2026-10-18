@@ -1,0 +1,378 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "keep-distraction",
+  "variant": "other-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "Morning, Dev.",
+      "span": 0.3
+    },
+    {
+      "gap": 0.6,
+      "who": "Dev",
+      "text": "Morning!",
+      "span": 0.12
+    },
+    {
+      "at": 5,
+      "who": "Dev",
+      "text": "Quick question, when does the new schedule come out?",
+      "span": 1.56
+    },
+    {
+      "gap": 0.8,
+      "who": "wearer",
+      "text": "Next week, as far as I know.",
+      "span": 1.2
+    },
+    {
+      "at": 20,
+      "who": "Dev",
+      "text": "Okay, and does it change the Friday review?",
+      "span": 1.38
+    },
+    {
+      "gap": 0.8,
+      "who": "wearer",
+      "text": "No, that stays at noon.",
+      "span": 0.84
+    },
+    {
+      "at": 38,
+      "who": "Dev",
+      "text": "Good, the team will be glad.",
+      "span": 1.02
+    },
+    {
+      "gap": 0.8,
+      "who": "wearer",
+      "text": "Me too.",
+      "span": 0.3
+    }
+  ],
+  "words": [
+    {
+      "text": "Morning,",
+      "start": 0,
+      "end": 0.147,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "Dev.",
+      "start": 0.207,
+      "end": 0.3,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "Morning!",
+      "start": 0.9,
+      "end": 1.02,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "Quick",
+      "start": 5,
+      "end": 5.125,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 1
+    },
+    {
+      "text": "question,",
+      "start": 5.185,
+      "end": 5.351,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 1
+    },
+    {
+      "text": "when",
+      "start": 5.411,
+      "end": 5.522,
+      "role": "other",
+      "loudness": -14.6,
+      "speaker": 1
+    },
+    {
+      "text": "does",
+      "start": 5.582,
+      "end": 5.692,
+      "role": "other",
+      "loudness": -12.7,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 5.752,
+      "end": 5.849,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "new",
+      "start": 5.909,
+      "end": 6.006,
+      "role": "other",
+      "loudness": -13.9,
+      "speaker": 1
+    },
+    {
+      "text": "schedule",
+      "start": 6.066,
+      "end": 6.232,
+      "role": "other",
+      "loudness": -15,
+      "speaker": 1
+    },
+    {
+      "text": "come",
+      "start": 6.292,
+      "end": 6.403,
+      "role": "other",
+      "loudness": -12.6,
+      "speaker": 1
+    },
+    {
+      "text": "out?",
+      "start": 6.463,
+      "end": 6.56,
+      "role": "other",
+      "loudness": -12.9,
+      "speaker": 1
+    },
+    {
+      "text": "Next",
+      "start": 7.36,
+      "end": 7.5,
+      "role": "wearer",
+      "loudness": -26.2,
+      "speaker": 0
+    },
+    {
+      "text": "week,",
+      "start": 7.56,
+      "end": 7.7,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "as",
+      "start": 7.76,
+      "end": 7.865,
+      "role": "wearer",
+      "loudness": -26.5,
+      "speaker": 0
+    },
+    {
+      "text": "far",
+      "start": 7.925,
+      "end": 8.048,
+      "role": "wearer",
+      "loudness": -25.5,
+      "speaker": 0
+    },
+    {
+      "text": "as",
+      "start": 8.108,
+      "end": 8.213,
+      "role": "wearer",
+      "loudness": -26.7,
+      "speaker": 0
+    },
+    {
+      "text": "I",
+      "start": 8.273,
+      "end": 8.36,
+      "role": "wearer",
+      "loudness": -25.7,
+      "speaker": 0
+    },
+    {
+      "text": "know.",
+      "start": 8.42,
+      "end": 8.56,
+      "role": "wearer",
+      "loudness": -26.5,
+      "speaker": 0
+    },
+    {
+      "text": "Okay,",
+      "start": 20,
+      "end": 20.116,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 1
+    },
+    {
+      "text": "and",
+      "start": 20.176,
+      "end": 20.278,
+      "role": "other",
+      "loudness": -13.8,
+      "speaker": 1
+    },
+    {
+      "text": "does",
+      "start": 20.338,
+      "end": 20.455,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 1
+    },
+    {
+      "text": "it",
+      "start": 20.515,
+      "end": 20.602,
+      "role": "other",
+      "loudness": -14.6,
+      "speaker": 1
+    },
+    {
+      "text": "change",
+      "start": 20.662,
+      "end": 20.807,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 20.867,
+      "end": 20.969,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 1
+    },
+    {
+      "text": "Friday",
+      "start": 21.029,
+      "end": 21.175,
+      "role": "other",
+      "loudness": -15.2,
+      "speaker": 1
+    },
+    {
+      "text": "review?",
+      "start": 21.235,
+      "end": 21.38,
+      "role": "other",
+      "loudness": -15.2,
+      "speaker": 1
+    },
+    {
+      "text": "No,",
+      "start": 22.18,
+      "end": 22.277,
+      "role": "wearer",
+      "loudness": -25.3,
+      "speaker": 0
+    },
+    {
+      "text": "that",
+      "start": 22.337,
+      "end": 22.467,
+      "role": "wearer",
+      "loudness": -24.8,
+      "speaker": 0
+    },
+    {
+      "text": "stays",
+      "start": 22.527,
+      "end": 22.673,
+      "role": "wearer",
+      "loudness": -27.4,
+      "speaker": 0
+    },
+    {
+      "text": "at",
+      "start": 22.733,
+      "end": 22.83,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "noon.",
+      "start": 22.89,
+      "end": 23.02,
+      "role": "wearer",
+      "loudness": -26.4,
+      "speaker": 0
+    },
+    {
+      "text": "Good,",
+      "start": 38,
+      "end": 38.128,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 38.188,
+      "end": 38.3,
+      "role": "other",
+      "loudness": -13.8,
+      "speaker": 1
+    },
+    {
+      "text": "team",
+      "start": 38.36,
+      "end": 38.488,
+      "role": "other",
+      "loudness": -13.8,
+      "speaker": 1
+    },
+    {
+      "text": "will",
+      "start": 38.548,
+      "end": 38.676,
+      "role": "other",
+      "loudness": -14,
+      "speaker": 1
+    },
+    {
+      "text": "be",
+      "start": 38.736,
+      "end": 38.832,
+      "role": "other",
+      "loudness": -12.8,
+      "speaker": 1
+    },
+    {
+      "text": "glad.",
+      "start": 38.892,
+      "end": 39.02,
+      "role": "other",
+      "loudness": -12.9,
+      "speaker": 1
+    },
+    {
+      "text": "Me",
+      "start": 39.82,
+      "end": 39.931,
+      "role": "wearer",
+      "loudness": -25.2,
+      "speaker": 0
+    },
+    {
+      "text": "too.",
+      "start": 39.991,
+      "end": 40.12,
+      "role": "wearer",
+      "loudness": -24.9,
+      "speaker": 0
+    }
+  ]
+}

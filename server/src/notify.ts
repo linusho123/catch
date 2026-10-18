@@ -14,7 +14,9 @@ import type { Clock, TimerHandle } from '../../shared/clock.ts'
 // and introduce Dev to Sam" (D117); a list too long for a line is cut off
 // with an ellipsis, and opening the notification opens the conversation's
 // screen, which has them all (`data.conversation`). The second line, owed to
-// the wearer, comes with P5. Every notification waits in the outbox until the
+// the wearer, comes with P5. A kept conversation sends a second notification
+// once its jogger is written, "Kept: conversation with Ana", which opens the
+// jogger (P4, D24). Every notification waits in the outbox until the
 // phone takes it, however long that is (D114), tried again every
 // NOTIFY_RETRY_MS on the injected clock.
 
@@ -65,6 +67,21 @@ export function promiseNotification(conversation: number | undefined, you: reado
   const [first, ...rest] = you
   const line = listOf([first!, ...rest.map((c) => c.charAt(0).toLowerCase() + c.slice(1))])
   return { title: 'Catch', body: cutLine(line), ...(conversation === undefined ? {} : { data: { conversation: String(conversation) } }) }
+}
+
+/**
+ * The notification for a kept conversation whose jogger has been written
+ * (D24): "Kept: conversation with Ana", or with the time it began when no
+ * name was caught ("Kept: conversation at 2:10 pm", in `timeZone`, the
+ * wearer's; the server's own when unset). Opening it opens the jogger
+ * (`data.screen`). It queues like any other (D114).
+ */
+export function keptNotification(conversation: number, names: readonly string[], startedAt: number, timeZone?: string): PhoneNotification {
+  const time = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', ...(timeZone ? { timeZone } : {}) })
+    .format(startedAt)
+    .replace(/\s?([AP]M)$/, (_m, half: string) => ` ${half.toLowerCase()}`)
+  const line = `Kept: conversation ${names.length > 0 ? `with ${listOf([...names])}` : `at ${time}`}`
+  return { title: 'Catch', body: cutLine(line), data: { conversation: String(conversation), screen: 'jogger' } }
 }
 
 /** One account's notifications not yet taken by its phone, oldest first, and its pending retry. */

@@ -50,6 +50,17 @@ import type { TranscriptWord } from './transcript.ts'
 // reaches the promises page, the notification and the phone page (operator
 // answer 9). Once the end has handed the promises on, any pass still out is
 // cancelled (its AbortSignal reaches the request itself) and reported lost.
+//
+// The keep (P4): a swipe up at the bare dot in an open conversation asks
+// `keep this conversation?`; a tap keeps it (`kept` for a second and a half,
+// D111), a swipe down declines (D40). The prompt has no timer: it waits however
+// long it takes (D41), and a catch line that replaces it under newest-wins
+// gives way to it again when the line goes, because it was never answered
+// (D42). A swipe up in a kept conversation shows `already kept` (D54). The
+// ended conversation tells onEnd whether it was kept, and a kept one hands
+// on its transcript as the store held it (D73), where the wearer's promises
+// were said, and the spans Catch could not hear (D53), so the jogger can be
+// written; the store's copy is deleted at the end all the same (D76).
 
 /** D17: a catch line holds for a second and a half. A ruling, not a tuning value. */
 export const LINE_MS = 1500
@@ -73,6 +84,13 @@ export const PROMISE_MS = 3000
 
 /** D92: a conversation ends after ten minutes in which the wearer does not speak. A ruling, not a tuning value. */
 export const QUIET_MS = 10 * 60 * 1000
+
+/** What the lens says when the wearer swipes up to keep the conversation (D40). */
+export const KEEP_PROMPT = 'keep this conversation?'
+/** The line a tap on the prompt shows, for a second and a half (D111). */
+export const KEPT = 'kept'
+/** The line a swipe up shows in a conversation already kept, for a second and a half (D54). */
+export const ALREADY_KEPT = 'already kept'
 
 /** The most recent words the split sees at once (the provider-label split reads them together). */
 const SPLIT_WINDOW_WORDS = 200
@@ -100,11 +118,19 @@ export interface SessionOptions {
   onLatePass?: () => void
   /** The end's hook threw (a store error, say); the conversation has ended all the same (risk-3). */
   onEndError?: (error: unknown) => void
-  /** Where the open conversation's transcript is held, and deleted at its end (D73, D76). */
-  transcript?: { add(word: TranscriptWord): void; delete(): void }
+  /** Where the open conversation's transcript is held, read for a kept one's jogger, and deleted at its end (D73, D76). */
+  transcript?: { add(word: TranscriptWord): void; words?(): TranscriptWord[]; delete(): void }
 }
 
-/** A conversation as it ends, on the session's clock (ms). P4 adds its keep, P5 the owed promises. */
+/** A span of an open conversation in which Catch could not hear (D37, D53): where it fell, and how long it lasted. */
+export interface Gap {
+  /** Where it fell on the session's timeline (seconds): after every word that ended by then. */
+  at: number
+  /** How long it lasted, on the session's clock (ms). */
+  ms: number
+}
+
+/** A conversation as it ends, on the session's clock (ms). P5 adds the owed promises. */
 export interface EndedConversation {
   startedAt: number
   endedAt: number
@@ -112,11 +138,21 @@ export interface EndedConversation {
   names: string[]
   /** The wearer's promises, as the lens summarizes them, in the order made (D89). */
   promises: string[]
+  /** Where each of `promises` was said: the end of its sentence on the session's timeline (seconds). */
+  promiseTimes: number[]
+  /** Whether the wearer kept it (D40, D111). */
+  kept: boolean
+  /** A kept conversation's transcript as the store held it, in the order heard (D73), for its jogger; empty when it was not kept. */
+  transcript: TranscriptWord[]
+  /** The spans Catch could not hear while it was open, in order (D53). */
+  gaps: Gap[]
 }
 
 /** One conversation's promises: a slot per pass, in the order the sentences were said, and the passes still out. */
 interface Promises {
   slots: (string | undefined)[]
+  /** Where each slot's sentence ended, on the session's timeline (seconds). */
+  times: number[]
   /** What the end waits for: one per pass, settled at its answer or at its deadline, whichever comes first. */
   inflight: Set<Promise<void>>
   /** Every pass not yet answered, deadline or not: cancelled once the end has handed the promises on. */
@@ -125,9 +161,10 @@ interface Promises {
   done: boolean
 }
 
-const noPromises = (): Promises => ({ slots: [], inflight: new Set(), out: new Set(), done: false })
+const noPromises = (): Promises => ({ slots: [], times: [], inflight: new Set(), out: new Set(), done: false })
 
 const held = (p: Promises) => p.slots.filter((s): s is string => s !== undefined)
+const heldTimes = (p: Promises) => p.times.filter((_, i) => p.slots[i] !== undefined)
 
 /** One lens's hold on the session: what its socket may still do. */
 export interface Attachment {
@@ -203,14 +240,24 @@ export class Session {
   private readonly ending = new Set<Promises>()
   /** The wearer's sentence so far, someone else's, and the sentences said before them (the detector's context). */
   private wearerSentence: string[] = []
+  /** Where the wearer's sentence so far ends on the session's timeline: where a promise in it was said. */
+  private wearerSentenceEnd = 0
   private otherSentence: string[] = []
   private said: Said[] = []
+  /** The open conversation's keep: not asked, the prompt waiting for an answer, or kept (D40, D41, D54, D111). */
+  private keep: 'none' | 'asking' | 'kept' = 'none'
+  /** Since when Catch has not heard, while a conversation was open (D53): where on the timeline, and the clock then. */
+  private deafSince: { at: number; clock: number } | undefined
+  /** The open conversation's spans not heard (D53). */
+  private gaps: Gap[] = []
 
   // What the lens shows.
   private hearing = false
   private view: LensView = { kind: 'deaf' }
   /** The view showing is the dropped-thread line: it stays until the wearer speaks or taps (D34, D35). */
   private threadShowing = false
+  /** The view showing is the keep prompt: it stays until a tap or a swipe down (D40, D41). */
+  private promptShowing = false
   /** The lens starts with no dot (it cannot hear until told), so the first view worth sending is the dot. */
   private sent = DEAF
   /** Takes a line or a page off the lens when its time is up. */
@@ -303,8 +350,11 @@ export class Session {
     // What was said while Catch could not hear may have finished the wearer's
     // sentence, or been someone else's turn: the run is not known to be cut off.
     if (!hearing) this.thread.clear()
+    // D53: a span the open conversation did not hear, from here to when Catch hears again (or the end).
+    if (!hearing && this.inConversation) this.deafSince = { at: this.coveredUntil, clock: this.clock.now() }
+    if (hearing) this.closeGap()
     this.clearView()
-    this.view = hearing ? { kind: 'dot' } : { kind: 'deaf' }
+    this.toRest()
     this.render()
   }
 
@@ -314,6 +364,12 @@ export class Session {
    */
   tap(): void {
     if (!this.hearing) return
+    // D111: a tap on the prompt keeps the conversation.
+    if (this.promptShowing) {
+      this.keep = 'kept'
+      this.showLine(KEPT)
+      return
+    }
     this.clearView()
     if (this.view.kind === 'dot') {
       // D120: with detection off, the page gives the thread back as its first line.
@@ -321,20 +377,49 @@ export class Session {
       this.view = { kind: 'names', names: this.names.list(), ...(thread ? { thread } : {}) }
       this.viewTimer = this.clock.setTimeout(() => this.backToDot(), PAGE_MS)
     } else {
-      this.view = { kind: 'dot' }
+      // A line or a page goes; an unanswered prompt comes back in its place (D42).
+      this.toRest()
     }
     this.render()
   }
 
   /**
    * A swipe down: on the names page, the promises page, for five seconds
-   * (D43, D112). Anywhere else it means nothing yet (P6 pauses at the dot).
+   * (D43, D112); on the keep prompt, no (D40). Anywhere else it means nothing
+   * yet (P6 pauses at the dot).
    */
   swipeDown(): void {
-    if (!this.hearing || this.view.kind !== 'names') return
+    if (!this.hearing) return
+    // D40: a swipe down on the prompt declines it; nothing is kept, and a later swipe up asks again.
+    if (this.promptShowing) {
+      this.keep = 'none'
+      this.backToDot()
+      return
+    }
+    if (this.view.kind !== 'names') return
     this.clearView()
     this.view = { kind: 'promises', you: held(this.promises) }
     this.viewTimer = this.clock.setTimeout(() => this.backToDot(), PAGE_MS)
+    this.render()
+  }
+
+  /**
+   * A swipe up at the bare dot in an open conversation: the keep prompt, which
+   * waits for a tap or a swipe down however long it takes (D40, D41); in a
+   * conversation already kept, `already kept` for a second and a half (D54).
+   * On the prompt it changes nothing (the prompt stays, D41); on a line or a
+   * page it means nothing yet (P10 scrolls a page back). With no conversation
+   * open there is nothing to keep, and it does nothing.
+   */
+  swipeUp(): void {
+    if (!this.hearing || this.closed || this.promptShowing) return
+    if (this.view.kind !== 'dot' || !this.inConversation) return
+    if (this.keep === 'kept') {
+      this.showLine(ALREADY_KEPT)
+      return
+    }
+    this.keep = 'asking'
+    this.toRest()
     this.render()
   }
 
@@ -409,7 +494,7 @@ export class Session {
       this.restartQuiet(agoMs)
     }
     if (this.inConversation) this.transcript?.add({ text, start, end, side })
-    this.sentences(text, side)
+    this.sentences(text, side, end)
     if (side === 'wearer') {
       if (this.inConversation) this.restartQuiet(agoMs)
       this.otherRun = []
@@ -444,11 +529,12 @@ export class Session {
    * change of speaker; each finished sentence of the wearer's is a candidate
    * promise (promises.ts says which are worth a model pass).
    */
-  private sentences(text: string, side: Side): void {
+  private sentences(text: string, side: Side, end: number): void {
     const mine = side === 'wearer' ? this.wearerSentence : this.otherSentence
     if (side === 'wearer') this.finishOther()
     else this.finishWearer()
     mine.push(text)
+    if (side === 'wearer') this.wearerSentenceEnd = end
     if (!/[.!?]$/.test(text)) return
     if (side === 'wearer') this.finishWearer()
     else this.finishOther()
@@ -464,7 +550,7 @@ export class Session {
     const text = this.wearerSentence.splice(0).join(' ')
     const before = this.said.slice()
     this.remember({ who: 'wearer', text })
-    if (this.inConversation && this.detector) this.judgePromise(text, before)
+    if (this.inConversation && this.detector) this.judgePromise(text, before, this.wearerSentenceEnd)
   }
 
   private remember(s: Said): void {
@@ -478,9 +564,10 @@ export class Session {
    * came within the three seconds and the conversation is still open; one
    * that came later is held without a line (answer 9).
    */
-  private judgePromise(text: string, before: Said[]): void {
+  private judgePromise(text: string, before: Said[], at: number): void {
     const promises = this.promises
     const slot = promises.slots.push(undefined) - 1
+    promises.times[slot] = at
     const abort = new AbortController()
     promises.out.add(abort)
     let late = false
@@ -539,11 +626,29 @@ export class Session {
     this.quietTimer = undefined
     // A sentence of the wearer's cut short by the end is still a candidate.
     this.finishWearer()
+    // A span not heard runs to the end at most (D53).
+    this.closeGap()
     // Snapshot, reset, then the hook: the conversation is over whatever the hook does (fix round, M4).
-    const ended = this.inConversation ? { startedAt: this.startedAt, endedAt: this.clock.now(), names: this.names.list() } : undefined
+    // A kept conversation's transcript is read from the store before the store's copy goes (D73, D76).
+    const kept = this.keep === 'kept'
+    const ended = this.inConversation
+      ? {
+          startedAt: this.startedAt,
+          endedAt: this.clock.now(),
+          names: this.names.list(),
+          kept,
+          transcript: kept ? (this.transcript?.words?.() ?? []) : [],
+          gaps: this.gaps,
+        }
+      : undefined
     const promises = this.promises
     this.promises = noPromises()
     this.inConversation = false
+    this.keep = 'none'
+    this.gaps = []
+    this.deafSince = undefined
+    // An unanswered prompt asked about the conversation that has ended: it goes (D40).
+    if (this.promptShowing) this.backToDot()
     this.names.clear()
     this.otherRun = []
     this.otherCaught.clear()
@@ -570,7 +675,7 @@ export class Session {
       this.stopPasses(promises)
       if (this.closed) return
       try {
-        this.onEnd?.({ ...ended, promises: held(promises) })
+        this.onEnd?.({ ...ended, promises: held(promises), promiseTimes: heldTimes(promises) })
       } catch (error) {
         this.onEndError(error)
       }
@@ -597,16 +702,39 @@ export class Session {
     this.render()
   }
 
+  /** A line or a page goes: the lens comes back to rest (the dot, or an unanswered prompt, D42). */
   private backToDot(): void {
     this.clearView()
-    this.view = this.hearing ? { kind: 'dot' } : { kind: 'deaf' }
+    this.toRest()
     this.render()
+  }
+
+  /**
+   * The view at rest: an unanswered keep prompt while the conversation is
+   * open and Catch can hear (D40, D42), else the dot, or no mark while Catch
+   * cannot hear (D37). Call after clearView.
+   */
+  private toRest(): void {
+    if (this.hearing && this.inConversation && this.keep === 'asking') {
+      this.view = { kind: 'line', text: KEEP_PROMPT }
+      this.promptShowing = true
+      return
+    }
+    this.view = this.hearing ? { kind: 'dot' } : { kind: 'deaf' }
+  }
+
+  /** Catch hears again, or the conversation ends: a span not heard is closed and kept for the jogger (D53). */
+  private closeGap(): void {
+    if (!this.deafSince) return
+    if (this.inConversation) this.gaps.push({ at: this.deafSince.at, ms: this.clock.now() - this.deafSince.clock })
+    this.deafSince = undefined
   }
 
   private clearView(): void {
     if (this.viewTimer) this.clock.clearTimeout(this.viewTimer)
     this.viewTimer = undefined
     this.threadShowing = false
+    this.promptShowing = false
   }
 
   private render(): void {

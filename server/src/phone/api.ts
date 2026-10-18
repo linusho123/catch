@@ -1,10 +1,10 @@
 import { createHash, timingSafeEqual } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { PHONE_CONVERSATION_PATH, PHONE_HISTORY_PATH } from '../../../shared/phone-protocol.ts'
+import { PHONE_CONVERSATION_PATH, PHONE_HISTORY_PATH, PHONE_JOGGER_SUFFIX } from '../../../shared/phone-protocol.ts'
 import type { History } from './history.ts'
 
-// The phone API (D130): the plugin's phone page reads the history (D100) and
-// one conversation's screen (D98) from here. Read-only: GET only, nothing
+// The phone API (D130): the plugin's phone page reads the history (D100), one
+// conversation's screen (D98) and a kept conversation's jogger (D99) from here. Read-only: GET only, nothing
 // written. It takes the same shared token as /audio (CATCH_AUDIO_TOKEN), as
 // `Authorization: Bearer <token>` (a fetch can set headers, unlike a browser
 // WebSocket), and answers only with the conversations of the wearer that
@@ -50,9 +50,15 @@ export function phoneRoute(
     json(200, opts.history.list(wearer))
     return true
   }
-  const id = path.slice(PHONE_CONVERSATION_PATH.length)
-  const conversation = /^\d+$/.test(id) ? opts.history.conversation(wearer, Number(id)) : undefined
-  if (conversation) json(200, conversation)
-  else json(404, { error: 'no such conversation' })
+  const rest = path.slice(PHONE_CONVERSATION_PATH.length)
+  const jogger = rest.endsWith(PHONE_JOGGER_SUFFIX)
+  const id = jogger ? rest.slice(0, -PHONE_JOGGER_SUFFIX.length) : rest
+  if (!/^\d+$/.test(id)) {
+    json(404, { error: 'no such conversation' })
+    return true
+  }
+  const found = jogger ? opts.history.jogger(wearer, Number(id)) : opts.history.conversation(wearer, Number(id))
+  if (found) json(200, found)
+  else json(404, { error: jogger ? 'no jogger for that conversation' : 'no such conversation' })
   return true
 }
