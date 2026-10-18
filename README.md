@@ -12,13 +12,13 @@
 - You say "I'll send you the link tonight" → `promised · send … the link tonight`.
 - You stop mid-sentence and someone talks over you for two seconds or more → your last words (`…and the second reason is`) wait until you speak again or tap.
 
-**Controls:** tap shows the names held in this conversation (five seconds, or tap again); swipe down from there shows your promises; long-press ends the conversation now (ten minutes of your silence also ends it); double-tap is Even's exit. Catch tells your voice from others' by loudness on the simulator and by the glasses' own speaker role on a G2, so the person introducing themselves should be a step or two away.
+**Controls:** tap shows the names held in this conversation (five seconds, or tap again); swipe down from there shows your promises; swipe up asks `keep this conversation?` and a tap keeps it (a kept conversation gets a short jogger of its key points on the phone page when it ends); long-press ends the conversation now (ten minutes of your silence also ends it); double-tap is Even's exit. Catch tells your voice from others' by loudness on the simulator and by the glasses' own speaker role on a G2, so the person introducing themselves should be a step or two away.
 
-**On the phone:** Catch's own page in the Even app lists past conversations that produced a promise, newest first, with each conversation's names and your promises.
+**On the phone:** Catch's own page in the Even app lists past conversations that produced a promise or were kept, newest first, with each conversation's names, your promises, and the jogger of a kept conversation.
 
-**Privacy:** nothing survives a conversation unless it produced a promise; the transcript and audio are deleted when it ends (D76). Speech-to-text is Deepgram with model-improvement opted out; the promise detector sends sentences with a commitment in them, and a few before them, to Gemini on the free tier, under which Google may use that content to improve its models.
+**Privacy:** nothing survives a conversation unless it produced a promise or you kept it; the transcript and audio are deleted when it ends, a kept one's once its jogger is written (D76). Speech-to-text is Deepgram with model-improvement opted out; the promise detector sends sentences with a commitment in them, and a few before them, and a kept conversation's transcript (for its jogger) to Gemini on the free tier, under which Google may use that content to improve its models.
 
-**Built at LA Hacks:** the spec (`features/`, `docs/BUILD-PLAN.md`) was written before the event; every line of code was written during it, through a reviewed build pipeline. Not built: tick-off on the phone, a website, phone push notifications, pause, promises owed to you and keep-with-jogger unless listed on the Devpost as done, and restart persistence (see `features/OUT-OF-SCOPE.md`).
+**Built at LA Hacks:** the spec (`features/`, `docs/BUILD-PLAN.md`) was written before the event; every line of code was written during it, through a reviewed build pipeline. Not built: tick-off on the phone, a website, phone push notifications, pause, promises owed to you unless listed on the Devpost as done, and restart persistence (see `features/OUT-OF-SCOPE.md`).
 
 **Run it without glasses:** see "Run Catch on this machine" below (the Even Hub simulator plus a local server).
 

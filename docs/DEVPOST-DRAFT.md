@@ -10,11 +10,11 @@ Catch is one interaction: **it holds what you were about to lose**. It stays dar
 - **A name:** "Hi, I'm Priya" → `Priya`.
 - **A promise you make:** "I'll send you the deck tonight" → `promised · send … the deck tonight`.
 - **The dropped thread:** you stop mid-sentence and someone takes the floor → `…and the second reason is` waits until you speak again.
-Tap to see the names held; swipe down for your promises; long-press to end the conversation. Promises appear afterwards on Catch's own page in the Even app.
+Tap to see the names held; swipe down for your promises; swipe up and tap to keep a conversation; long-press to end it. Afterwards, Catch's own page in the Even app shows your promises and, for a kept conversation, a short jogger of its key points with the technical terms in bold.
 
 ## How we built it
 - Even Hub plugin (TypeScript, Vite, SDK 0.0.16) streams glasses audio to a TypeScript/Node server on Fly.io.
-- Deepgram nova-3 streaming speech-to-text with word timings; Gemini Flash (`gemini-3.5-flash-lite`) detects commitments within three seconds.
+- Deepgram nova-3 streaming speech-to-text with word timings; Gemini Flash (`gemini-3.5-flash-lite`) detects commitments within three seconds and writes the jogger.
 - Wearer-versus-others split behind one interface: the SDK's per-frame speaker role, loudness, or the provider's speaker labels.
 - The behaviour was specified before the event as Gherkin feature files (45 scenarios) and a ruled docket; during the event every phase went through a pipeline of a builder agent, two independent reviewers, a head reviewer running mutation probes, a fix round with failing-tests-first, and a gate. Tests never call the network: fixtures are pre-transcribed word timings on a virtual clock, model calls replay recorded cassettes.
 
@@ -28,7 +28,7 @@ Tap to see the names held; swipe down for your promises; long-press to end the c
 
 ## What we learned / What's next
 - [your words]
-- Next: promises owed to you, keep-a-conversation with a jogger summary, pause, restart persistence.
+- Next: promises owed to you, pause, restart persistence, phone push notifications.
 
 ## Built with
 TypeScript, Even Hub SDK, Vite, Node.js, SQLite, Deepgram, Gemini, Fly.io, Vitest, Gherkin
