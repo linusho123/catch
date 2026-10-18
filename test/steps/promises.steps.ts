@@ -285,6 +285,14 @@ const promises: Definer<PromiseWorld> = (reg) => {
     expect(lines.map((l) => l.text), 'the lens lines').toEqual(['they promised · send the deck tonight', 'they promised · send the slides'])
     expect(lines[0]!.at - run.at(first.end)).toBeLessThanOrEqual(3000)
     expect(lines[1]!.at - run.at(second.end)).toBeLessThanOrEqual(3000)
+    // D113's numbering, on the far side (test-gap-1): before the name comes, the
+    // promises page holds the two unnamed promisers as they (1) and they (2).
+    expect(await heldPromises(w), 'the owed list, numbered').toEqual(['owed: they (1) sends the deck tonight', 'owed: they (2) sends the slides'])
+    // The page goes on a tap, back to the dot.
+    const at = tap(w)
+    await waitFor(w, () => (screens(h).some((s) => s.at >= at && visible(s).length === 1 && visible(s)[0]!.content === '•') ? true : undefined))
+    expectDotOnly(screenAt(h, h.clock.now()), 'after the page')
+    expect(nowSec(w), 'the Given is over before the name is said').toBeLessThan(lineIn(run, "By the way, I'm Dev.").start)
     w.promisers = [first.who, second.who]
   })
 

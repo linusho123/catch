@@ -9,8 +9,8 @@
 // The server's near-field threshold defaults to -25 dBFS here, not the
 // server's -20, when the .env sets none (local-env.ts: a laptop microphone).
 import { spawn } from 'node:child_process'
-import { join, resolve } from 'node:path'
-import { localServerEnv } from './local-env.ts'
+import { resolve } from 'node:path'
+import { localProcesses } from './local-env.ts'
 
 const root = resolve(import.meta.dirname, '..')
 const missing = ['DEEPGRAM_API_KEY', 'CATCH_AUDIO_TOKEN'].filter((name) => !process.env[name])
@@ -19,18 +19,9 @@ if (missing.length > 0) {
   process.exit(1)
 }
 
-const port = process.env.PORT ?? '8080'
-const serverUrl = `ws://localhost:${port}`
-const serverEnv = localServerEnv(process.env, port)
-const children = [
-  spawn(process.execPath, ['server/src/main.ts'], { cwd: root, stdio: 'inherit', env: serverEnv }),
-  spawn(join(root, 'node_modules/.bin/vite'), ['apps/lens'], {
-    cwd: root,
-    stdio: 'inherit',
-    // Vite gives variables already in the environment priority over .env files.
-    env: { ...process.env, VITE_CATCH_SERVER: serverUrl, VITE_CATCH_TOKEN: process.env.CATCH_AUDIO_TOKEN },
-  }),
-]
+// The server and the lens dev server, as local-env.ts builds them (tested there).
+const { serverUrl, serverEnv, processes } = localProcesses(process.env, root, process.execPath)
+const children = processes.map(({ command, args, options }) => spawn(command, args, options))
 console.log(
   `npm run local: server on ${serverUrl} (loudness threshold ${serverEnv.CATCH_LOUDNESS_THRESHOLD_DBFS} dBFS), lens on http://localhost:5173; now run \`npm run lens:simulate\``,
 )

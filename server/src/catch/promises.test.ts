@@ -99,6 +99,27 @@ describe('the owed prompt and the owed line (P5, D91)', () => {
     expect(thirdPerson('have it ready by Friday')).toBe('has it ready by Friday')
   })
 
+  // risk-3: the prompt forbids a subject or a modal in the action, but the demo
+  // runs on the live model, so a "will send" or an "I'll send" it keeps must
+  // never come out as "Dev wills send" or "Dev I'lls send".
+  it('risk-3: strips a leading subject or future modal the prompt forbids before it conjugates', () => {
+    expect(owedLine('Dev', 'will send the deck')).toBe('Dev sends the deck')
+    expect(owedLine('Dev', "I'll send the deck")).toBe('Dev sends the deck')
+    expect(owedLine('Dev', 'I’ll send the deck')).toBe('Dev sends the deck')
+    expect(owedLine('Dev', 'I will send the deck tonight')).toBe('Dev sends the deck tonight')
+    expect(owedLine('they (1)', "they'll fix the build")).toBe('they (1) fixes the build')
+    expect(owedLine('Dev', "I'm going to send the deck")).toBe('Dev sends the deck')
+    expect(owedLine('Dev', 'going to call you on Monday')).toBe('Dev calls you on Monday')
+    expect(owedLine('Dev', 'Will send the deck')).toBe('Dev sends the deck')
+    expect(owedLine('Dev', "we'll go over the plan")).toBe('Dev goes over the plan')
+  })
+
+  it('risk-3: leaves an action led by another modal unconjugated: "Dev can send the deck"', () => {
+    expect(owedLine('Dev', 'can send the deck')).toBe('Dev can send the deck')
+    expect(owedLine('Dev', "I can send the deck")).toBe('Dev can send the deck')
+    expect(owedLine('Dev', 'should have it by Friday')).toBe('Dev should have it by Friday')
+  })
+
   it('costs no model pass for a sentence of theirs with no commitment cue', async () => {
     const asked: string[] = []
     const detector = new PromiseDetector({ complete: async (_m, prompt) => (asked.push(prompt), '{"promise": false}') })

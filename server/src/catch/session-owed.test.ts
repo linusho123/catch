@@ -223,6 +223,95 @@ describe('promises owed to the wearer, in the session (P5)', () => {
     expect(views.at(-1)!.view, 'the page does not come back').toEqual({ kind: 'dot' })
   })
 
+  // risk-1, widened by the human's answer (1): only a self-introduction ("I'm
+  // X", "my name is X") names a promiser. A name in someone else's "meet X",
+  // "this is X" or "X, nice to meet you" never names one, neither the
+  // promiser of its own sentence nor an earlier unnamed one.
+  it('risk-1: a name caught in the promise\'s own sentence by "meet X" does not name its promiser', async () => {
+    const { model } = fakeModel({ "I'll meet Priya on Friday.": 'meet Priya on Friday' })
+    const { session, views, ended, say, settle, promisesPage } = setup(model)
+    session.setHearing(true)
+    say('Morning, how was the trip?', 0, WEARER)
+    say("I'll meet Priya on Friday.", 3, OTHER)
+    await settle()
+    expect(lines(views)).toEqual(['Priya', 'they promised · meet Priya on Friday'])
+    expect(promisesPage()).toEqual({ kind: 'promises', you: [], owed: ['they (1) meets Priya on Friday'] })
+    session.longPress()
+    await settle()
+    expect(ended.map((e) => e.owed)).toEqual([['they (1) meets Priya on Friday']])
+  })
+
+  it('risk-1: a "meet X" in the promise\'s own sentence leaves it with the last name caught before the sentence', async () => {
+    const { model } = fakeModel({ "I'll introduce you, meet Priya, she runs the lab.": 'introduce you to Priya' })
+    const { session, views, say, settle, promisesPage } = setup(model)
+    session.setHearing(true)
+    say("Hi, I'm Dev.", 0, OTHER)
+    say("I'll introduce you, meet Priya, she runs the lab.", 3, OTHER)
+    await settle()
+    expect(lines(views)).toEqual(['Dev', 'Priya', 'Dev promised · introduce you to Priya'])
+    expect(promisesPage()).toEqual({ kind: 'promises', you: [], owed: ['Dev introduces you to Priya'] })
+  })
+
+  it('risk-1: "this is X" and "X, nice to meet you" in the same sentence do not name its promiser either', async () => {
+    for (const [said, action, owed] of [
+      ["I'll send you the notes, this is Priya by the way.", 'send the notes', 'they (1) sends the notes'],
+      ["Sam, nice to meet you, I'll call you tomorrow.", 'call you tomorrow', 'they (1) calls you tomorrow'],
+    ] as const) {
+      const { model } = fakeModel({ [said]: action })
+      const { session, say, settle, promisesPage } = setup(model)
+      session.setHearing(true)
+      say('Morning, everyone.', 0, WEARER)
+      say(said, 2, OTHER)
+      await settle()
+      expect(promisesPage(), said).toEqual({ kind: 'promises', you: [], owed: [owed] })
+    }
+  })
+
+  it('risk-1: a self-introduction in the same sentence still names its promiser', async () => {
+    const { model } = fakeModel({ "Hi, I'm Dev, I'll send you the agenda.": 'send the agenda' })
+    const { session, views, say, settle, promisesPage } = setup(model)
+    session.setHearing(true)
+    say('Morning, how was the trip?', 0, WEARER)
+    say("Hi, I'm Dev, I'll send you the agenda.", 3, OTHER)
+    await settle()
+    expect(lines(views)).toEqual(['Dev', 'Dev promised · send the agenda'])
+    expect(promisesPage()).toEqual({ kind: 'promises', you: [], owed: ['Dev sends the agenda'] })
+  })
+
+  it('risk-1 (answer 1): a name from "meet X" said after an unnamed promise does not attach to that earlier promiser', async () => {
+    const { model } = fakeModel({ "I'll send you the deck tonight.": 'send the deck tonight' })
+    const { session, say, settle, promisesPage } = setup(model)
+    session.setHearing(true)
+    say('Morning, how was the trip?', 0, WEARER)
+    say("I'll send you the deck tonight.", 3, OTHER)
+    await settle()
+    say('You should meet Priya.', 8, OTHER)
+    say('This is Sam.', 11, OTHER)
+    say('Sam, nice to meet you.', 13, OTHER)
+    await settle()
+    expect(promisesPage()).toEqual({ kind: 'promises', you: [], owed: ['they (1) sends the deck tonight'] })
+  })
+
+  it('risk-1 (answer 1): a "meet X" that ends the promise\'s own sentence does not attach to it either', async () => {
+    const { model } = fakeModel({ "Tomorrow I'll introduce you, you should meet Priya.": 'introduce you to Priya' })
+    const { session, say, settle, promisesPage } = setup(model)
+    session.setHearing(true)
+    say('Morning, how was the trip?', 0, WEARER)
+    say("Tomorrow I'll introduce you, you should meet Priya.", 3, OTHER)
+    await settle()
+    expect(promisesPage()).toEqual({ kind: 'promises', you: [], owed: ['they (1) introduces you to Priya'] })
+  })
+
+  it('risk-1: a name from "meet X" caught before a later sentence still names that later promiser (D91)', async () => {
+    const { model } = fakeModel({ "I'll send you the agenda.": 'send the agenda' })
+    const { session, say, settle, promisesPage } = setup(model)
+    session.setHearing(true)
+    say('You should meet Priya.', 0, OTHER)
+    say("I'll send you the agenda.", 3, OTHER)
+    await settle()
+    expect(promisesPage()).toEqual({ kind: 'promises', you: [], owed: ['Priya sends the agenda'] })
+  })
+
   it("forgets the last name caught at the conversation's end: the next conversation's first promise is unnamed", async () => {
     const { model } = fakeModel({ "I'll send you the deck tonight.": 'send the deck tonight' })
     const { session, ended, say, settle, promisesPage } = setup(model)

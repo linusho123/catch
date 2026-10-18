@@ -77,9 +77,43 @@ export function owedPrompt(utterance: string, before: readonly Said[]): string {
 /** Verbs whose third person is not the regular one. */
 const IRREGULAR: Record<string, string> = { be: 'is', have: 'has', do: 'does', go: 'goes' }
 
-/** An action in the plain form with its first word, the verb, in the third person: "send the deck" becomes "sends the deck". */
+/** Subjects the promiser might keep before the action: dropped (risk-3). */
+const SUBJECTS = new Set(['i', 'we', 'they', 'he', 'she'])
+/** The same, contracted with a future modal ("I'll") or a "be" before "going to" ("I'm"): dropped. */
+const SUBJECT_CONTRACTIONS = new Set(["i'll", "we'll", "they'll", "he'll", "she'll", "i'm", "we're", "they're", "he's", "she's"])
+/** Modals that say no more than the promise does: dropped, and the verb after them conjugated. */
+const FUTURE = new Set(['will', 'shall', 'gonna'])
+/** Modals that say more: kept, and the action after them left in its plain form ("Dev can send the deck"). */
+const OTHER_MODALS = new Set(['can', 'could', 'should', 'would', 'might', 'must', 'may'])
+
+/**
+ * The action with a leading subject or future modal gone (risk-3). The prompt
+ * forbids both, but the demo runs on the live model: "will send the deck",
+ * "I'll send the deck" and "I'm going to send the deck" are all "send the
+ * deck". Words after the verb are never touched.
+ */
+function plainAction(words: string[]): string[] {
+  const at = (i: number) => (words[i] ?? '').toLowerCase().replace(/’/g, "'")
+  let i = 0
+  if (SUBJECTS.has(at(i)) || SUBJECT_CONTRACTIONS.has(at(i))) i += 1
+  if (FUTURE.has(at(i))) i += 1
+  else if (['am', 'are', 'is'].includes(at(i)) && at(i + 1) === 'going' && at(i + 2) === 'to') i += 3
+  else if (at(i) === 'going' && at(i + 1) === 'to') i += 2
+  // Nothing left after them: the words as they came, rather than nothing.
+  return i < words.length ? words.slice(i) : words
+}
+
+/**
+ * An action in the plain form with its first word, the verb, in the third
+ * person: "send the deck" becomes "sends the deck". A leading subject or
+ * future modal goes first ("will send the deck" is "sends the deck"); an
+ * action led by another modal keeps it and stays as it is ("can send the
+ * deck"), never "cans send" (risk-3).
+ */
 export function thirdPerson(action: string): string {
-  const [verb = '', ...rest] = action.split(' ')
+  const words = plainAction(action.split(' '))
+  if (OTHER_MODALS.has((words[0] ?? '').toLowerCase())) return words.join(' ')
+  const [verb = '', ...rest] = words
   const lower = verb.toLowerCase()
   const third =
     IRREGULAR[lower] ??

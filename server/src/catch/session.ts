@@ -4,7 +4,7 @@ import type { AudioFrame } from '../../../shared/wire.ts'
 import { pcmLoudnessDbfs, type FrameSignal, type Side, type SplitWord, type WearerSplit } from '../split/split.ts'
 import type { SttWord } from '../stt/types.ts'
 import { HeldNames } from './held-names.ts'
-import { findIntroductionsHow, findSelfIntroductions } from './introductions.ts'
+import { findIntroductionsHow, findSelfIntroductions, type Introduced } from './introductions.ts'
 import { CONTEXT_SENTENCES, isCandidate, owedLine, PromisePassError, type PromiseDetector, type Said } from './promises.ts'
 import { Thread } from './thread.ts'
 import type { TranscriptWord } from './transcript.ts'
@@ -301,6 +301,13 @@ export class Session {
   private gaps: Gap[] = []
   /** The last name caught in the open conversation: who an owed promise said now is from (P5, D91, D26). */
   private lastCaught: string | undefined
+  /**
+   * A name caught by someone else's pattern ("meet X", "this is X", "X, nice
+   * to meet you") inside the other sentence still open: it is someone the
+   * speaker mentions, not the speaker, so it becomes the last name caught only
+   * once that sentence has been judged (risk-1).
+   */
+  private caughtInSentence: string | undefined
 
   // What the lens shows.
   private hearing = false
@@ -575,7 +582,7 @@ export class Session {
       if (this.ownNames.has(name.toLowerCase()) || name.toLowerCase() === this.wearerName) continue
       const heard = this.names.hear(name, this.clock.now(), how)
       this.showLine(heard.line)
-      this.nameCaught(heard.line)
+      this.nameCaught(heard.line, how)
     }
   }
 
@@ -601,6 +608,8 @@ export class Session {
     const before = this.said.slice()
     this.remember({ who: 'other', text })
     if (this.inConversation && this.detector) this.judgeOwed(text, before)
+    if (this.caughtInSentence !== undefined) this.lastCaught = this.caughtInSentence
+    this.caughtInSentence = undefined
   }
 
   private finishWearer(): void {
@@ -642,7 +651,8 @@ export class Session {
   /**
    * One model pass of someone else's sentence (P5, D91, D26, D113), on the
    * same three seconds. The promiser is named as the sentence ends, by the last
-   * name caught, and stays unnamed when none has been; a promise is held and
+   * name caught before it or its speaker's own "I'm X" in it (never a name
+   * the speaker mentions in it, risk-1), and stays unnamed when none has been; a promise is held and
    * shown as `Dev promised · …` or `they promised · …`.
    */
   private judgeOwed(text: string, before: Said[]): void {
@@ -665,11 +675,21 @@ export class Session {
 
   /**
    * A name is caught (P5, D113): it is the one later owed promises are from,
-   * and it attaches to the most recent promiser, if that one has no name yet
-   * (a pass still out counts; one that said no promise does not).
+   * and, given by its owner ("I'm X", "my name is X"), it attaches to the most
+   * recent promiser, if that one has no name yet (a pass still out counts; one
+   * that said no promise does not). A name given by someone else ("meet X",
+   * "this is X", "X, nice to meet you") never names a promiser, neither the
+   * one of its own sentence nor an earlier one (risk-1, the human's answer 1):
+   * it names only the promisers of sentences said after its own.
    */
-  private nameCaught(name: string): void {
+  private nameCaught(name: string, how: Introduced): void {
+    if (how !== 'self') {
+      if (this.otherSentence.length > 0) this.caughtInSentence = name
+      else this.lastCaught = name
+      return
+    }
     this.lastCaught = name
+    this.caughtInSentence = undefined
     const last = this.promises.owed.findLast((s) => s.state !== 'no')
     if (last && last.name === undefined) {
       last.name = name
@@ -784,6 +804,7 @@ export class Session {
     this.gaps = []
     this.deafSince = undefined
     this.lastCaught = undefined
+    this.caughtInSentence = undefined
     // An unanswered prompt asked about the conversation that has ended: it goes (D40).
     if (this.promptShowing) this.backToDot()
     this.names.clear()
