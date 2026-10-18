@@ -276,6 +276,41 @@ describe('a conversation deleted from the phone page (D134)', () => {
     expect(modelErrors, 'a cancelled jogger is no model failure').toEqual([])
     expect(bytesOnDisk(dbPath)).not.toContain('Quokka')
   })
+
+  it("head-1: cancels only the deleted conversation's jogger: another kept conversation's jogger, in flight at the same time, is stored and its \"Kept:\" notification arrives", async () => {
+    const dbPath = newStore()
+    const clock = new VirtualClock(1)
+    const phone = new NotificationCapture(clock)
+    const { model, releaseJogger, joggerAsked } = scriptedModel()
+    const { server, say } = await start(dbPath, clock, { phone, model })
+    const a = await lens(server, say)
+    /** One kept conversation, ended, its jogger left being written. */
+    const kept = async (words: string, asked: number) => {
+      await a.say(words, WEARER_DBFS)
+      await until(() => a.views.at(-1)?.kind === 'dot', 'the dot is up')
+      const shown = a.views.length
+      a.touch('swipe-up')
+      await until(() => a.views.slice(shown).some((v) => v.kind === 'line' && v.text === 'keep this conversation?'), 'the keep prompt')
+      a.touch('tap')
+      await until(() => a.views.slice(shown).some((v) => v.kind === 'line' && v.text === 'kept'), '"kept"')
+      clock.advance(2000)
+      a.touch('long-press')
+      await until(() => joggerAsked() === asked, 'its jogger is being written')
+    }
+    await kept('The Quokka plan is ready.', 1)
+    await kept('The Wombat plan is ready.', 2)
+    const [deleted, other] = (rows(dbPath, 'conversations') as { id: number }[]).map((r) => r.id).sort((x, y) => x - y)
+    expect(other, 'two kept conversations, both joggers in flight').toBeDefined()
+
+    expect((await remove(server, deleted!, TOKEN)).status).toBe(200)
+    releaseJogger()
+    await until(() => phone.received.length > 0, 'the kept conversation left alone has its "Kept:" notification')
+    expect(
+      (rows(dbPath, 'joggers') as { conversation_id: number }[]).map((r) => r.conversation_id),
+      "the other conversation's jogger is stored, the deleted one's is not",
+    ).toEqual([other])
+    expect(phone.received.map((c) => [c.notification.data?.conversation, c.notification.body.startsWith('Kept:')])).toEqual([[String(other), true]])
+  })
 })
 
 describe('the delete write (D134)', () => {
@@ -309,13 +344,19 @@ describe('the delete write (D134)', () => {
     expect(leftFor(dbPath), 'the store is as it was').toEqual(left)
   })
 
-  it("refuses another wearer's conversation, a missing or wrong token, and an id that is not a number, changing nothing", async () => {
+  it("refuses a missing or wrong token and an id that is not a number; another wearer's conversation is the same quiet success as a missing one; nothing changes", async () => {
     const { dbPath, server, dev, zed } = await seeded()
     const before = leftFor(dbPath)
     expect((await remove(server, dev)).status).toBe(401)
     expect((await remove(server, dev, 'wrong')).status).toBe(401)
-    expect((await remove(server, zed, TOKEN)).status, "another wearer's conversation").toBe(404)
-    expect((await remove(server, dev, OTHER)).status, "another wearer's conversation").toBe(404)
+    // Answer (1): a second token cannot learn which conversation numbers exist, so another wearer's answers as a missing one does.
+    const missing = await remove(server, zed + 1000, TOKEN)
+    const others = await remove(server, zed, TOKEN)
+    expect([others.status, await others.json()], "another wearer's conversation, answered as a missing one is").toEqual([missing.status, await missing.json()])
+    expect(others.status).toBe(200)
+    const asOther = await remove(server, dev, OTHER)
+    expect(asOther.status, "another wearer's conversation, from the other side").toBe(200)
+    expect((await asOther.json()) as HistoryResponse, "only the asker's own history, as it stands").toEqual({ open: 1, conversations: [{ id: zed, startedAt: at(10, 0), names: ['Zed'], open: 1, kept: false }] })
     for (const id of ['nope', '1.5', '-1', '1e3', '%20', `${dev}/jogger`]) {
       expect([id, (await remove(server, id, TOKEN)).status], 'not a conversation it can delete').not.toEqual([id, 200])
     }

@@ -10,11 +10,12 @@ import type { DeleteOutcome, History } from './history.ts'
 // promise answers the same and changes nothing; and it deletes a conversation
 // (D134) with `DELETE /phone/conversations/<id>`, which answers the history as
 // it now stands, idempotent too: a conversation already deleted is a quiet
-// success. It takes the same shared token
-// as /audio (CATCH_AUDIO_TOKEN), as `Authorization: Bearer <token>` (a fetch
-// can set headers, unlike a browser WebSocket), and reads and writes only the
-// conversations of the wearer that token stands for (D79): another wearer's
-// promise or conversation is answered 404 and is never touched.
+// success, and so is another wearer's, which is never touched. It takes the
+// same shared token as /audio (CATCH_AUDIO_TOKEN), as `Authorization: Bearer
+// <token>` (a fetch can set headers, unlike a browser WebSocket), and reads and
+// writes only the conversations of the wearer that token stands for (D79):
+// another wearer's promise or conversation is answered 404 to a read or a tick
+// and is never touched.
 
 /** The wearer a shared token stands for: the key the server files sessions and conversations under. */
 export function wearerOf(token: string): string {
@@ -81,8 +82,10 @@ export function phoneRoute(
     return true
   }
   if (req.method === 'DELETE') {
-    if (opts.remove(wearer, Number(id)) === 'refused') json(404, { error: 'no such conversation' })
-    else json(200, opts.history.list(wearer))
+    // Another wearer's conversation is refused and untouched, but answered as a missing one is (answer 1):
+    // a second token cannot learn from a delete which conversation numbers exist.
+    opts.remove(wearer, Number(id))
+    json(200, opts.history.list(wearer))
     return true
   }
   const found = jogger ? opts.history.jogger(wearer, Number(id)) : opts.history.conversation(wearer, Number(id))

@@ -260,7 +260,8 @@ export class Outbox {
           taken = false
         }
         // Taken is taken, whatever happened meanwhile: it leaves the store, so no restart sends it twice (P9).
-        if (taken && item.id !== undefined) {
+        // Unless it was dropped meanwhile (its conversation deleted, D134): its row went with the delete, and the number is not ours to touch (head-2).
+        if (taken && item.id !== undefined && q.items.includes(item)) {
           try {
             this.store?.remove(item.id)
           } catch {
