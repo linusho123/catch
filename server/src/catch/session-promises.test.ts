@@ -36,8 +36,10 @@ function fakeModel(answers: Record<string, string | undefined>, hold = false) {
   return { model, asked, release: () => waiting.splice(0).forEach((go) => go()) }
 }
 
-function setup(model: ModelClient, opts: Partial<SessionOptions> = {}) {
-  const clock = new VirtualClock(1)
+// A test that asserts a boundary to the millisecond passes a near-frozen speed, so only advance() moves
+// the clock and wall time spent between steps (a busy machine) cannot cross the boundary.
+function setup(model: ModelClient, opts: Partial<SessionOptions> = {}, speed = 1) {
+  const clock = new VirtualClock(speed)
   const views: { at: number; view: LensView }[] = []
   const ended: EndedConversation[] = []
   const stored: TranscriptWord[] = []
@@ -224,7 +226,7 @@ describe('a promise pass past its three seconds (risk-2, answer 9)', () => {
   it('ends the conversation at the pass\'s deadline when the model never answers, and cancels the call', async () => {
     const { model, calls } = slowModel()
     const errors: unknown[] = []
-    const { session, ended, say, settle, clock } = setup(model, { onModelError: (e) => errors.push(e) })
+    const { session, ended, say, settle, clock } = setup(model, { onModelError: (e) => errors.push(e) }, 1e-9)
     session.setHearing(true)
     say("Hi, I'm Dev.", 0, OTHER)
     say("I'll send you the deck tonight.", 2, WEARER)
