@@ -1,0 +1,721 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "restart",
+  "variant": "wearer-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "Thanks for making the time, everyone.",
+      "span": 1.02
+    },
+    {
+      "at": 2.5,
+      "who": "Priya",
+      "text": "Hi, I'm Priya.",
+      "span": 0.48
+    },
+    {
+      "at": 30,
+      "who": "Dev",
+      "text": "Hi, I'm Dev.",
+      "span": 0.48
+    },
+    {
+      "at": 60,
+      "who": "Priya",
+      "text": "We rank the results with LightGBM.",
+      "terms": [
+        "LightGBM"
+      ],
+      "span": 1.02
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "I'll send you the benchmark numbers tonight.",
+      "span": 1.2
+    },
+    {
+      "at": 200,
+      "who": "Ana",
+      "text": "Hi, I'm Ana.",
+      "span": 0.48
+    },
+    {
+      "at": 300,
+      "who": "wearer",
+      "text": "How do you serve the model?",
+      "ask": "serve",
+      "span": 1.02
+    },
+    {
+      "gap": 1,
+      "who": "Ana",
+      "text": "Behind Triton on two GPUs.",
+      "terms": [
+        "Triton"
+      ],
+      "span": 0.84
+    },
+    {
+      "at": 600,
+      "who": "wearer",
+      "text": "I'll introduce you to Sam.",
+      "span": 0.84
+    },
+    {
+      "at": 880,
+      "who": "Dev",
+      "text": "Next quarter the data moves to Snowflake.",
+      "terms": [
+        "Snowflake"
+      ],
+      "span": 1.2
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Makes sense.",
+      "span": 0.3
+    },
+    {
+      "at": 920,
+      "who": "Dev",
+      "text": "Our Kubernetes bill doubled in March.",
+      "span": 1.02
+    },
+    {
+      "at": 1000,
+      "who": "wearer",
+      "text": "Sorry, I lost you for a minute.",
+      "span": 1.2
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "No problem. The logs go to Parquet now.",
+      "terms": [
+        "Parquet"
+      ],
+      "span": 1.38
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Sounds good.",
+      "span": 0.3
+    }
+  ],
+  "words": [
+    {
+      "text": "Thanks",
+      "start": 0,
+      "end": 0.133,
+      "role": "wearer",
+      "loudness": -13,
+      "speaker": 0
+    },
+    {
+      "text": "for",
+      "start": 0.193,
+      "end": 0.287,
+      "role": "wearer",
+      "loudness": -10.8,
+      "speaker": 0
+    },
+    {
+      "text": "making",
+      "start": 0.347,
+      "end": 0.48,
+      "role": "wearer",
+      "loudness": -11,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 0.54,
+      "end": 0.633,
+      "role": "wearer",
+      "loudness": -11.7,
+      "speaker": 0
+    },
+    {
+      "text": "time,",
+      "start": 0.693,
+      "end": 0.8,
+      "role": "wearer",
+      "loudness": -10.6,
+      "speaker": 0
+    },
+    {
+      "text": "everyone.",
+      "start": 0.86,
+      "end": 1.02,
+      "role": "wearer",
+      "loudness": -11.3,
+      "speaker": 0
+    },
+    {
+      "text": "Hi,",
+      "start": 2.5,
+      "end": 2.603,
+      "role": "other",
+      "loudness": -27.2,
+      "speaker": 1
+    },
+    {
+      "text": "I'm",
+      "start": 2.663,
+      "end": 2.766,
+      "role": "other",
+      "loudness": -27.2,
+      "speaker": 1
+    },
+    {
+      "text": "Priya.",
+      "start": 2.826,
+      "end": 2.98,
+      "role": "other",
+      "loudness": -28.9,
+      "speaker": 1
+    },
+    {
+      "text": "Hi,",
+      "start": 30,
+      "end": 30.114,
+      "role": "other",
+      "loudness": -28.9,
+      "speaker": 2
+    },
+    {
+      "text": "I'm",
+      "start": 30.174,
+      "end": 30.287,
+      "role": "other",
+      "loudness": -28.7,
+      "speaker": 2
+    },
+    {
+      "text": "Dev.",
+      "start": 30.347,
+      "end": 30.48,
+      "role": "other",
+      "loudness": -26.6,
+      "speaker": 2
+    },
+    {
+      "text": "We",
+      "start": 60,
+      "end": 60.083,
+      "role": "other",
+      "loudness": -28,
+      "speaker": 1
+    },
+    {
+      "text": "rank",
+      "start": 60.143,
+      "end": 60.254,
+      "role": "other",
+      "loudness": -29.4,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 60.314,
+      "end": 60.411,
+      "role": "other",
+      "loudness": -29.2,
+      "speaker": 1
+    },
+    {
+      "text": "results",
+      "start": 60.471,
+      "end": 60.623,
+      "role": "other",
+      "loudness": -26.7,
+      "speaker": 1
+    },
+    {
+      "text": "with",
+      "start": 60.683,
+      "end": 60.794,
+      "role": "other",
+      "loudness": -28,
+      "speaker": 1
+    },
+    {
+      "text": "LightGBM.",
+      "start": 60.854,
+      "end": 61.02,
+      "role": "other",
+      "loudness": -28.8,
+      "speaker": 1
+    },
+    {
+      "text": "I'll",
+      "start": 62.02,
+      "end": 62.112,
+      "role": "wearer",
+      "loudness": -11.9,
+      "speaker": 0
+    },
+    {
+      "text": "send",
+      "start": 62.172,
+      "end": 62.277,
+      "role": "wearer",
+      "loudness": -10.9,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 62.337,
+      "end": 62.429,
+      "role": "wearer",
+      "loudness": -12.3,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 62.489,
+      "end": 62.581,
+      "role": "wearer",
+      "loudness": -13.3,
+      "speaker": 0
+    },
+    {
+      "text": "benchmark",
+      "start": 62.641,
+      "end": 62.811,
+      "role": "wearer",
+      "loudness": -12.8,
+      "speaker": 0
+    },
+    {
+      "text": "numbers",
+      "start": 62.871,
+      "end": 63.016,
+      "role": "wearer",
+      "loudness": -10.9,
+      "speaker": 0
+    },
+    {
+      "text": "tonight.",
+      "start": 63.076,
+      "end": 63.22,
+      "role": "wearer",
+      "loudness": -13,
+      "speaker": 0
+    },
+    {
+      "text": "Hi,",
+      "start": 200,
+      "end": 200.114,
+      "role": "other",
+      "loudness": -28,
+      "speaker": 3
+    },
+    {
+      "text": "I'm",
+      "start": 200.174,
+      "end": 200.287,
+      "role": "other",
+      "loudness": -26.9,
+      "speaker": 3
+    },
+    {
+      "text": "Ana.",
+      "start": 200.347,
+      "end": 200.48,
+      "role": "other",
+      "loudness": -29,
+      "speaker": 3
+    },
+    {
+      "text": "How",
+      "start": 300,
+      "end": 300.112,
+      "role": "wearer",
+      "loudness": -12,
+      "speaker": 0
+    },
+    {
+      "text": "do",
+      "start": 300.172,
+      "end": 300.268,
+      "role": "wearer",
+      "loudness": -10.8,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 300.328,
+      "end": 300.44,
+      "role": "wearer",
+      "loudness": -13.5,
+      "speaker": 0
+    },
+    {
+      "text": "serve",
+      "start": 300.5,
+      "end": 300.644,
+      "role": "wearer",
+      "loudness": -10.7,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 300.704,
+      "end": 300.816,
+      "role": "wearer",
+      "loudness": -12.9,
+      "speaker": 0
+    },
+    {
+      "text": "model?",
+      "start": 300.876,
+      "end": 301.02,
+      "role": "wearer",
+      "loudness": -12.3,
+      "speaker": 0
+    },
+    {
+      "text": "Behind",
+      "start": 302.02,
+      "end": 302.166,
+      "role": "other",
+      "loudness": -26.5,
+      "speaker": 3
+    },
+    {
+      "text": "Triton",
+      "start": 302.226,
+      "end": 302.373,
+      "role": "other",
+      "loudness": -27.4,
+      "speaker": 3
+    },
+    {
+      "text": "on",
+      "start": 302.433,
+      "end": 302.52,
+      "role": "other",
+      "loudness": -28.6,
+      "speaker": 3
+    },
+    {
+      "text": "two",
+      "start": 302.58,
+      "end": 302.683,
+      "role": "other",
+      "loudness": -29.3,
+      "speaker": 3
+    },
+    {
+      "text": "GPUs.",
+      "start": 302.743,
+      "end": 302.86,
+      "role": "other",
+      "loudness": -26.6,
+      "speaker": 3
+    },
+    {
+      "text": "I'll",
+      "start": 600,
+      "end": 600.105,
+      "role": "wearer",
+      "loudness": -12,
+      "speaker": 0
+    },
+    {
+      "text": "introduce",
+      "start": 600.165,
+      "end": 600.36,
+      "role": "wearer",
+      "loudness": -11.9,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 600.42,
+      "end": 600.525,
+      "role": "wearer",
+      "loudness": -11,
+      "speaker": 0
+    },
+    {
+      "text": "to",
+      "start": 600.585,
+      "end": 600.675,
+      "role": "wearer",
+      "loudness": -10.9,
+      "speaker": 0
+    },
+    {
+      "text": "Sam.",
+      "start": 600.735,
+      "end": 600.84,
+      "role": "wearer",
+      "loudness": -12.6,
+      "speaker": 0
+    },
+    {
+      "text": "Next",
+      "start": 880,
+      "end": 880.108,
+      "role": "other",
+      "loudness": -28.3,
+      "speaker": 2
+    },
+    {
+      "text": "quarter",
+      "start": 880.168,
+      "end": 880.317,
+      "role": "other",
+      "loudness": -28.3,
+      "speaker": 2
+    },
+    {
+      "text": "the",
+      "start": 880.377,
+      "end": 880.472,
+      "role": "other",
+      "loudness": -26.8,
+      "speaker": 2
+    },
+    {
+      "text": "data",
+      "start": 880.532,
+      "end": 880.641,
+      "role": "other",
+      "loudness": -29.4,
+      "speaker": 2
+    },
+    {
+      "text": "moves",
+      "start": 880.701,
+      "end": 880.823,
+      "role": "other",
+      "loudness": -28.3,
+      "speaker": 2
+    },
+    {
+      "text": "to",
+      "start": 880.883,
+      "end": 880.964,
+      "role": "other",
+      "loudness": -27.2,
+      "speaker": 2
+    },
+    {
+      "text": "Snowflake.",
+      "start": 881.024,
+      "end": 881.2,
+      "role": "other",
+      "loudness": -29.3,
+      "speaker": 2
+    },
+    {
+      "text": "Makes",
+      "start": 882.2,
+      "end": 882.32,
+      "role": "wearer",
+      "loudness": -11.6,
+      "speaker": 0
+    },
+    {
+      "text": "sense.",
+      "start": 882.38,
+      "end": 882.5,
+      "role": "wearer",
+      "loudness": -11.5,
+      "speaker": 0
+    },
+    {
+      "text": "Our",
+      "start": 920,
+      "end": 920.092,
+      "role": "other",
+      "loudness": -28.8,
+      "speaker": 2
+    },
+    {
+      "text": "Kubernetes",
+      "start": 920.152,
+      "end": 920.335,
+      "role": "other",
+      "loudness": -27.6,
+      "speaker": 2
+    },
+    {
+      "text": "bill",
+      "start": 920.395,
+      "end": 920.5,
+      "role": "other",
+      "loudness": -29.4,
+      "speaker": 2
+    },
+    {
+      "text": "doubled",
+      "start": 920.56,
+      "end": 920.704,
+      "role": "other",
+      "loudness": -29.3,
+      "speaker": 2
+    },
+    {
+      "text": "in",
+      "start": 920.764,
+      "end": 920.842,
+      "role": "other",
+      "loudness": -29.2,
+      "speaker": 2
+    },
+    {
+      "text": "March.",
+      "start": 920.902,
+      "end": 921.02,
+      "role": "other",
+      "loudness": -27.4,
+      "speaker": 2
+    },
+    {
+      "text": "Sorry,",
+      "start": 1000,
+      "end": 1000.148,
+      "role": "wearer",
+      "loudness": -11.9,
+      "speaker": 0
+    },
+    {
+      "text": "I",
+      "start": 1000.208,
+      "end": 1000.291,
+      "role": "wearer",
+      "loudness": -11.5,
+      "speaker": 0
+    },
+    {
+      "text": "lost",
+      "start": 1000.351,
+      "end": 1000.482,
+      "role": "wearer",
+      "loudness": -12.4,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 1000.542,
+      "end": 1000.658,
+      "role": "wearer",
+      "loudness": -10.6,
+      "speaker": 0
+    },
+    {
+      "text": "for",
+      "start": 1000.718,
+      "end": 1000.833,
+      "role": "wearer",
+      "loudness": -13.1,
+      "speaker": 0
+    },
+    {
+      "text": "a",
+      "start": 1000.893,
+      "end": 1000.975,
+      "role": "wearer",
+      "loudness": -11.6,
+      "speaker": 0
+    },
+    {
+      "text": "minute.",
+      "start": 1001.035,
+      "end": 1001.2,
+      "role": "wearer",
+      "loudness": -11.8,
+      "speaker": 0
+    },
+    {
+      "text": "No",
+      "start": 1002.2,
+      "end": 1002.293,
+      "role": "other",
+      "loudness": -28.1,
+      "speaker": 2
+    },
+    {
+      "text": "problem.",
+      "start": 1002.353,
+      "end": 1002.523,
+      "role": "other",
+      "loudness": -27.5,
+      "speaker": 2
+    },
+    {
+      "text": "The",
+      "start": 1002.583,
+      "end": 1002.692,
+      "role": "other",
+      "loudness": -27.8,
+      "speaker": 2
+    },
+    {
+      "text": "logs",
+      "start": 1002.752,
+      "end": 1002.875,
+      "role": "other",
+      "loudness": -29.4,
+      "speaker": 2
+    },
+    {
+      "text": "go",
+      "start": 1002.935,
+      "end": 1003.028,
+      "role": "other",
+      "loudness": -27.9,
+      "speaker": 2
+    },
+    {
+      "text": "to",
+      "start": 1003.088,
+      "end": 1003.181,
+      "role": "other",
+      "loudness": -27,
+      "speaker": 2
+    },
+    {
+      "text": "Parquet",
+      "start": 1003.241,
+      "end": 1003.412,
+      "role": "other",
+      "loudness": -28.8,
+      "speaker": 2
+    },
+    {
+      "text": "now.",
+      "start": 1003.472,
+      "end": 1003.58,
+      "role": "other",
+      "loudness": -29.3,
+      "speaker": 2
+    },
+    {
+      "text": "Sounds",
+      "start": 1004.58,
+      "end": 1004.713,
+      "role": "wearer",
+      "loudness": -12.5,
+      "speaker": 0
+    },
+    {
+      "text": "good.",
+      "start": 1004.773,
+      "end": 1004.88,
+      "role": "wearer",
+      "loudness": -11.9,
+      "speaker": 0
+    }
+  ]
+}

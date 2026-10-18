@@ -9,16 +9,17 @@ import type { SpeechToText, SttWord } from '../../server/src/stt/types.ts'
 import { encodeFrame } from '../../shared/wire.ts'
 import { VirtualClock } from '../harness/clock.ts'
 import { pcmAt } from '../harness/player.ts'
-import { find, rows, tables } from '../harness/store-reader.ts'
+import { find, rows } from '../harness/store-reader.ts'
 
 // The server's own boundary rules, on a store of its own (the harness empties
 // its store between scenarios, so the suite cannot see these from there).
 //
-// Fix round, risk-1 (D76): before P9 no session survives a restart, so a
-// conversation the process was holding when it stopped (a crash, a redeploy,
-// a close with no end) has ended, and its transcript must not outlive it on
-// the volume. The server purges every orphaned transcript row as it starts,
-// and forgetWearers (the harness's stand-in for a restart) does the same.
+// Fix round, risk-1 (D76), as P9 left it: a conversation the process was
+// holding when it stopped is taken up again by the next one, and a transcript
+// row no open conversation owns is deleted as the server starts
+// (test/integration/restart.test.ts, which replaced P2a's purge of every row
+// at start). forgetWearers, the harness's clean slate between scenarios,
+// drops every open conversation, and its transcript with it.
 //
 // Fix round, head-log-1: a model answer that cannot be read is logged without
 // a word of it.
@@ -90,27 +91,7 @@ function bytesOnDisk(dbPath: string): string {
 }
 
 describe('an orphaned transcript (risk-1, D76)', () => {
-  it('is gone, rows and bytes, when the server starts again on the same store after closing with no end', async () => {
-    const dbPath = join(mkdtempSync(join(tmpdir(), 'catch-orphans-')), 'catch.db')
-    const first = await start(dbPath)
-    await wearerSays(first.server, first.say, 'The Zanzibar plan is ready.')
-    // The precondition, read from the file: the open conversation's words are in the store.
-    expect(find(dbPath, 'Zanzibar').map((h) => h.table), 'the open conversation is held in the store').toEqual(['transcript'])
-    // The process stops with the conversation open: no long-press, no ten minutes of quiet.
-    expect(first.server.store.db.prepare('SELECT count(*) AS n FROM transcript').get()).toEqual({ n: 5 })
-    await first.server.close()
-    servers.splice(servers.indexOf(first.server), 1)
-
-    const second = await start(dbPath)
-    expect(tables(dbPath)).toContain('transcript')
-    expect(rows(dbPath, 'transcript'), 'transcript rows survived the restart').toEqual([])
-    expect(find(dbPath, 'Zanzibar'), 'the words in any table').toEqual([])
-    expect(bytesOnDisk(dbPath), "the words' bytes in the file or its log").not.toContain('Zanzibar')
-    await second.server.close()
-    servers.splice(servers.indexOf(second.server), 1)
-  })
-
-  it('is gone, rows and bytes, when the wearers are forgotten (the stand-in for a restart)', async () => {
+  it('is gone, rows and bytes, when the wearers are forgotten (the harness\'s clean slate)', async () => {
     const dbPath = join(mkdtempSync(join(tmpdir(), 'catch-orphans-')), 'catch.db')
     const { server, say } = await start(dbPath)
     await wearerSays(server, say, 'The Zanzibar plan is ready.')

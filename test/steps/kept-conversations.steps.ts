@@ -22,6 +22,7 @@ import {
   tapOnce,
   type JoggerWorld,
 } from './jogger-world.ts'
+import { rows } from '../harness/store-reader.ts'
 import {
   begin,
   expectDotOnly,
@@ -33,6 +34,9 @@ import {
   lineIn,
   linesShown,
   namesOn,
+  promisesOn,
+  tapToPromises,
+  untilDot,
   nowSec,
   pend,
   playTo,
@@ -55,8 +59,16 @@ import {
 // bold, every bold span must be something Catch heard, the questions (`ask`)
 // and the wearer's promises must be among the bullets, and all of it in the
 // order it was said (jogger-world.ts). The default split, loudness (D126), on
-// the wearer-louder fixtures (D127). "Everything survives a restart" is P9's
-// and stays wip.
+// the wearer-louder fixtures (D127).
+//
+// "Everything survives a restart mid-conversation" (P9, D73): the Even app is
+// killed mid-fixture (its lens stops, its socket closes) and the server it
+// talks to restarts on the same store in the same minute, so nothing of the
+// conversation can survive in any process's memory (the Android case: the
+// state must be the server's, and in its store); then a fresh launch of the
+// plugin comes back a minute later. The held pages are read from the bridge
+// stub after it, the jogger from the capture and the phone page after the
+// end, and the store holds one conversation, never a second.
 
 const V = 'wearer-louder'
 
@@ -83,7 +95,15 @@ interface KeptWorld extends JoggerWorld {
   endAt?: number
   /** The span Catch could not hear (D53), fixture seconds. */
   deaf?: { from: number; to: number }
+  /** The names the lens showed before the restart, in the order heard (P9). */
+  namesBefore?: string[]
 }
+
+/** P9: the restart comes fifteen minutes in, and Catch is back a minute later (D73). */
+const RESTART_AT_S = 900
+const BACK_AT_S = 960
+/** And the conversation ends after the wearer has spoken again, by a long-press. */
+const RESTART_END_S = 1010
 
 /** The wearer is in a conversation (the first speech began it) and the lens has shown only the dot. */
 async function midConversation(w: KeptWorld, fixture: string, upTo: number): Promise<void> {
@@ -396,6 +416,101 @@ const kept: Definer<KeptWorld> = (reg) => {
     expect(bullets[at]).toBe('4 minutes not heard')
     for (const b of bullets.slice(Math.max(0, at - 1), at + 2)) {
       expect(b, `"${b}" says when`).not.toMatch(/\b\d{1,2}:\d{2}\b|\b\d{1,2}\s?(am|pm|a\.m\.|p\.m\.)(?![\p{L}])|\bo'clock\b|\baround\b|\bat (noon|midnight)\b/iu)
+    }
+  })
+
+  // D73 (P9)
+  reg.define(/^the wearer is fifteen minutes into a kept conversation in which two promises and three names are held$/, async (w) => {
+    await keptFixture(w, 'restart')
+    await playOnTo(w, RESTART_AT_S)
+    const h = w.h!
+    const shown = linesShown(h, w.dotSince!, h.clock.now()).map((l) => l.text)
+    // Read from the bridge stub: the three names came up in the order heard, and the two promises.
+    w.namesBefore = shown.filter((l) => !l.startsWith('promised · ') && l !== 'kept' && l !== KEEP_PROMPT)
+    expect(w.namesBefore, 'three names held, in the order heard').toEqual(['Priya', 'Dev', 'Ana'])
+    expect(w.promised, 'two promises held, seen on the lens').toHaveLength(2)
+    expect(nowSec(w), 'fifteen minutes in').toBeGreaterThanOrEqual(15 * 60)
+    expectDotOnly(screenAt(h, h.clock.now()), 'fifteen minutes in')
+  })
+
+  reg.define(/^the Even app restarts and Catch comes back one minute later$/, async (w) => {
+    const h = w.h!
+    const run = w.run!
+    const goneAt = h.clock.now()
+    const before = h.server
+    // The Even app is killed: the lens and its socket go. The server restarts on the same store meanwhile: nothing survives in memory.
+    await h.killApp()
+    await h.restartServer()
+    expect(h.server, 'the server was started again').not.toBe(before)
+    // A minute goes by; what is said in it reaches nothing.
+    await fastForward(w, BACK_AT_S)
+    expect(run.fixture.words.some((wd) => wd.start > RESTART_AT_S && wd.end < BACK_AT_S), 'something is said while Catch is gone').toBe(true)
+    // The plugin is launched again (a new launch, D129) and finds the server.
+    await h.startLens()
+    const back = await waitFor(w, () => screens(h).find((s) => s.at > goneAt && isDotOnly(s)), 3000)
+    expect(back, 'the dot came back once the plugin did').toBeDefined()
+    for (const s of screensDuring(h, goneAt + SLACK_MS, back!.at - 1)) {
+      expect(visible(s), `at ${s.at} ms the lens shows ${JSON.stringify(visible(s).map((c) => c.content))} while Catch is gone`).toEqual([])
+    }
+    expect((back!.at - goneAt) / 60_000, 'one minute later').toBeCloseTo(1, 1)
+    w.deaf = { from: RESTART_AT_S, to: BACK_AT_S }
+  })
+
+  reg.define(/^a tap shows the three names in their original order$/, async (w) => {
+    await untilDot(w)
+    const page = await tapForPage(w)
+    expect(namesOn(page), 'the names page after the restart').toEqual(w.namesBefore)
+  })
+
+  reg.define(/^a tap and a swipe down show both promises$/, async (w) => {
+    // The last tap's names page goes on its own (D31); from the dot, a tap brings it back and a swipe down turns it (D43).
+    const h = w.h!
+    await waitFor(w, () => (isDotOnly(screenAt(h, h.clock.now())!) ? true : undefined), 5000 + 2 * SLACK_MS)
+    const page = await tapToPromises(w, w.namesBefore!)
+    expect(promisesOn(page), 'the promises page after the restart: both promises, as the lens showed them before it').toEqual(w.promised)
+    // The page goes on its own (D43) before anything else is asked of the lens.
+    await waitFor(w, () => (isDotOnly(screenAt(h, h.clock.now())!) ? true : undefined), 5000 + 2 * SLACK_MS)
+    expectDotOnly(screenAt(h, h.clock.now()), 'after the promises page')
+  })
+
+  reg.define(/^the jogger written at the end covers the whole conversation apart from one minute not heard$/, async (w) => {
+    const h = w.h!
+    const run = w.run!
+    const promisedBefore = w.promised!
+    await playOnTo(w, RESTART_END_S)
+    expect(w.promised, 'no promise line came after the restart').toEqual(promisedBefore)
+    await longPressNow(w)
+    const kept = await keptWithin(w, WITHIN['30 seconds']!)
+    expect(linesOf(kept.notification), 'the kept notification names all three').toEqual(['Catch', 'Kept: conversation with Priya, Dev and Ana'])
+    // One conversation, never a second one begun at the restart: one row in the store, with every name and both promises.
+    const conversations = rows(h.dbPath, 'conversations')
+    expect(conversations, 'the store holds one conversation').toHaveLength(1)
+    expect(JSON.parse(String(conversations[0]!.names))).toEqual(w.namesBefore)
+    expect(Number(conversations[0]!.kept), 'the keep mark survived to the end').toBe(1)
+    const jogger = await openKept(w)
+    const bullets = jogger.bullets.map((b) => b.text)
+    expect(jogger.lists, 'one list').toBe(1)
+    expect(jogger.headings, 'no headings').toEqual([])
+    // The whole conversation: every term said before the restart and after it, in bold, in the order said, with the questions and both promises.
+    expectTermsBold(jogger, run.fixture.lines)
+    expectInOrder(jogger, run.fixture.lines, w.promised)
+    for (const p of w.promised!) expect(bullets, `the promise "${p}" is not among the bullets`).toContain(`You promised: ${p}`)
+    // Apart from one minute not heard: one line, where the restart fell.
+    const gap = bullets.filter((b) => b.endsWith('not heard'))
+    expect(gap, `the jogger: ${JSON.stringify(bullets)}`).toEqual(['1 minute not heard'])
+    const at = bullets.indexOf('1 minute not heard')
+    const said = (from: number, to: number) => run.fixture.lines.filter((l) => lineIn(run, l.text).start >= from && lineIn(run, l.text).end <= to)
+    const before = said(0, w.deaf!.from).flatMap((l) => l.terms ?? [])
+    const after = said(w.deaf!.to, Infinity).flatMap((l) => l.terms ?? [])
+    expect(before.length > 0 && after.length > 0, 'the fixture marks terms either side of the restart').toBe(true)
+    for (const t of before) expect(bullets.findIndex((b) => norm(b).includes(norm(t))), `"${t}" was said before the restart`).toBeLessThan(at)
+    for (const t of after) expect(bullets.findIndex((b) => norm(b).includes(norm(t))), `"${t}" was said after the restart`).toBeGreaterThan(at)
+    const missed = said(w.deaf!.from, w.deaf!.to)
+    expect(missed.length, 'something was said in the minute').toBeGreaterThan(0)
+    for (const l of missed) {
+      for (const word of l.text.split(/\s+/).map(norm).filter((x) => x.length >= 5)) {
+        for (const b of bullets) expect(norm(b).split(' '), `"${word}" was said while Catch was gone, yet the jogger has it`).not.toContain(word)
+      }
     }
   })
 }

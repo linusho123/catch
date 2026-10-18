@@ -1,8 +1,8 @@
 import type { Store } from '../store.ts'
 
 // The open conversation's transcript, held in the store while the
-// conversation runs (D73: so the jogger can be written, and so a restart in
-// P9 finds it) and deleted at its end, kept or not (D76: nothing of an unkept
+// conversation runs (D73: so the jogger can be written, and so a restart
+// finds it, P9) and deleted at its end, kept or not (D76: nothing of an unkept
 // conversation's transcript survives the boundary; P4's jogger is written
 // from it before it goes). One row per word, keyed by the wearer (D79). No
 // audio is ever stored: the PCM goes to the speech-to-text provider and
@@ -49,16 +49,26 @@ export class Transcript {
   }
 
   /**
-   * Every wearer's transcript goes: the pre-P9 rule for a restart (fix round,
-   * risk-1). Before P9 no session survives the process, so a conversation the
-   * last process was holding has ended, and its words must not wait on the
-   * volume for that wearer's next end (D76), nor join the next conversation's
-   * words. The server calls it as it starts, and forgetWearers, the stand-in
-   * for a restart, calls it too. P9's resume replaces it: a restart then
-   * finds the open conversation and its transcript where it left them.
+   * Every wearer's transcript goes: the harness's clean slate (forgetWearers),
+   * which drops every session and so every open conversation with it (D76).
    */
   purge(): void {
     this.store.db.exec('DELETE FROM transcript')
+    this.scrub()
+  }
+
+  /**
+   * Every transcript row that belongs to no open conversation goes, as the
+   * server starts (P9, replacing P2a's purge of every row at start): the open
+   * conversations of `open` are taken up again with their words, but a word
+   * whose conversation has ended or whose saved session is gone (a crash
+   * between a word and its session's save, a row that cannot be read) belongs
+   * to nothing that will ever end it, so it must not wait on the volume (D76).
+   */
+  purgeExcept(open: readonly string[]): void {
+    const db = this.store.db
+    if (open.length === 0) db.exec('DELETE FROM transcript')
+    else db.prepare(`DELETE FROM transcript WHERE wearer NOT IN (${open.map(() => '?').join(', ')})`).run(...open)
     this.scrub()
   }
 

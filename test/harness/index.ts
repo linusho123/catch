@@ -46,6 +46,18 @@ export interface Harness {
   /** Starts the lens against the server; rejects, loudly, if it cannot open /audio. */
   startLens(): Promise<Lens>
   /**
+   * The Even app is killed (P9): every running lens stops, its socket closed,
+   * and the speech-to-text provider hears nothing said until a lens is back
+   * (FixtureStt.appGone).
+   */
+  killApp(): Promise<void>
+  /**
+   * The server process restarts on the same store (P9): closed, with nothing
+   * of its memory kept, and started again with the same clock, provider,
+   * model and phone. `server` is the new one afterwards.
+   */
+  restartServer(): Promise<void>
+  /**
    * Signs another pair of glasses in to the second account
    * (OTHER_HARNESS_TOKEN), as a bare /audio socket, and resolves once the
    * server holds that account's session and shows it the dot. Call it before
@@ -73,26 +85,32 @@ async function start(): Promise<Harness> {
   const model = modelForTests()
   const dbPath = join(mkdtempSync(join(tmpdir(), 'catch-harness-')), 'catch.db')
   const realStt = process.env.CATCH_REAL_STT === '1'
-  const server = await startServer({
-    port: 0,
-    host: '127.0.0.1',
-    dbPath,
-    audioToken: HARNESS_TOKEN,
-    clock,
-    stt: realStt ? deepgram(process.env.DEEPGRAM_API_KEY ?? '') : stt,
-    model,
-    notifier: notifications,
-    otherAudioTokens: [OTHER_HARNESS_TOKEN],
-  })
-  stt.attach(server.events)
   const modelErrors: unknown[] = []
-  server.events.on('modelError', ({ error }) => modelErrors.push(error))
+  const serve = async () => {
+    const started = await startServer({
+      port: 0,
+      host: '127.0.0.1',
+      dbPath,
+      audioToken: HARNESS_TOKEN,
+      clock,
+      stt: realStt ? deepgram(process.env.DEEPGRAM_API_KEY ?? '') : stt,
+      model,
+      notifier: notifications,
+      otherAudioTokens: [OTHER_HARNESS_TOKEN],
+    })
+    stt.attach(started.events)
+    started.events.on('modelError', ({ error }) => modelErrors.push(error))
+    return started
+  }
+  let server = await serve()
   const lenses: Lens[] = []
   const others: WebSocket[] = []
   host.reset(clock)
   const h: Harness = {
     clock,
-    server,
+    get server() {
+      return server
+    },
     dbPath,
     host,
     stt,
@@ -125,6 +143,14 @@ async function start(): Promise<Harness> {
       lenses.push(lens)
       await lens.connected
       return lens
+    },
+    async killApp() {
+      await Promise.all(lenses.splice(0).map((lens) => lens.stop()))
+      stt.appGone()
+    },
+    async restartServer() {
+      await server.close()
+      server = await serve()
     },
     async signInOtherAccount() {
       const socket = new WebSocket(`${server.url.replace(/^http/, 'ws')}/audio?token=${OTHER_HARNESS_TOKEN}&lens=other-account`)

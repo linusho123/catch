@@ -8,11 +8,13 @@ import { parseLensMessage, type LensView, type ServerMessage } from '../../share
 import { decodeFrame, type AudioFrame } from '../../shared/wire.ts'
 import { writeJogger } from './catch/jogger.ts'
 import { command, PromiseDetector } from './catch/promises.ts'
-import { Session } from './catch/session.ts'
+import { SavedSessions } from './catch/saved-sessions.ts'
+import { Session, type SessionState } from './catch/session.ts'
 import { Transcript } from './catch/transcript.ts'
 import type { ModelClient } from './llm/client.ts'
 import { SafeModelError } from './llm/errors.ts'
 import { checkedTimeZone, keptNotification, Outbox, promiseNotification, type Notifier } from './notify.ts'
+import { StoredOutbox } from './notify-store.ts'
 import { phoneRoute, wearerOf } from './phone/api.ts'
 import { History } from './phone/history.ts'
 import { createSplit, type WearerSplit } from './split/split.ts'
@@ -54,10 +56,21 @@ import type { SpeechToText, SttStream, SttWord } from './stt/types.ts'
 // its notification to the wearer's phone through the outbox (notify.ts),
 // which holds it until the phone takes it (D114). The open conversation's
 // transcript lives in the store until its end, and is deleted there (D76).
-// Before P9 no session survives the process, so the server purges every
-// transcript left in the store as it starts, and forgetWearers does the same
-// (fix round, risk-1; P9's resume replaces this rule). Nothing the server
-// logs about a model pass quotes the conversation (head-log-1).
+// Nothing the server logs about a model pass quotes the conversation
+// (head-log-1).
+//
+// A restart (P9, D73): each wearer's session hands the store its state after
+// every change (catch/saved-sessions.ts), and the outbox keeps what waits for
+// a phone there too (notify-store.ts). As the server starts, before it takes
+// a socket, it builds every wearer's session again from the store, so a lens
+// that comes back (the same launch reconnecting, or the Even app started
+// again) re-attaches to the open conversation, with its names, promises,
+// keep mark and transcript, and never starts a second one; the quiet rule
+// runs on across the restart, so a conversation whose ten minutes ran out
+// while no server ran ends as it is built, and its transcript goes (D92,
+// D76). Every transcript row that belongs to no open conversation is deleted
+// as the server starts (P2a's purge of every row at start, which this
+// replaces). The outbox's waiting notifications are tried again at once.
 //
 // A kept conversation (P4): as it ends, its history row is written kept, its
 // promise notification (if any) is queued, and its jogger is written from the
@@ -155,9 +168,10 @@ export interface RunningServer {
   clock: Clock
   events: EventEmitter<ServerEvents>
   /**
-   * Drops every wearer's in-memory session and every notification waiting
-   * for its phone, as a restart of the process would (P9 makes them survive
-   * one). The test harness calls it between scenarios.
+   * Drops every wearer's session and every notification waiting for its
+   * phone, in memory and in the store, with every open conversation's
+   * transcript: the test harness's clean slate between scenarios. Not a
+   * restart: a restart (close, then start on the same store) keeps them (P9).
    */
   forgetWearers(): void
   /** The operator's D120 switch, set while the server runs: every session, open or new, reads it from the next word or tap. */
@@ -183,13 +197,15 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   const store = openStore(opts.dbPath)
   const history = new History(store)
   const transcript = new Transcript(store)
-  // The pre-P9 rule (risk-1): no conversation survives a restart, so whatever transcript the last process left is an ended one's (D76).
-  transcript.purge()
+  const saved = new SavedSessions(store)
+  // P9: what the last process left. A transcript row no open conversation owns has ended with its conversation, and goes (D76).
+  const left = saved.all()
+  transcript.purgeExcept(saved.open())
   const clock = opts.clock ?? systemClock
   const split = opts.split ?? createSplit()
   const events = new EventEmitter<ServerEvents>()
   let threadDetection = opts.threadDetection ?? true
-  const outbox = opts.notifier ? new Outbox(opts.notifier, clock) : undefined
+  const outbox = opts.notifier ? new Outbox(opts.notifier, clock, new StoredOutbox(store)) : undefined
   // CATCH_TIME_ZONE, checked once as the server starts (risk-2).
   const timeZone = checkedTimeZone(opts.timeZone)
   const promises = opts.model ? new PromiseDetector(opts.model) : undefined
@@ -202,6 +218,61 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   }
   /** One session per wearer, keyed by the digest of the shared token their lens carries (D79). */
   const wearers = new Map<string, Session>()
+
+  /**
+   * One wearer's session (D79), built fresh or from what the store kept of it
+   * (P9): every change goes back to the store, so a restart finds it.
+   */
+  const makeSession = (wearer: string, state?: SessionState): Session =>
+    new Session({
+      clock,
+      split,
+      ...(state ? { saved: state } : {}),
+      persist: (next) => saved.save(wearer, next),
+      onSaveError: (error) => console.error(`a session's state could not be saved, so a restart would lose it: ${loggable(error)}`),
+      wearerName: opts.wearerName,
+      threadDetection: () => threadDetection,
+      promises,
+      onModelError: (error) => {
+        console.error(`a promise pass failed, so that promise is lost: ${loggable(error)}`)
+        events.emit('modelError', { at: clock.now(), error })
+      },
+      onLatePass: () => {
+        console.warn('a promise pass had not answered within three seconds (D89): a promise it finds is held without a line')
+        events.emit('modelLate', { at: clock.now() })
+      },
+      onEndError: (error) => {
+        console.error(`a conversation's end could not be recorded: ${loggable(error)}`)
+        events.emit('endError', { at: clock.now(), error })
+      },
+      transcript: { add: (word) => transcript.add(wearer, word), words: () => transcript.words(wearer), delete: () => transcript.delete(wearer) },
+      // The wearer's promises as commands, and those owed to the wearer (P5), go to the history and the notification.
+      onEnd: ({ promises: said, promiseTimes, kept, transcript: words, gaps, owed, ...ended }) => {
+        const you = said.map(command)
+        const id = history.record(wearer, { ...ended, you, owed: owed.map(command), kept })
+        const notification = promiseNotification(id, you, owed)
+        if (notification) outbox?.enqueue(wearer, notification)
+        if (!kept || id === undefined) return
+        if (!opts.model) {
+          console.error('a kept conversation ended with no model to write its jogger (GEMINI_API_KEY is not set)')
+          return
+        }
+        const abort = new AbortController()
+        writing.add(abort)
+        writeJogger(opts.model, { names: ended.names, transcript: words, promises: said, promiseTimes, gaps }, { signal: abort.signal })
+          .then((jogger) => {
+            if (abort.signal.aborted) return
+            history.recordJogger(id, jogger.bullets)
+            outbox?.enqueue(wearer, keptNotification(id, ended.names, ended.startedAt, timeZone))
+          })
+          .catch((error: unknown) => {
+            if (abort.signal.aborted) return
+            console.error(`a kept conversation's jogger could not be written: ${loggable(error)}`)
+            events.emit('modelError', { at: clock.now(), error })
+          })
+          .finally(() => writing.delete(abort))
+      },
+    })
 
   const http = createServer((req: IncomingMessage, res: ServerResponse) => {
     if (req.method === 'OPTIONS') {
@@ -229,54 +300,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(msg))
     }
     const wearer = wearerOf(params(req).get('token') ?? '')
-    const lens =
-      wearers.get(wearer) ??
-      new Session({
-        clock,
-        split,
-        wearerName: opts.wearerName,
-        threadDetection: () => threadDetection,
-        promises,
-        onModelError: (error) => {
-          console.error(`a promise pass failed, so that promise is lost: ${loggable(error)}`)
-          events.emit('modelError', { at: clock.now(), error })
-        },
-        onLatePass: () => {
-          console.warn('a promise pass had not answered within three seconds (D89): a promise it finds is held without a line')
-          events.emit('modelLate', { at: clock.now() })
-        },
-        onEndError: (error) => {
-          console.error(`a conversation's end could not be recorded: ${loggable(error)}`)
-          events.emit('endError', { at: clock.now(), error })
-        },
-        transcript: { add: (word) => transcript.add(wearer, word), words: () => transcript.words(wearer), delete: () => transcript.delete(wearer) },
-        // The wearer's promises as commands, and those owed to the wearer (P5), go to the history and the notification.
-        onEnd: ({ promises: said, promiseTimes, kept, transcript: words, gaps, owed, ...ended }) => {
-          const you = said.map(command)
-          const id = history.record(wearer, { ...ended, you, owed: owed.map(command), kept })
-          const notification = promiseNotification(id, you, owed)
-          if (notification) outbox?.enqueue(wearer, notification)
-          if (!kept || id === undefined) return
-          if (!opts.model) {
-            console.error('a kept conversation ended with no model to write its jogger (GEMINI_API_KEY is not set)')
-            return
-          }
-          const abort = new AbortController()
-          writing.add(abort)
-          writeJogger(opts.model, { names: ended.names, transcript: words, promises: said, promiseTimes, gaps }, { signal: abort.signal })
-            .then((jogger) => {
-              if (abort.signal.aborted) return
-              history.recordJogger(id, jogger.bullets)
-              outbox?.enqueue(wearer, keptNotification(id, ended.names, ended.startedAt, timeZone))
-            })
-            .catch((error: unknown) => {
-              if (abort.signal.aborted) return
-              console.error(`a kept conversation's jogger could not be written: ${loggable(error)}`)
-              events.emit('modelError', { at: clock.now(), error })
-            })
-            .finally(() => writing.delete(abort))
-        },
-      })
+    const lens = wearers.get(wearer) ?? makeSession(wearer)
     wearers.set(wearer, lens)
 
     // One speech-to-text stream at a time; a lost one is reopened on the clock.
@@ -365,6 +389,10 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     })
   })
 
+  // P9: every wearer the last process held, taken up again before any socket is taken, so a lens that comes back finds its conversation and never begins a second.
+  for (const { wearer, state } of left) wearers.set(wearer, makeSession(wearer, state))
+  outbox?.resume()
+
   await new Promise<void>((resolve) => http.listen(opts.port, opts.host ?? '0.0.0.0', resolve))
   const { port } = http.address() as AddressInfo
 
@@ -378,7 +406,8 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       wearers.clear()
       stopJoggers()
       outbox?.forget()
-      // As at a start (risk-1): the forgotten sessions' conversations have ended, and their transcripts go.
+      // The forgotten sessions go from the store, and their open conversations' transcripts with them (D76).
+      saved.clear()
       transcript.purge()
     },
     setThreadDetection(on) {
@@ -386,6 +415,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     },
     async close() {
       // No session hands anything on after this (a deferred end, a quiet timer), so nothing touches the store once it is closed (risk-3).
+      // Each saves its state as it closes: the open conversation waits in the store for the next process (P9).
       for (const session of wearers.values()) session.close()
       wearers.clear()
       stopJoggers()

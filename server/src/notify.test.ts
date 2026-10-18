@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { VirtualClock } from '../../test/harness/clock.ts'
-import { checkedTimeZone, cutLine, keptNotification, listOf, NOTIFICATION_LINE_CHARS, NOTIFY_RETRY_MS, Outbox, promiseNotification, type Notifier, type PhoneNotification } from './notify.ts'
+import { checkedTimeZone, cutLine, keptNotification, listOf, NOTIFICATION_LINE_CHARS, NOTIFY_RETRY_MS, Outbox, promiseNotification, type Notifier, type OutboxStore, type PhoneNotification } from './notify.ts'
 
 // The notification semantics on their own (D28, D51, D114, D117).
 
@@ -195,5 +195,82 @@ describe('the outbox', () => {
     clock.advance(10 * NOTIFY_RETRY_MS)
     await settle()
     expect(p.tried, 'tried again after the outbox closed').toHaveLength(1)
+  })
+})
+
+// P9: what waits for a phone is kept in the store, so a restart sends it all the same, in order, once.
+describe('the outbox across a restart (P9, D114)', () => {
+  function memoryStore(): OutboxStore & { rows: { id: number; to: string; notification: PhoneNotification }[] } {
+    let next = 1
+    const rows: { id: number; to: string; notification: PhoneNotification }[] = []
+    return {
+      rows,
+      add: (to, notification) => {
+        rows.push({ id: next, to, notification: structuredClone(notification) })
+        return next++
+      },
+      remove: (id) => {
+        const i = rows.findIndex((r) => r.id === id)
+        if (i !== -1) rows.splice(i, 1)
+      },
+      all: () => rows.map((r) => structuredClone(r)),
+      clear: () => {
+        rows.length = 0
+      },
+    }
+  }
+  const settle = () => new Promise((r) => setImmediate(r))
+
+  it('keeps what the phone did not take for the next process, which sends it in order, per account, and keeps nothing it has sent', async () => {
+    const clock = new VirtualClock(1)
+    const store = memoryStore()
+    const off: Notifier = { send: async () => false }
+    const first = new Outbox(off, clock, store)
+    first.enqueue('a', { title: 'Catch', body: 'one' })
+    first.enqueue('b', { title: 'Catch', body: 'for b' })
+    first.enqueue('a', { title: 'Catch', body: 'two' })
+    await settle()
+    first.close()
+    expect(store.rows.map((r) => r.notification.body), 'closing keeps them').toEqual(['one', 'for b', 'two'])
+
+    const got: { to: string; body: string }[] = []
+    const on: Notifier = {
+      send: async (to, n) => {
+        got.push({ to, body: n.body })
+        return true
+      },
+    }
+    const second = new Outbox(on, clock, store)
+    second.resume()
+    await settle()
+    expect(got.filter((g) => g.to === 'a').map((g) => g.body)).toEqual(['one', 'two'])
+    expect(got.filter((g) => g.to === 'b').map((g) => g.body)).toEqual(['for b'])
+    expect(store.rows, 'taken, so gone from the store').toEqual([])
+    second.close()
+  })
+
+  it('a notification the phone takes as the process closes leaves the store, so the next process does not send it again', async () => {
+    const clock = new VirtualClock(1)
+    const store = memoryStore()
+    const answers: ((taken: boolean) => void)[] = []
+    const slow: Notifier = { send: () => new Promise((resolve) => answers.push(resolve)) }
+    const outbox = new Outbox(slow, clock, store)
+    outbox.enqueue('a', { title: 'Catch', body: 'one' })
+    await settle()
+    outbox.close()
+    answers.shift()!(true)
+    await settle()
+    expect(store.rows).toEqual([])
+  })
+
+  it('forget() clears the store too: the harness\'s clean slate, never a restart', async () => {
+    const clock = new VirtualClock(1)
+    const store = memoryStore()
+    const outbox = new Outbox({ send: async () => false }, clock, store)
+    outbox.enqueue('a', { title: 'Catch', body: 'one' })
+    await settle()
+    outbox.forget()
+    expect(store.rows).toEqual([])
+    outbox.close()
   })
 })

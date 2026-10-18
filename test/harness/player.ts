@@ -177,6 +177,16 @@ export class FixtureStt implements SpeechToText {
     this.down = false
   }
 
+  /**
+   * The Even app has gone (P9): its lens is stopped, so no audio reaches any
+   * server, and words said until a lens opens a new stream are never
+   * transcribed, as with a dropped stream.
+   */
+  appGone(): void {
+    this.lost = true
+    if (this.stream) this.stream.open = false
+  }
+
   /** How many words are waiting for their audio to reach the server. */
   get holding(): number {
     return this.stream?.open ? this.stream.held.length : 0

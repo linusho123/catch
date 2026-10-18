@@ -3,7 +3,7 @@ import type { LensView } from '../../../shared/lens-protocol.ts'
 import type { AudioFrame } from '../../../shared/wire.ts'
 import { pcmLoudnessDbfs, type FrameSignal, type Side, type SplitWord, type WearerSplit } from '../split/split.ts'
 import type { SttWord } from '../stt/types.ts'
-import { HeldNames } from './held-names.ts'
+import { HeldNames, type HeldNamesState } from './held-names.ts'
 import { findIntroductionsHow, findSelfIntroductions, type Introduced } from './introductions.ts'
 import { CONTEXT_SENTENCES, isCandidate, owedLine, PromisePassError, type PromiseDetector, type Said } from './promises.ts'
 import { Thread } from './thread.ts'
@@ -75,6 +75,28 @@ import type { TranscriptWord } from './transcript.ts'
 // lists the owed after the wearer's own; the end hands them on as "who does
 // what", `Dev sends the agenda`, for the notification's second line and the
 // phone page's OWED TO YOU (D28, D117, D98).
+//
+// A restart (P9, D73): everything the open conversation holds lives in the
+// store from its first word, not only in this object, so a server that
+// restarts (a redeploy, a crash) finds it where it was, as a lens started
+// again (the Even app restarted, an Android WebView reclaimed) does already
+// through the session that outlives its socket. After every change the
+// session hands `persist` its state (SessionState): the names in order with
+// their D87 windows, the wearer's promises and where each was said, the
+// promises owed to the wearer, the keep mark, the spans not heard, when the
+// quiet ends it, and where its timeline stands; the transcript is already in
+// the store word by word (transcript.ts). A session built from `saved` takes
+// the conversation up again: the same conversation, never a second one. What
+// it never stores is what was said outside the transcript (the detector's
+// context, a sentence half heard): those start again empty, as after any
+// span not heard. From when the last process stopped hearing (its lens gone,
+// or the process closing; at the latest its last save, for a crash) until a
+// lens is heard again is a span not heard (D53). The quiet rule runs on the
+// clock across the restart (D92): a conversation whose ten minutes of the
+// wearer's silence ran out while no server was running ends as the session is
+// built, at the moment the quiet ran out, and its transcript is deleted then
+// like any other (D76), so no abandoned conversation's words outlive it. A
+// conversation that ends hands the store a state with no conversation in it.
 
 /** D17: a catch line holds for a second and a half. A ruling, not a tuning value. */
 export const LINE_MS = 1500
@@ -134,6 +156,48 @@ export interface SessionOptions {
   onEndError?: (error: unknown) => void
   /** Where the open conversation's transcript is held, read for a kept one's jogger, and deleted at its end (D73, D76). */
   transcript?: { add(word: TranscriptWord): void; words?(): TranscriptWord[]; delete(): void }
+  /** Where the session's state goes after every change, so a restart finds it (P9, D73). */
+  persist?: (state: SessionState) => void
+  /** The state a previous process left (P9): the session takes up the open conversation where it stood. */
+  saved?: SessionState
+  /** `persist` threw (a store error); the session goes on in memory. */
+  onSaveError?: (error: unknown) => void
+}
+
+/** The open conversation as the store keeps it across a restart (P9, D73). Nothing of what was said: that is the transcript's, and goes with it (D76). */
+export interface SavedConversation {
+  startedAt: number
+  /** The clock reading at which ten minutes of the wearer's silence end it (D92). */
+  quietUntil: number
+  names: HeldNamesState
+  /** The wearer's promises held, in the order made, each with where it was said (seconds on the session's timeline). */
+  promises: { summary: string; at: number }[]
+  /** The promises owed to the wearer held, in the order made (P5, D113). */
+  owed: { action: string; name?: string; heldUnnamed?: boolean; namedLater?: boolean }[]
+  keep: 'none' | 'asking' | 'kept'
+  gaps: Gap[]
+  /** Since when Catch has not heard, if it has not heard since (D53). */
+  deafSince?: { at: number; clock: number }
+  /** The last name caught: who an owed promise said next is from (D91, D26). */
+  lastCaught?: string
+}
+
+/** One wearer's session as the store keeps it (P9). */
+export interface SessionState {
+  v: 1
+  /** The plugin launch last attached: the same one reconnecting is no new start (D129). */
+  lens?: string
+  /** Whether a conversation has begun since that launch (D129). */
+  begun: boolean
+  /** The names the wearer gave as their own (D29). */
+  ownNames: string[]
+  /** Where the session's timeline starts, on the lens's capture clock (ms), so the conversation's times run on across a restart. */
+  epochMs?: number
+  /** How far the audio heard reached on the timeline (seconds). */
+  coveredUntil: number
+  /** The clock when this state was saved: Catch heard at least until then. */
+  savedAt: number
+  conversation?: SavedConversation
 }
 
 /** A span of an open conversation in which Catch could not hear (D37, D53): where it fell, and how long it lasted. */
@@ -270,6 +334,8 @@ export class Session {
   private wearerRun: string[] = []
   /** When the conversation ends unless the wearer speaks (D92). */
   private quietTimer: TimerHandle | undefined
+  /** The clock reading at which it does (D92), kept so a restart runs the same ten minutes on (P9). */
+  private quietUntil = 0
   /** Names the wearer gave as their own (D29): never caught from anyone. They are the wearer's, so they outlast a conversation. */
   private ownNames = new Set<string>()
   /** The configured wearer name, case-folded, if any. */
@@ -321,6 +387,10 @@ export class Session {
   /** Takes a line or a page off the lens when its time is up. */
   private viewTimer: TimerHandle | undefined
   private closed = false
+  private readonly persist: ((state: SessionState) => void) | undefined
+  private readonly onSaveError: (error: unknown) => void
+  /** The state last handed to `persist`, without its time: an unchanged state is not written again. */
+  private savedKey: string | undefined
 
   constructor(opts: SessionOptions) {
     this.clock = opts.clock
@@ -333,7 +403,98 @@ export class Session {
     this.onLatePass = opts.onLatePass ?? (() => {})
     this.onEndError = opts.onEndError ?? (() => {})
     this.transcript = opts.transcript
+    this.persist = opts.persist
+    this.onSaveError = opts.onSaveError ?? (() => {})
+    if (opts.saved) this.restore(opts.saved)
     if (opts.show) this.attach(opts.show)
+  }
+
+  /**
+   * Takes up what a previous process left (P9, D73): the open conversation
+   * with its names, promises, keep mark and spans not heard, not yet hearing.
+   * One whose quiet ran out meanwhile ends now, at the moment it ran out (D92).
+   */
+  private restore(state: SessionState): void {
+    this.lensId = state.lens
+    this.begun = state.begun
+    this.ownNames = new Set(state.ownNames)
+    this.epochMs = state.epochMs
+    this.coveredUntil = state.coveredUntil
+    this.savedKey = JSON.stringify({ ...state, savedAt: 0 })
+    const c = state.conversation
+    if (!c) return
+    this.inConversation = true
+    this.begun = true
+    this.startedAt = c.startedAt
+    this.names.restore(c.names)
+    this.promises.slots = c.promises.map((p) => p.summary)
+    this.promises.times = c.promises.map((p) => p.at)
+    this.promises.owed = c.owed.map((o) => ({
+      state: 'yes',
+      action: o.action,
+      ...(o.name !== undefined ? { name: o.name } : {}),
+      ...(o.heldUnnamed ? { heldUnnamed: true } : {}),
+      ...(o.namedLater ? { namedLater: true } : {}),
+    }))
+    this.keep = c.keep
+    this.gaps = c.gaps.map((g) => ({ ...g }))
+    this.lastCaught = c.lastCaught
+    // Not heard since the last process stopped hearing, or at the latest since it last saved (a crash).
+    this.deafSince = c.deafSince ? { ...c.deafSince } : { at: state.coveredUntil, clock: state.savedAt }
+    this.quietUntil = c.quietUntil
+    const left = c.quietUntil - this.clock.now()
+    if (left <= 0) this.endConversation(c.quietUntil)
+    else this.armQuiet(left)
+  }
+
+  /** What the store keeps of this session now (P9). */
+  private snapshot(): SessionState {
+    const owed = this.promises.owed
+      .filter((o) => o.state === 'yes' && o.action !== undefined)
+      .map((o) => ({
+        action: o.action!,
+        ...(o.name !== undefined ? { name: o.name } : {}),
+        ...(o.heldUnnamed ? { heldUnnamed: true } : {}),
+        ...(o.namedLater ? { namedLater: true } : {}),
+      }))
+    return {
+      v: 1,
+      ...(this.lensId !== undefined ? { lens: this.lensId } : {}),
+      begun: this.begun,
+      ownNames: [...this.ownNames],
+      ...(this.epochMs !== undefined ? { epochMs: this.epochMs } : {}),
+      coveredUntil: this.coveredUntil,
+      savedAt: this.clock.now(),
+      ...(this.inConversation
+        ? {
+            conversation: {
+              startedAt: this.startedAt,
+              quietUntil: this.quietUntil,
+              names: this.names.snapshot(),
+              promises: held(this.promises).map((summary, i) => ({ summary, at: heldTimes(this.promises)[i]! })),
+              owed,
+              keep: this.keep,
+              gaps: this.gaps.map((g) => ({ ...g })),
+              ...(this.deafSince ? { deafSince: { ...this.deafSince } } : {}),
+              ...(this.lastCaught !== undefined ? { lastCaught: this.lastCaught } : {}),
+            },
+          }
+        : {}),
+    }
+  }
+
+  /** Hands the store the session's state if it changed (P9); never after the session has closed. */
+  private save(): void {
+    if (this.closed || !this.persist) return
+    const state = this.snapshot()
+    const key = JSON.stringify({ ...state, savedAt: 0 })
+    if (key === this.savedKey) return
+    try {
+      this.persist(state)
+      this.savedKey = key
+    } catch (error) {
+      this.onSaveError(error)
+    }
   }
 
   /**
@@ -361,6 +522,7 @@ export class Session {
     // A lens that has just connected shows no dot (D37) until told otherwise.
     this.sent = DEAF
     this.render()
+    this.save()
     return {
       get active() {
         return mine.active
@@ -414,6 +576,7 @@ export class Session {
     this.clearView()
     this.toRest()
     this.render()
+    this.save()
   }
 
   /**
@@ -426,6 +589,7 @@ export class Session {
     if (this.promptShowing) {
       this.keep = 'kept'
       this.showLine(KEPT)
+      this.save()
       return
     }
     this.clearView()
@@ -455,6 +619,7 @@ export class Session {
     if (this.promptShowing) {
       this.keep = 'none'
       this.backToDot()
+      this.save()
       return
     }
     if (this.view.kind !== 'names') return
@@ -482,6 +647,7 @@ export class Session {
     this.keep = 'asking'
     this.toRest()
     this.render()
+    this.save()
   }
 
   /**
@@ -504,6 +670,9 @@ export class Session {
   }
 
   close(): void {
+    // The process is stopping, not the conversation (P9): until a server hears this wearer again is a span not heard (D53).
+    if (this.inConversation && !this.deafSince) this.deafSince = { at: this.coveredUntil, clock: this.clock.now() }
+    this.save()
     this.closed = true
     // Nothing of an ended conversation's is handed on after the session has closed, and no pass is left on the network (risk-3).
     this.stopPasses(this.promises)
@@ -542,6 +711,7 @@ export class Session {
     // How long ago the word ended, by the audio heard since: the provider's
     // answer comes after the speech, and the quiet is the wearer's (D92).
     this.hear(word.text, entry.side, word.start, word.end, Math.max(0, (this.coveredUntil - word.end) * 1000))
+    this.save()
   }
 
   private hear(text: string, side: Side, start: number, end: number, agoMs: number): void {
@@ -753,6 +923,7 @@ export class Session {
         this.clock.clearTimeout(deadline)
         promises.out.delete(abort)
         left()
+        this.save()
       })
   }
 
@@ -764,33 +935,40 @@ export class Session {
 
   /** The quiet timer starts over: the conversation ends ten minutes after the wearer last spoke (D92). */
   private restartQuiet(agoMs: number): void {
+    this.quietUntil = this.clock.now() + QUIET_MS - agoMs
+    this.armQuiet(QUIET_MS - agoMs)
+  }
+
+  /** The conversation ends `ms` from now, at `quietUntil`, unless the wearer speaks first (D92). */
+  private armQuiet(ms: number): void {
     if (this.quietTimer) this.clock.clearTimeout(this.quietTimer)
     this.quietTimer = this.clock.setTimeout(() => {
       this.quietTimer = undefined
-      this.endConversation()
-    }, QUIET_MS - agoMs)
+      this.endConversation(this.quietUntil)
+    }, ms)
   }
 
   /**
    * The conversation ends: its names clear, its transcript is deleted (D76),
    * its promises go to the phone, and the wearer's next speech begins the
-   * next one (D92, D129).
+   * next one (D92, D129). `at` is when it ended: now, or the moment its
+   * quiet ran out (a restart that found the ten minutes over, P9).
    */
-  private endConversation(): void {
+  private endConversation(at = this.clock.now()): void {
     if (this.quietTimer) this.clock.clearTimeout(this.quietTimer)
     this.quietTimer = undefined
     // A sentence cut short by the end, the wearer's or someone else's, is still a candidate.
     this.finishWearer()
     this.finishOther()
     // A span not heard runs to the end at most (D53).
-    this.closeGap()
+    this.closeGap(at)
     // Snapshot, reset, then the hook: the conversation is over whatever the hook does (fix round, M4).
     // A kept conversation's transcript is read from the store before the store's copy goes (D73, D76).
     const kept = this.keep === 'kept'
     const ended = this.inConversation
       ? {
           startedAt: this.startedAt,
-          endedAt: this.clock.now(),
+          endedAt: at,
           names: this.names.list(),
           kept,
           transcript: kept ? (this.transcript?.words?.() ?? []) : [],
@@ -818,6 +996,8 @@ export class Session {
     this.said = []
     this.judged = []
     if (ended) this.transcript?.delete()
+    // The store's state no longer holds a conversation (P9): a restart now finds none to take up.
+    this.save()
     if (!ended) {
       this.stopPasses(promises)
       return
@@ -881,10 +1061,10 @@ export class Session {
     this.view = this.hearing ? { kind: 'dot' } : { kind: 'deaf' }
   }
 
-  /** Catch hears again, or the conversation ends: a span not heard is closed and kept for the jogger (D53). */
-  private closeGap(): void {
+  /** Catch hears again (now), or the conversation ends (at `at`): a span not heard is closed and kept for the jogger (D53). */
+  private closeGap(at = this.clock.now()): void {
     if (!this.deafSince) return
-    if (this.inConversation) this.gaps.push({ at: this.deafSince.at, ms: this.clock.now() - this.deafSince.clock })
+    if (this.inConversation) this.gaps.push({ at: this.deafSince.at, ms: Math.max(0, at - this.deafSince.clock) })
     this.deafSince = undefined
   }
 

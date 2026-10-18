@@ -18,7 +18,10 @@ import type { Clock, TimerHandle } from '../../shared/clock.ts'
 // once its jogger is written, "Kept: conversation with Ana", which opens the
 // jogger (P4, D24). Every notification waits in the outbox until the
 // phone takes it, however long that is (D114), tried again every
-// NOTIFY_RETRY_MS on the injected clock.
+// NOTIFY_RETRY_MS on the injected clock. The outbox keeps what waits in the
+// store too (OutboxStore, notify-store.ts), so a server that restarts sends
+// it all the same, in order, once (P9): a notification leaves the store only
+// when its phone has taken it.
 
 export interface PhoneNotification {
   title: string
@@ -118,9 +121,27 @@ export function keptNotification(conversation: number, names: readonly string[],
   return { title: 'Catch', body: cutLine(line), data: { conversation: String(conversation), screen: 'jogger' } }
 }
 
+/** Where the outbox keeps what waits for a phone, so a restart loses none of it (P9, D114). */
+export interface OutboxStore {
+  /** Keeps `notification` for the phone of `to`; returns its id. */
+  add(to: string, notification: PhoneNotification): number
+  /** Its phone has taken it. */
+  remove(id: number): void
+  /** Everything still waiting, every account's, oldest first. */
+  all(): { id: number; to: string; notification: PhoneNotification }[]
+  /** Everything goes (the harness's clean slate). */
+  clear(): void
+}
+
+/** One notification waiting, with its id in the store when there is one. */
+interface Waiting {
+  id?: number
+  notification: PhoneNotification
+}
+
 /** One account's notifications not yet taken by its phone, oldest first, and its pending retry. */
 interface PhoneQueue {
-  items: PhoneNotification[]
+  items: Waiting[]
   retry: TimerHandle | undefined
   sending: boolean
 }
@@ -135,11 +156,22 @@ export class Outbox {
   private queues = new Map<string, PhoneQueue>()
   private readonly notifier: Notifier
   private readonly clock: Clock
+  private readonly store: OutboxStore | undefined
   private closed = false
 
-  constructor(notifier: Notifier, clock: Clock) {
+  constructor(notifier: Notifier, clock: Clock, store?: OutboxStore) {
     this.notifier = notifier
     this.clock = clock
+    this.store = store
+  }
+
+  /**
+   * As the server starts (P9): every notification a previous process left
+   * waiting is queued again for its phone, in order, and tried at once.
+   */
+  resume(): void {
+    if (this.closed || !this.store) return
+    for (const { id, to, notification } of this.store.all()) this.queue(to, { id, notification })
   }
 
   /** Notifications waiting for their phone, every account's. */
@@ -152,27 +184,42 @@ export class Outbox {
   /** Queues `notification` for the phone of `to` and tries it at once, unless that phone's queue is waiting for its retry. */
   enqueue(to: string, notification: PhoneNotification): void {
     if (this.closed) return
+    const id = this.store?.add(to, notification)
+    this.queue(to, { ...(id !== undefined ? { id } : {}), notification })
+  }
+
+  private queue(to: string, item: Waiting): void {
     let q = this.queues.get(to)
     if (!q) {
       q = { items: [], retry: undefined, sending: false }
       this.queues.set(to, q)
     }
-    q.items.push(notification)
+    q.items.push(item)
     if (!q.retry) void this.flush(to, q)
   }
 
-  /** No notification is sent, and no retry armed, once closed (risk-4 c). */
+  /**
+   * No notification is sent, and no retry armed, once closed (risk-4 c).
+   * What waits stays in the store for the next process (P9).
+   */
   close(): void {
     this.closed = true
-    this.forget()
+    this.drop()
   }
 
   /**
-   * Drops every waiting notification, as a restart of the process would (P9
-   * makes them survive one). A send still in flight belongs to a queue that
-   * is gone: when it answers it touches nothing queued after this (risk-4 b).
+   * Drops every waiting notification, in memory and in the store: the
+   * harness's clean slate between scenarios, never a restart (a restart keeps
+   * them, P9). A send still in flight belongs to a queue that is gone: when it
+   * answers it touches nothing queued after this (risk-4 b).
    */
   forget(): void {
+    this.drop()
+    this.store?.clear()
+  }
+
+  /** The queues in memory go, with their retries. */
+  private drop(): void {
     for (const q of this.queues.values()) {
       if (q.retry) this.clock.clearTimeout(q.retry)
       q.retry = undefined
@@ -191,12 +238,20 @@ export class Outbox {
     q.sending = true
     try {
       while (q.items.length > 0 && this.live(to, q)) {
-        const notification = q.items[0]!
+        const item = q.items[0]!
         let taken = false
         try {
-          taken = await this.notifier.send(to, notification)
+          taken = await this.notifier.send(to, item.notification)
         } catch {
           taken = false
+        }
+        // Taken is taken, whatever happened meanwhile: it leaves the store, so no restart sends it twice (P9).
+        if (taken && item.id !== undefined) {
+          try {
+            this.store?.remove(item.id)
+          } catch {
+            // The store closed as the phone answered: the next process sends it once more rather than never.
+          }
         }
         // Forgotten or closed while the phone answered: this queue is gone, and nothing newer is ours to touch.
         if (!this.live(to, q)) return
@@ -207,7 +262,7 @@ export class Outbox {
           }, NOTIFY_RETRY_MS)
           return
         }
-        if (q.items[0] === notification) q.items.shift()
+        if (q.items[0] === item) q.items.shift()
       }
       if (q.items.length === 0 && this.queues.get(to) === q) this.queues.delete(to)
     } finally {

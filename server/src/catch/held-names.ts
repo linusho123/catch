@@ -24,6 +24,12 @@ interface Entry {
   label: string
 }
 
+/** The held names as the store keeps them across a restart (P9, D73): the list in order, and each name's window. */
+export interface HeldNamesState {
+  entries: Entry[]
+  seen: [key: string, seen: { firstAt: number; count: number; awaitingSelf: boolean }][]
+}
+
 export class HeldNames {
   private entries: Entry[] = []
   /**
@@ -66,5 +72,16 @@ export class HeldNames {
   clear(): void {
     this.entries = []
     this.seen.clear()
+  }
+
+  /** What a restart must find (D73): the names in the order heard, and when each was first heard, so D87's window runs on across it. */
+  snapshot(): HeldNamesState {
+    return { entries: this.entries.map((e) => ({ ...e })), seen: [...this.seen].map(([key, seen]) => [key, { ...seen }]) }
+  }
+
+  /** The names as a snapshot left them (P9). */
+  restore(state: HeldNamesState): void {
+    this.entries = state.entries.map((e) => ({ ...e }))
+    this.seen = new Map(state.seen.map(([key, seen]) => [key, { ...seen }]))
   }
 }

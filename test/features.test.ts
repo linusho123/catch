@@ -30,8 +30,7 @@ const WIP: WipEntry[] = [
   // (D112) and the phone's half of the quiet end; P4 the keep in the
   // long-press end; P5 the owed line on the promises page. Scrolling waits for P10.
   { feature: 'holding', scenarios: ['Thirty names scroll before the promises page'] },
-  // P4 binds the keep and the jogger; the restart waits for P9 (D73).
-  { feature: 'kept-conversations', scenarios: ['Everything survives a restart mid-conversation'] },
+  // kept-conversations.feature has left the register: P4 bound the keep and the jogger, P9 the restart (D73).
   // P2b′ (D130) binds the phone page's "nothing to keep" scenario; P2a binds D51,
   // D76 and D79 in full; P4 binds D114 in full (its kept half) and the iPhone
   // rows of the history and jogger outlines, with steps that match only the

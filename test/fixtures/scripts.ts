@@ -537,6 +537,29 @@ export const SCRIPTS: Record<string, ScriptLine[]> = {
     { gap: 1, who: 'Marcus', text: 'No problem. Next we try gRPC streaming.', terms: ['gRPC'] },
     { gap: 1, who: 'wearer', text: 'Sounds good.' },
   ]),
+  // P9, D73: a kept conversation, kept at second 7, in which Priya, Dev and
+  // Ana introduce themselves and the wearer makes two promises; the wearer
+  // last speaks before the restart at 882 s. The Even app is killed at 900 s
+  // (fifteen minutes in) and Catch is back at 960 s: what Dev says at 920 s is
+  // never heard. The wearer speaks again at 1000 s, after the scenario's taps
+  // and swipes, and the scenario long-presses at 1010 s.
+  restart: brisk([
+    { at: 0, who: 'wearer', text: 'Thanks for making the time, everyone.' },
+    { at: 2.5, who: 'Priya', text: "Hi, I'm Priya." },
+    { at: 30, who: 'Dev', text: "Hi, I'm Dev." },
+    { at: 60, who: 'Priya', text: 'We rank the results with LightGBM.', terms: ['LightGBM'] },
+    { gap: 1, who: 'wearer', text: "I'll send you the benchmark numbers tonight." },
+    { at: 200, who: 'Ana', text: "Hi, I'm Ana." },
+    { at: 300, who: 'wearer', text: 'How do you serve the model?', ask: 'serve' },
+    { gap: 1, who: 'Ana', text: 'Behind Triton on two GPUs.', terms: ['Triton'] },
+    { at: 600, who: 'wearer', text: "I'll introduce you to Sam." },
+    { at: 880, who: 'Dev', text: 'Next quarter the data moves to Snowflake.', terms: ['Snowflake'] },
+    { gap: 1, who: 'wearer', text: 'Makes sense.' },
+    { at: 920, who: 'Dev', text: 'Our Kubernetes bill doubled in March.' },
+    { at: 1000, who: 'wearer', text: 'Sorry, I lost you for a minute.' },
+    { gap: 1, who: 'Dev', text: 'No problem. The logs go to Parquet now.', terms: ['Parquet'] },
+    { gap: 1, who: 'wearer', text: 'Sounds good.' },
+  ]),
   // D100, the history on the phone: three conversations in one day and a
   // bit. Fixture second 0 is yesterday at 4:00 pm (the scenario sets the
   // clock there): Marcus, kept at second 7; quiet ends it at 4:10. Today at

@@ -25,7 +25,7 @@
 {"file":"features/kept-conversations.feature","title":"A swipe down declines without keeping","status":"passed"}
 {"file":"features/kept-conversations.feature","title":"A swipe up asks whether to keep the conversation","status":"passed"}
 {"file":"features/kept-conversations.feature","title":"A tap keeps the conversation","status":"passed"}
-{"file":"features/kept-conversations.feature","title":"Everything survives a restart mid-conversation","status":"unbound"}
+{"file":"features/kept-conversations.feature","title":"Everything survives a restart mid-conversation","status":"passed"}
 {"file":"features/kept-conversations.feature","title":"Swiping up again shows already kept","status":"passed"}
 {"file":"features/kept-conversations.feature","title":"The jogger admits missed time without saying when","status":"passed"}
 {"file":"features/kept-conversations.feature","title":"The prompt returns after a catch line","status":"passed"}
