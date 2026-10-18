@@ -94,7 +94,7 @@ async function start(): Promise<Harness> {
     async startLens() {
       const { evenBridge } = await import('./even-host.ts')
       const { startLens } = await import('../../apps/lens/src/lens.ts')
-      const lens = await startLens({ bridge: await evenBridge(), server: server.url.replace(/^http/, 'ws'), token: HARNESS_TOKEN, now: () => clock.now() })
+      const lens = await startLens({ bridge: await evenBridge(), server: server.url.replace(/^http/, 'ws'), token: HARNESS_TOKEN, now: host.captureClock(clock) })
       lenses.push(lens)
       await lens.connected
       return lens

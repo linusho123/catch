@@ -72,7 +72,7 @@ async function play(split: SplitName, fixture: string, until: number, opts: { to
   clock.reset()
   host.reset(clock)
   const { startLens } = await import('../../apps/lens/src/lens.ts')
-  const lens = await startLens({ bridge: await evenBridge(), server: server.url.replace(/^http/, 'ws'), token: HARNESS_TOKEN, now: () => clock.now() })
+  const lens = await startLens({ bridge: await evenBridge(), server: server.url.replace(/^http/, 'ws'), token: HARNESS_TOKEN, now: host.captureClock(clock) })
   try {
     await lens.connected
     await waitUntil(() => isDotOnly(screenAt({ host }, clock.now()) ?? { at: 0, method: '', containers: [] }))

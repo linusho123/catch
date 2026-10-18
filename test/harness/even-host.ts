@@ -74,9 +74,31 @@ class EvenHost {
     listen({ type: 'listen_even_app_data', method: 'evenHubEvent', data: { type, jsonData } })
   }
 
-  /** One 100 ms glasses audio frame, as the Even app delivers it. */
-  pushAudio(pcm: Uint8Array, speakerRole: SpeakerRoleName = 'unknown', direction: number | null = null): void {
-    this.push('audioEvent', { audioPcm: Array.from(pcm), speakerRole, direction })
+  /**
+   * When the frame being pushed now was captured (fixture ms), while its push
+   * is handled: `captureClock` reads it, so the lens stamps the frame with the
+   * moment the glasses heard it, not with however late a loaded machine got
+   * round to the push. The SDK hands the event to the lens synchronously.
+   */
+  private capturing: number | undefined
+
+  /**
+   * One 100 ms glasses audio frame, as the Even app delivers it. `captureMs`
+   * is when it was captured (the player gives the frame's end on the fixture
+   * clock); without it the lens stamps it with the clock as it handles the push.
+   */
+  pushAudio(pcm: Uint8Array, speakerRole: SpeakerRoleName = 'unknown', direction: number | null = null, captureMs?: number): void {
+    this.capturing = captureMs
+    try {
+      this.push('audioEvent', { audioPcm: Array.from(pcm), speakerRole, direction })
+    } finally {
+      this.capturing = undefined
+    }
+  }
+
+  /** The lens's capture clock: a frame's own capture time while it is being pushed, the fixture clock otherwise. */
+  captureClock(clock: Clock): () => number {
+    return () => this.capturing ?? clock.now()
   }
 
   receive(message: string): unknown {

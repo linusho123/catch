@@ -74,10 +74,44 @@ describe('the Even bridge stub', () => {
   })
 })
 
+/**
+ * The server's frames and words in the order it handled them, so a word can be
+ * placed against the audio that carried it without reading wall time (P2a).
+ */
+function listenInOrder(): ({ kind: 'frame'; captureMs: number; at: number } | { kind: 'words'; e: ServerEvents['words'][0] })[] {
+  const order: ({ kind: 'frame'; captureMs: number; at: number } | { kind: 'words'; e: ServerEvents['words'][0] })[] = []
+  const onFrame = ((e: ServerEvents['frame'][0]) => order.push({ kind: 'frame', captureMs: e.frame.captureMs, at: e.at })) as never
+  const onWords = ((e: ServerEvents['words'][0]) => order.push({ kind: 'words', e })) as never
+  h.server.events.on('frame', onFrame)
+  h.server.events.on('words', onWords)
+  added.push(['frame', onFrame], ['words', onWords])
+  return order
+}
+
+/**
+ * A word heard on its fixture time: placed on the server's timeline exactly
+ * where the fixture says it was said, and given to the server the moment the
+ * frame carrying its end arrived there (after that frame, before the next),
+ * never before its end. Delivery, not wall time: a loaded machine may carry
+ * frames late, but the word still lands with its own audio.
+ */
+function expectHeardWithItsAudio(order: ReturnType<typeof listenInOrder>, run: FixtureRun, word: { text: string; start: number; end: number }): void {
+  const i = order.findIndex((o) => o.kind === 'words' && o.e.words[0]!.text === word.text && o.e.words[0]!.start === word.start)
+  expect(i, `"${word.text}" at ${word.start}s was never heard on its fixture time; heard: ${JSON.stringify(order.flatMap((o) => (o.kind === 'words' ? [[o.e.words[0]!.text, o.e.words[0]!.start]] : [])))}`).toBeGreaterThanOrEqual(0)
+  const heard = order[i] as Extract<(typeof order)[number], { kind: 'words' }>
+  expect(heard.e.words[0]).toMatchObject({ start: word.start, end: word.end, isFinal: true })
+  expect(run.seconds(heard.e.at) - word.end, `"${word.text}" was heard before it was said`).toBeGreaterThanOrEqual(0)
+  const carrier = order.slice(0, i).findLast((o) => o.kind === 'frame')
+  expect(carrier, `"${word.text}" was heard before any of its audio`).toBeDefined()
+  expect(run.seconds((carrier as { captureMs: number }).captureMs), `"${word.text}" was heard before the frame carrying its end`).toBeGreaterThanOrEqual(word.end - 1e-6)
+  expect(run.seconds((carrier as { captureMs: number }).captureMs) - word.end, `"${word.text}" waited past the frame carrying its end`).toBeLessThan(0.1 + 1e-6)
+}
+
 describe('the fixture player', () => {
   for (const name of ['own-name.wearer-louder', 'own-name.other-louder']) {
     it(`delivers ${name}'s words to the server at their fixture times`, async () => {
       const words = listen('words')
+      const order = listenInOrder()
       await h.startLens()
       const run = h.play(name)
       await run.playTo()
@@ -86,9 +120,7 @@ describe('the fixture player', () => {
       for (const [i, heard] of words.entries()) {
         const word = fx.words[i]!
         expect(heard.words[0]).toMatchObject({ start: word.start, end: word.end, speaker: word.speaker, isFinal: true })
-        const lateBy = run.seconds(heard.at) - word.end
-        expect(lateBy).toBeGreaterThanOrEqual(0)
-        expect(lateBy).toBeLessThan(0.5)
+        expectHeardWithItsAudio(order, run, word)
       }
     })
   }
@@ -132,12 +164,16 @@ describe('the fixture player', () => {
     // M6: a word the jump would land inside is skipped too (its frames before the landing).
     const hi = run.fixture.words.find((w) => w.text === 'Hi,' && w.start >= 90)!
     expect(() => run.skipTo((hi.start + hi.end) / 2)).toThrow(/would skip "Hi,"/)
+    const order = listenInOrder()
     run.skipTo(92)
     await run.playTo(95)
+    // Waits for delivery, on the fixture clock, not for wall time (P2a: this read once found nothing under load).
+    await run.delivered()
     const priya2 = run.fixture.words.find((w) => w.start >= 93)!
-    const heard = words.find((w) => w.words[0]!.start === priya2.start)!
-    expect(run.seconds(heard.at) - priya2.end).toBeGreaterThanOrEqual(0)
-    expect(run.seconds(heard.at) - priya2.end).toBeLessThan(0.5)
+    expectHeardWithItsAudio(order, run, priya2)
+    // Nothing in the gap was heard: the jump skipped it.
+    const skipped = run.fixture.words.filter((w) => w.start > 15 && w.end < 92).map((w) => w.start)
+    expect(words.filter((w) => skipped.includes(w.words[0]!.start))).toEqual([])
   })
 
   it('fails loudly when no /audio session is open', async () => {

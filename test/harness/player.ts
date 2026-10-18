@@ -82,8 +82,10 @@ export class FixtureStt implements SpeechToText {
         pcm: Uint8Array[]
         /** When the first audio this stream heard was captured (its frame's capture stamp); words are timed from that frame's start. */
         firstCaptureMs: number | undefined
-        /** Words said before this stream heard any audio, with their run's epoch: given once it hears some. */
-        early: { words: SttWord[]; epoch: number }[]
+        /** When the latest audio this stream heard was captured: the end of the audio it has heard. */
+        lastCaptureMs: number | undefined
+        /** Words said whose audio this stream has not yet heard, with their run's epoch: given, in order, once it has. */
+        held: { word: SttWord; epoch: number }[]
       }
     | undefined
   /** The frame the server is handling now (its 'frame' event comes just before it feeds that frame's PCM to the stream). */
@@ -130,7 +132,15 @@ export class FixtureStt implements SpeechToText {
       queueMicrotask(() => onError(new Error('the speech-to-text provider is unreachable')))
       return { sendPcm() {}, close() {} }
     }
-    const stream = { onWords, onError, open: true, pcm: [] as Uint8Array[], firstCaptureMs: undefined as number | undefined, early: [] as { words: SttWord[]; epoch: number }[] }
+    const stream = {
+      onWords,
+      onError,
+      open: true,
+      pcm: [] as Uint8Array[],
+      firstCaptureMs: undefined as number | undefined,
+      lastCaptureMs: undefined as number | undefined,
+      held: [] as { word: SttWord; epoch: number }[],
+    }
     this.stream = stream
     this.lost = false
     this.opened.push(this.clock?.now() ?? Number.NaN)
@@ -140,11 +150,11 @@ export class FixtureStt implements SpeechToText {
     return {
       sendPcm: (pcm) => {
         stream.pcm.push(new Uint8Array(pcm))
+        if (!this.lastFrame) return
         // Where this stream's audio begins: the first PCM it is fed, whose frame the server is handling now.
-        if (stream.firstCaptureMs === undefined && this.lastFrame) {
-          stream.firstCaptureMs = this.lastFrame.captureMs
-          for (const { words, epoch } of stream.early.splice(0)) if (stream.open) this.give(stream, words, epoch)
-        }
+        stream.firstCaptureMs ??= this.lastFrame.captureMs
+        stream.lastCaptureMs = this.lastFrame.captureMs
+        this.release(stream)
       },
       close: () => {
         stream.open = false
@@ -167,6 +177,11 @@ export class FixtureStt implements SpeechToText {
     this.down = false
   }
 
+  /** How many words are waiting for their audio to reach the server. */
+  get holding(): number {
+    return this.stream?.open ? this.stream.held.length : 0
+  }
+
   /** Back to a provider that is up, with no record of streams, for the next scenario (the clock starts again at zero). */
   reset(): void {
     this.down = false
@@ -187,17 +202,32 @@ export class FixtureStt implements SpeechToText {
       stream.onWords(words)
       return
     }
-    // A provider answers only after it hears the audio: a frame still on its way holds the word back.
-    if (stream.firstCaptureMs === undefined) stream.early.push({ words, epoch })
-    else this.give(stream, words, epoch)
+    // A provider answers only after it hears the audio: a word waits until the
+    // frame that carries its end has reached the server and been fed to the
+    // stream. So the server never has a word before its audio, however long a
+    // loaded machine takes to carry the frame over the socket, and never has to
+    // judge one on the frames that happen to have arrived (P2a: the
+    // dropped-thread flake, a run's last word judged on missing frames).
+    for (const word of words) stream.held.push({ word, epoch })
+    this.release(stream)
+  }
+
+  /** Gives the held words whose audio the stream has heard, in order, stopping at the first it has not. */
+  private release(stream: NonNullable<FixtureStt['stream']>): void {
+    while (stream.open && stream.held.length > 0 && stream.lastCaptureMs !== undefined) {
+      const { word, epoch } = stream.held[0]!
+      // The end of the audio heard, in the run's fixture seconds: the end of the last frame fed (captured at its end).
+      const heardTo = (stream.lastCaptureMs - epoch) / 1000
+      if (word.end > heardTo + 1e-6) return
+      stream.held.shift()
+      this.give(stream, [word], epoch)
+    }
   }
 
   private give(stream: NonNullable<FixtureStt['stream']>, words: SttWord[], epoch: number): void {
     // The first audio is one of the run's 100 ms frames, so it starts on the
-    // fixture's frame grid. The player pushes a frame when the fixture clock
-    // reaches the frame's end, and the lens stamps its capture time in that
-    // push, a moment later and well before the next frame is due; that moment
-    // is not part of the audio, so it is dropped here.
+    // fixture's frame grid: the player has the lens stamp each frame with its
+    // end on the fixture clock (its capture time), so the stamp is on the grid.
     const frameMs = FRAME_SECONDS * 1000
     const firstEnd = Math.floor((stream.firstCaptureMs! - epoch) / frameMs + 1e-6) * frameMs
     const zero = (firstEnd - frameMs) / 1000
@@ -265,7 +295,8 @@ export class FixtureRun {
     const frames: Item[] = signals.map((f, i) => ({
       t: f.end,
       kind: 0,
-      play: () => deps.host.pushAudio(audio ? recorded(i) : pcmAt(f.loudness), f.role),
+      // Captured at the frame's end on the fixture clock, however late the push runs (P2a, the flake under load).
+      play: () => deps.host.pushAudio(audio ? recorded(i) : pcmAt(f.loudness), f.role, null, this.at(f.end)),
     }))
     const words: Item[] = real
       ? []
@@ -287,7 +318,11 @@ export class FixtureRun {
     return (at - this.epoch) / 1000
   }
 
-  /** Plays frames and words up to fixture second `t` (default: the end), at the clock's speed. */
+  /**
+   * Plays frames and words up to fixture second `t` (default: the end), at the
+   * clock's speed. Played to the end, it returns once every word has reached
+   * the server, however long the last frames take over the socket.
+   */
   async playTo(t = Infinity): Promise<void> {
     while (this.cursor < this.items.length && this.items[this.cursor]!.t <= t) {
       const item = this.items[this.cursor++]!
@@ -295,6 +330,22 @@ export class FixtureRun {
       item.play()
     }
     if (Number.isFinite(t)) await this.deps.clock.sleepUntil(this.at(t))
+    else await this.delivered()
+  }
+
+  /**
+   * Waits, on the fixture clock, until the server has every word played so
+   * far: the provider gives a word only once its audio is in (FixtureStt), so
+   * a step that reads what the server made of a word waits for this, not for
+   * wall time. Fails loudly if the audio never arrives.
+   */
+  async delivered(withinMs = 5000): Promise<void> {
+    const clock = this.deps.clock
+    const until = clock.now() + withinMs
+    while (this.deps.stt.holding > 0) {
+      if (clock.now() >= until) throw new Error(`${this.deps.stt.holding} word(s) of ${this.name} never reached the server: their audio did not arrive within ${withinMs} ms of fixture time`)
+      await clock.sleepUntil(clock.now() + 10)
+    }
   }
 
   /**
