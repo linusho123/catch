@@ -10,7 +10,7 @@ The orienting document for the agent that builds Catch, with the human as second
 
 ## Shape
 
-- Four parts: the lens app (an Even Hub plugin running in the Even app's WebView on the phone, driving the glasses' containers and receiving their mic and touch events); and a screenless server that hears, judges and writes. There is no separate iPhone app and no website (D126); the phone's screens (history, conversation screen with tick-off, jogger) live on the plugin's own page in the Even app (D130, D133). [ruled: D102, D103, D126, D130, D133]
+- Four parts: the lens app (an Even Hub plugin running in the Even app's WebView on the phone, driving the glasses' containers and receiving their mic and touch events); and a screenless server that hears, judges and writes. There is no separate iPhone app and no website (D126); the phone's screens (history, conversation screen with tick-off and delete, jogger) live on the plugin's own page in the Even app (D130, D133, D134). [ruled: D102, D103, D126, D130, D133, D134]
 - The lens is the only surface during a conversation; the phone and the website are the surfaces after it. Nothing done on the phone shows on the lens. [ruled: D61]
 - The server is where speech-to-text, the wearer/other split, the catch detectors, the joggers and the stores live; the lens app streams audio up and draws what comes down. [chosen]
 - What comes down is a view (the dot, no mark, one line, the names page), each timed on the server's clock; the lens keeps no timer of its own but its reconnect, sends its taps up, and decides alone only that with no server Catch cannot hear. [chosen]
@@ -112,3 +112,4 @@ The orienting document for the agent that builds Catch, with the human as second
 - 2026-10-18 — P7 (D133, and the operator's request for the tidy pass): two `chosen` lines added: tick-off on the phone page, its write and its failure; the jogger's tidy pass, its structural check and the thirty seconds it shares. One `chosen` line changed: the phone page's API now makes that one write, and its tick boxes are live. No ruled line touched.
 - 2026-10-18 — P7 fix round (the head reviewer's risk-1 and risk-2, and the operator's answer 3): the tidy pass's `chosen` line changed: its check now holds a promise or missed-time line at its place among the plain bullets, checks a bullet's first word like any other (a possessive read as its name), and a conversation of an hour or more shares three minutes instead of thirty seconds. No ruled line touched.
 - 2026-10-18 — D133: tick-off on the phone returns, on the plugin's phone page; one ruled line changed.
+- 2026-10-18 — D134: a conversation can be deleted from its screen on the phone page, everything with it; one ruled line changed.

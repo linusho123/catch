@@ -1088,3 +1088,10 @@ D133 2026-10-18 [V] amends D130
   serves: N4 N8
   touches: D130 D39 D98 D100 D115
 # the visionary, early Sunday, asked which phase ticks off completed promises; told it was cut by D126 and kept cut by D130, chose to bring it back on the plugin's phone page, built right after the latency phase. The same night, as a `chosen` change with no ruling: a second model pass that tidies a kept conversation's jogger before it is stored, never adding anything not said.
+
+D134 2026-10-18 [V]
+  resp: the wearer can delete a conversation from its screen on the plugin's phone page, with a confirm; it is then gone everywhere: its history row, names, promises of both kinds, ticks, jogger and any notification still waiting to go out are deleted and scrubbed from the store's file the same way an ended conversation's transcript is, and the history no longer lists it [V]
+  -> structural
+  serves: N4 N8
+  touches: D76 D98 D100 D133
+# the visionary, early Sunday: "a way to delete old conversations caught by Catch". Chosen: delete one at a time, from the conversation's own screen, with a confirm; everything goes. Roads not taken: delete all; conversations that expire on their own after some days; keeping a deleted conversation's open promises.
