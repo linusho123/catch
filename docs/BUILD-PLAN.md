@@ -1,3 +1,5 @@
+> **Status, 2026-10-18 11:30 PDT:** built. Every phase in this plan shipped (P2b, P7's original iPhone form and P8 were cut by D126; P2b′, PS, PT, PH, PD and the post-glasses fixes D135–D136 were added). Catch now lives in its own repository, github.com/linusho123/catch. For using it, see the README and [the touch guide](GESTURES.md); for the submission, [DEVPOST.md](DEVPOST.md).
+
 # Build plan — Catch
 
 The reviewed contract is `catch/features/`: seven feature files (45 scenarios, 10 outlines), `OUT-OF-SCOPE.md` (the fence), `USER-NEEDS.md` (the ledger), `DESIGN.md` (bounds the build) and `DOCKET.md` (D1–D117, signed at D110; D111–D117 ruled after the read; **N15 and D118–D120 ruled 2026-10-16 against the Even Realities challenge brief and signed the same day as D121–D124**). The feature files bind, `DESIGN.md` bounds, the ledger explains. Written 2026-10-15, revised 2026-10-16; **no application code exists or may exist before Saturday, October 17, 12:00 PM PDT.** This plan is the last planning artifact.
