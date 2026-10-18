@@ -6,7 +6,7 @@ import type { ModelClient } from '../llm/client.ts'
 import { loudnessSplit } from '../split/split.ts'
 import type { SttWord } from '../stt/types.ts'
 import { PromiseDetector } from './promises.ts'
-import { LINE_MS, PAGE_MS, PROMISE_MS, QUIET_MS, Session, type EndedConversation, type SessionOptions } from './session.ts'
+import { CONVERSATION_ENDED, LINE_MS, PAGE_MS, PROMISE_MS, QUIET_MS, Session, type EndedConversation, type SessionOptions } from './session.ts'
 import type { TranscriptWord } from './transcript.ts'
 
 // The session's promises (P2a) on their own: a sentence of the wearer's goes
@@ -110,9 +110,6 @@ describe("a session's promises", () => {
     session.setHearing(true)
     say("Hi, I'm Priya.", 0, OTHER)
     clock.advance(LINE_MS)
-    // A swipe at the dot means nothing yet (P6 pauses there).
-    session.swipeDown()
-    expect(views.at(-1)!.view).toEqual({ kind: 'dot' })
     session.tap()
     clock.advance(PAGE_MS - 1000)
     session.swipeDown()
@@ -122,8 +119,9 @@ describe("a session's promises", () => {
     expect(views.at(-1)!.view.kind).toBe('promises')
     clock.advance(1)
     expect(views.at(-1)!.view).toEqual({ kind: 'dot' })
+    // D136: back at the bare dot, a swipe down ends the conversation.
     session.swipeDown()
-    expect(views.at(-1)!.view).toEqual({ kind: 'dot' })
+    expect(views.at(-1)!.view).toEqual({ kind: 'line', text: CONVERSATION_ENDED })
   })
 
   it('ends a conversation with its promises in the order said, once every pass in flight has answered, and shows none after the end', async () => {

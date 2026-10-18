@@ -219,6 +219,32 @@ export class History {
     return this.conversation(wearer, row.id)
   }
 
+  /** A name added by hand on the phone page (D135), after those caught; undefined when the wearer has no such conversation. */
+  addName(wearer: string, id: number, name: string): ConversationResponse | undefined {
+    const db = this.store.db
+    const c = db.prepare('SELECT names FROM conversations WHERE id = ? AND wearer = ?').get(id, wearer) as { names: string } | undefined
+    if (!c) return undefined
+    const names = JSON.parse(c.names) as string[]
+    db.prepare('UPDATE conversations SET names = ? WHERE id = ?').run(JSON.stringify([...names, name]), id)
+    return this.conversation(wearer, id)
+  }
+
+  /** A promise added by hand on the phone page (D135), the wearer's or owed to the wearer, after those there, open. */
+  addPromise(wearer: string, id: number, side: Side, text: string): ConversationResponse | undefined {
+    const db = this.store.db
+    if (!db.prepare('SELECT 1 FROM conversations WHERE id = ? AND wearer = ?').get(id, wearer)) return undefined
+    db.exec('BEGIN')
+    try {
+      const position = (db.prepare('SELECT COALESCE(MAX(position), -1) + 1 AS n FROM promises WHERE conversation_id = ? AND side = ?').get(id, side) as { n: number }).n
+      db.prepare('INSERT INTO promises (id, conversation_id, side, position, text) VALUES (?, ?, ?, ?, ?)').run(this.nextNumber('promises'), id, side, position, text)
+      db.exec('COMMIT')
+    } catch (err) {
+      db.exec('ROLLBACK')
+      throw err
+    }
+    return this.conversation(wearer, id)
+  }
+
   /** One of the wearer's conversations as its screen shows it; undefined when the wearer has no such conversation. */
   conversation(wearer: string, id: number): ConversationResponse | undefined {
     const db = this.store.db

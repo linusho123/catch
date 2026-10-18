@@ -7,7 +7,7 @@ import { loudnessSplit } from '../split/split.ts'
 import type { SttWord } from '../stt/types.ts'
 import { writeJogger } from './jogger.ts'
 import { PromiseDetector } from './promises.ts'
-import { KEEP_PROMPT, LINE_MS, LISTENING, PAUSED, QUIET_MS, Session, type EndedConversation, type SessionState } from './session.ts'
+import { CONVERSATION_ENDED, KEEP_PROMPT, LINE_MS, LISTENING, PAUSED, QUIET_MS, Session, type EndedConversation, type SessionState } from './session.ts'
 import type { TranscriptWord } from './transcript.ts'
 
 // Pause in the session on its own (P6, D86, D81), behind the operator's
@@ -69,13 +69,12 @@ function setup(opts: { pause?: boolean; model?: ModelClient; saved?: SessionStat
 const settle = () => new Promise<void>((resolve) => setImmediate(resolve))
 
 describe("a swipe down's meanings (D43, D40, D86), with the pause switched off (the demo build)", () => {
-  it('means nothing at the bare dot: no `paused`, no dash, the lens never told to stop', () => {
-    const { session, say, shows, views, paused } = setup({ pause: false })
+  it('never pauses at the bare dot: no `paused`, no dash, the lens never told to stop; it ends the conversation instead (D136)', () => {
+    const { session, say, shows, paused } = setup({ pause: false })
     say('Morning, everyone.', 0, WEARER)
-    const before = views.length
     session.swipeDown()
-    expect(shows()).toEqual(DOT)
-    expect(views.slice(before), 'nothing new on the lens').toEqual([])
+    expect(shows()).toEqual(line(CONVERSATION_ENDED))
+    expect(session.conversationOpen).toBe(false)
     expect(paused, 'the lens never told to stop listening').toEqual([])
     expect(session.isPaused).toBe(false)
   })
@@ -102,7 +101,8 @@ describe("a swipe down's meanings (D43, D40, D86), with the pause switched off (
     say('Morning, everyone.', 0, WEARER)
     session.swipeDown()
     say('Still here.', 2, WEARER)
-    expect(stored.map((w) => w.text)).toEqual(['Morning,', 'everyone.', 'Still', 'here.'])
+    // D136: the swipe ended the conversation (its words went, D76); the wearer's next words begin the next one and are heard.
+    expect(stored.map((w) => w.text)).toEqual(['Still', 'here.'])
   })
 })
 
@@ -176,9 +176,11 @@ describe("a swipe down's meanings (D43, D40, D86), with the pause switched on", 
   })
 
   it('reads the switch at every swipe', () => {
-    const { session, say, shows, setSwitch } = setup({ pause: false })
+    const { session, say, shows, setSwitch, clock } = setup({ pause: false })
     say('Morning, everyone.', 0, WEARER)
     session.swipeDown()
+    expect(shows(), 'switched off, the swipe ends the conversation (D136)').toEqual(line(CONVERSATION_ENDED))
+    clock.advance(LINE_MS)
     expect(shows()).toEqual(DOT)
     setSwitch(true)
     session.swipeDown()

@@ -1,6 +1,16 @@
 import { createHash, timingSafeEqual } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { PHONE_CONVERSATION_PATH, PHONE_DONE_SUFFIX, PHONE_HISTORY_PATH, PHONE_JOGGER_SUFFIX, PHONE_PROMISE_PATH, PHONE_END_PATH } from '../../../shared/phone-protocol.ts'
+import {
+  MAX_ADDED_LENGTH,
+  PHONE_CONVERSATION_PATH,
+  PHONE_DONE_SUFFIX,
+  PHONE_END_PATH,
+  PHONE_HISTORY_PATH,
+  PHONE_JOGGER_SUFFIX,
+  PHONE_NAMES_SUFFIX,
+  PHONE_PROMISE_PATH,
+  PHONE_PROMISES_SUFFIX,
+} from '../../../shared/phone-protocol.ts'
 import type { DeleteOutcome, History } from './history.ts'
 
 // The phone API (D130): the plugin's phone page reads the history (D100), one
@@ -55,8 +65,10 @@ export function phoneRoute(
   }
   const rest = path.slice(PHONE_CONVERSATION_PATH.length)
   const jogger = !tick && path.startsWith(PHONE_CONVERSATION_PATH) && rest.endsWith(PHONE_JOGGER_SUFFIX)
+  // D135: a name or a promise added by hand to one of the wearer's conversations.
+  const adding = !tick && path.startsWith(PHONE_CONVERSATION_PATH) && (rest.endsWith(PHONE_NAMES_SUFFIX) || rest.endsWith(PHONE_PROMISES_SUFFIX))
   // A conversation's screen is also where it is deleted (D134); the history and the jogger are read only.
-  const allowed = ending ? ['POST'] : tick ? ['PUT'] : path.startsWith(PHONE_CONVERSATION_PATH) && !jogger ? ['GET', 'DELETE'] : ['GET']
+  const allowed = ending || adding ? ['POST'] : tick ? ['PUT'] : path.startsWith(PHONE_CONVERSATION_PATH) && !jogger ? ['GET', 'DELETE'] : ['GET']
   if (!allowed.includes(req.method ?? '')) {
     res.writeHead(405, { ...opts.headers, allow: allowed.join(', ') }).end()
     return true
@@ -69,6 +81,35 @@ export function phoneRoute(
   const wearer = wearerOf(token)
   if (ending) {
     json(200, { ended: opts.end?.(wearer) ?? false })
+    return true
+  }
+  if (adding) {
+    const names = rest.endsWith(PHONE_NAMES_SUFFIX)
+    const id = rest.slice(0, -(names ? PHONE_NAMES_SUFFIX : PHONE_PROMISES_SUFFIX).length)
+    let raw = ''
+    req.setEncoding('utf8')
+    req.on('data', (chunk: string) => {
+      raw += chunk
+      if (raw.length > 4096) req.destroy()
+    })
+    req.on('end', () => {
+      let body: { name?: unknown; text?: unknown; side?: unknown }
+      try {
+        body = JSON.parse(raw) as typeof body
+      } catch {
+        return json(400, { error: 'the body is not JSON' })
+      }
+      const value = String((names ? body.name : body.text) ?? '').trim()
+      if (!value || value.length > MAX_ADDED_LENGTH) return json(400, { error: `say something of 1 to ${MAX_ADDED_LENGTH} characters` })
+      if (!names && body.side !== 'you' && body.side !== 'owed') return json(400, { error: "side is 'you' or 'owed'" })
+      const screen = /^\d+$/.test(id)
+        ? names
+          ? opts.history.addName(wearer, Number(id), value)
+          : opts.history.addPromise(wearer, Number(id), body.side as 'you' | 'owed', value)
+        : undefined
+      if (screen) json(200, screen)
+      else json(404, { error: 'no such conversation' })
+    })
     return true
   }
   if (tick) {

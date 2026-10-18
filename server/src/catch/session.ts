@@ -165,6 +165,8 @@ export const QUIET_MS = 10 * 60 * 1000
 export const KEEP_PROMPT = 'keep this conversation?'
 /** The line a tap on the prompt shows, for a second and a half (D111). */
 export const KEPT = 'kept'
+/** D136: what the lens says, for a line's time, when a swipe down at the dot has ended the conversation. */
+export const CONVERSATION_ENDED = 'conversation ended'
 /** The line a swipe up shows in a conversation already kept, for a second and a half (D54). */
 export const ALREADY_KEPT = 'already kept'
 /** The line a swipe down at the dot shows as Catch pauses, for a second and a half, before the dash (D86). */
@@ -878,6 +880,11 @@ export class Session {
       case 'dot':
         // D86: at the bare dot, the swipe pauses (only with the operator's switch on).
         if (this.pauseEnabled()) this.pause()
+        // D136: otherwise it ends the open conversation, as the long-press the Even OS keeps would (D52), and says so.
+        else if (this.inConversation) {
+          this.longPress()
+          this.showLine(CONVERSATION_ENDED)
+        }
         return
       default:
         // A line, the promises page: nothing.
