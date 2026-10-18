@@ -116,6 +116,27 @@ describe('names from interim results (PT)', () => {
     expect(session.names.confirmedList()).toEqual(['Priya'])
   })
 
+  // risk-1: the final timings can come later than the interim's by half the
+  // name word or more, and the long-speech cut can fall between "I'm" and the
+  // name. A batch ending on "I'm" has then not passed the name: it must not be
+  // withdrawn (it blinked off the names page), and the next batch, which gives
+  // it, must not show it a second time.
+  for (const drift of [0.2, 0.3, 0.5]) {
+    it(`keeps a name, with one line, when its final timings come ${drift} s late and the finals are cut between "I'm" and the name (risk-1)`, () => {
+      const { session, interim, audio, lines, views } = opened()
+      interim("Hi, I'm Priya", 2, OTHER)
+      const at = (text: string, start: number): SttWord => ({ text, start: start + drift, end: start + drift + 0.3, confidence: 1, speaker: null, isFinal: true })
+      audio(3.2 + drift, OTHER)
+      session.words([at('Hi,', 2.0), at("I'm", 2.3)])
+      expect(session.names.list()).toEqual(['Priya'])
+      expect(views.at(-1)!.view).toMatchObject({ kind: 'line', text: 'Priya' })
+      session.words([at('Priya.', 2.6)])
+      expect(lines()).toEqual(['Priya'])
+      expect(session.names.list()).toEqual(['Priya'])
+      expect(session.names.confirmedList()).toEqual(['Priya'])
+    })
+  }
+
   it('withdraws a name the final words do not give: off the held names, and its line taken down at once', () => {
     const { session, views, interim, final, lines, clock } = opened()
     interim("Hi, I'm Priya", 2, OTHER)
@@ -250,12 +271,35 @@ describe('names from interim results (PT)', () => {
   })
 
   it('never stores a name not yet confirmed: a restart finds only the names the final words gave (D73)', () => {
-    const { saved, interim, final } = opened()
+    const { session, saved, interim, final } = opened()
     interim("Hi, I'm Priya", 2, OTHER)
-    const tentativeStates = saved.slice()
-    expect(tentativeStates.flatMap((s) => s.conversation?.names.entries.map((e) => e.label) ?? [])).not.toContain('Priya')
-    final("Hi, I'm Priya.", 2, OTHER)
+    // test-honesty-1: a final word that ends before the name is judged and saved while the tentative name stands.
+    const before = saved.length
+    final('Hi,', 2, OTHER)
+    expect(session.names.list()).toEqual(['Priya'])
+    expect(saved.length).toBeGreaterThan(before)
+    expect(saved.at(-1)!.conversation!.names.entries.map((e) => e.label)).not.toContain('Priya')
+    final("I'm Priya.", 2.3, OTHER)
     expect(saved.at(-1)!.conversation!.names.entries.map((e) => e.label)).toEqual(['Priya'])
+  })
+
+  // head-1: the split decides an interim word's side from its frames, so a word is read only once they are in.
+  it('reads an interim word for names only once its frames are in, and splits it on them (head-1)', () => {
+    const { session, audio, lines } = opened()
+    const hypothesis = (text: string, start: number): SttWord[] =>
+      text.split(' ').map((t, i) => ({ text: t, start: start + i * 0.3, end: start + i * 0.3 + 0.3, confidence: 1, speaker: null, isFinal: false }))
+    // The wearer's "Hi, I'm Dana" comes before its frames: nothing read yet; then its loud frames make it the wearer's (D29).
+    session.words(hypothesis("Hi, I'm Dana", 2))
+    expect(lines()).toEqual([])
+    audio(2.9, WEARER)
+    expect(lines()).toEqual([])
+    expect(session.names.list()).toEqual([])
+    // Someone else's "Hi, I'm Priya" before its frames: nothing yet; caught once its quiet frames are in.
+    session.words(hypothesis("Hi, I'm Priya", 4))
+    audio(3.9, OTHER)
+    expect(lines()).toEqual([])
+    audio(4.9, OTHER)
+    expect(lines()).toEqual(['Priya'])
   })
 
   it('ends with only the confirmed names, and gives the promise detector only those (promises stay on finals)', async () => {
@@ -311,6 +355,24 @@ describe('the provider\'s utterance end (PT)', () => {
     // The wearer goes on: a new sentence, not the old one grown.
     final('Anyway, how long are you here?', 4, WEARER)
     expect(asked).toHaveLength(1)
+  })
+
+  it('judges a sentence once when its speech_final end and the UtteranceEnd after it both end it (operator answer 4)', async () => {
+    const { asked, model } = promising()
+    const { session, final, lines, clock } = opened({ promises: new PromiseDetector(model) })
+    const said = final("Sure I'll send you the deck tonight", 2, WEARER)
+    // The provider's endpointing marked these finals speech_final: the adapter ends the utterance at their last word.
+    session.utteranceEnd(said.at(-1)!.end)
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(asked).toEqual(["Sure I'll send you the deck tonight"])
+    // A second later Deepgram's UtteranceEnd names the same word: the sentence has ended already.
+    clock.advance(700)
+    session.utteranceEnd(said.at(-1)!.end)
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(asked).toHaveLength(1)
+    expect(lines()).toEqual(['promised · send Dev the deck tonight'])
   })
 
   it('leaves a sentence alone when the utterance end is for words before it', () => {

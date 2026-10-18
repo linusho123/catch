@@ -78,6 +78,41 @@ describe('the Deepgram adapter, against a loopback stand-in', () => {
     expect(heard).toEqual(['interim hi', 'final hi there', 'utterance end 0.55'])
   })
 
+  it('ends the utterance at a final Deepgram marks speech_final (its endpointing), before any UtteranceEnd after it (PT, operator answer 4)', async () => {
+    let peer: import('ws').WebSocket | undefined
+    const url = await standIn((ws) => {
+      peer = ws
+      const results = (isFinal: boolean, speechFinal: boolean, words: string[], from: number) =>
+        JSON.stringify({
+          type: 'Results',
+          is_final: isFinal,
+          speech_final: speechFinal,
+          channel: { alternatives: [{ words: words.map((word, i) => ({ word, start: from + i * 0.3, end: from + i * 0.3 + 0.25, confidence: 0.9 })) }] },
+        })
+      // A final cut in continuous speech (not speech_final), then the endpointed one, then Deepgram's own UtteranceEnd.
+      ws.send(results(true, false, ['sure', 'i'], 0))
+      ws.send(results(true, true, ['send', 'it'], 0.6))
+      ws.send(JSON.stringify({ type: 'UtteranceEnd', channel: [0, 1], last_word_end: 1.15 }))
+      ws.send(results(true, false, ['next'], 3))
+    })
+    const heard: string[] = []
+    let done: () => void = () => {}
+    const ended = new Promise<void>((resolve) => (done = resolve))
+    const stream = deepgram('key', { url }).open(
+      (words) => {
+        heard.push(`final ${words.map((w) => w.text).join(' ')}`)
+        if (words[0]!.text === 'next') done()
+      },
+      () => {},
+      undefined,
+      (lastWordEnd) => heard.push(`utterance end ${lastWordEnd}`),
+    )
+    cleanups.push(() => stream.close())
+    cleanups.push(() => peer?.terminate())
+    await ended
+    expect(heard).toEqual(['final sure i', 'final send it', 'utterance end 1.15', 'utterance end 1.15', 'final next'])
+  })
+
   it('reports through onError when Deepgram closes the stream unexpectedly (M7)', async () => {
     const url = await standIn((ws) => setTimeout(() => ws.close(1011, 'idle timeout'), 10))
     const e = errors()

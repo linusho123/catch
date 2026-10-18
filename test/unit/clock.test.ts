@@ -24,7 +24,9 @@ describe('the fixture clock', () => {
   })
 
   it('fires the timers inside a jump in fixture order, each reading its own time', () => {
-    const clock = new VirtualClock(1)
+    // Near-frozen, so only advance() moves it: at speed 1 a loaded machine's
+    // milliseconds between setting the timers put one at 1501 (a flake).
+    const clock = new VirtualClock(1e-9)
     const seen: [string, number][] = []
     const note = (name: string) => () => seen.push([name, Math.round(clock.now())])
     clock.setTimeout(note('ten minutes'), 600_000)

@@ -26,7 +26,9 @@ export interface SpeechToText {
    * and the server opens a new one. `onUtteranceEnd` fires when the provider
    * has heard a gap with no words after the word ending at `lastWordEnd`
    * (seconds on the stream's clock), sent after that utterance's final words:
-   * a natural pause, which ends the sentence being gathered (PT).
+   * a natural pause, which ends the sentence being gathered (PT). Deepgram's
+   * adapter also fires it at a final marked `speech_final` (its endpointing's
+   * pause), at that final's last word, ahead of the UtteranceEnd that may follow.
    */
   open(
     onWords: (words: SttWord[]) => void,

@@ -51,6 +51,14 @@ describe('the Deepgram adapter', () => {
     expect(parseDeepgramMessage(JSON.stringify({ type: 'Metadata', request_id: 'x' }))).toEqual([])
   })
 
+  it('marks a final Deepgram says is speech_final, and nothing else (operator answer 4)', () => {
+    const results = (isFinal: boolean, speechFinal: boolean) =>
+      JSON.stringify({ type: 'Results', is_final: isFinal, speech_final: speechFinal, channel: { alternatives: [{ words: [{ word: 'ok', start: 0, end: 0.2, confidence: 1 }] }] } })
+    expect(parseDeepgramEvent(results(true, true))).toMatchObject({ kind: 'words', speechFinal: true })
+    expect(parseDeepgramEvent(results(true, false))).toMatchObject({ kind: 'words', speechFinal: false })
+    expect(parseDeepgramEvent(results(false, true))).toMatchObject({ kind: 'words', speechFinal: false })
+  })
+
   it('reads an UtteranceEnd as the end of an utterance at its last word, and words from no other message', () => {
     expect(parseDeepgramEvent(JSON.stringify({ type: 'UtteranceEnd', channel: [0, 1], last_word_end: 2.395 }))).toEqual({ kind: 'utteranceEnd', lastWordEnd: 2.395 })
     expect(parseDeepgramMessage(JSON.stringify({ type: 'UtteranceEnd', channel: [0, 1], last_word_end: 2.395 }))).toEqual([])

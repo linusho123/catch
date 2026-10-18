@@ -106,13 +106,13 @@ import type { TranscriptWord } from './transcript.ts'
 // like any word, read as the final words would be (D29, CATCH_WEARER_NAME,
 // D87, D88, D132 all apply), and the name is held tentatively (held-names.ts).
 // The final words confirm it, with no second line and no `(2)`; if they do
-// not give it once they reach past the introduction (or the utterance ends,
-// or Catch stops hearing), the name is withdrawn: off the held names, off a
-// names page showing, and its line taken down if it is still up. And the
-// provider's UtteranceEnd, a second with no words, ends the sentence being
-// gathered, so a promise is judged at a natural pause and not only at the
-// provider's punctuation. Promises, the thread and the transcript stay on the
-// finals.
+// not give it once they reach past the introduction, by time and by count
+// (risk-1), or the utterance ends, or Catch stops hearing, the name is
+// withdrawn: off the held names, off a names page showing, and its line taken
+// down if it is still up. And the provider's UtteranceEnd, a second with no
+// words (or a final it marks speech_final), ends the sentence being gathered,
+// so a promise is judged at a natural pause and not only at the provider's
+// punctuation. Promises, the thread and the transcript stay on the finals.
 
 /** D17: a catch line holds for a second and a half. A ruling, not a tuning value. */
 export const LINE_MS = 1500
@@ -163,20 +163,40 @@ interface Tentative {
   start: number
   /**
    * The middle of the introduction's last word (the name, or the "you" of "X,
-   * nice to meet you"): once a batch of final words reaches past it without
-   * giving the name, the name is withdrawn. The middle, so that the
-   * provider's timings moving a little between its interim and final results
-   * neither withdraws a name its next batch gives nor keeps one its batch has passed.
+   * nice to meet you"): once a batch of final words reaches past it, and has
+   * as many words as `finalsNeeded`, without giving the name, the name is
+   * withdrawn. The middle, so that the provider's timings moving a little
+   * between its interim and final results neither withdraws a name its next
+   * batch gives nor keeps one its batch has passed.
    */
   decideAt: number
+  /**
+   * How many final words the provider must have sent for its finals to have
+   * come as far as the introduction's last word: those before the hypothesis
+   * it was caught from, and that hypothesis up to and including that word.
+   * Time alone cannot tell (risk-1): final timings that come half a word late
+   * put a batch cut just before the name over the name's interim timing. A
+   * batch must pass the introduction both ways; one that passes it only one
+   * way leaves the name to the next batch, the utterance's end or the stream's.
+   */
+  finalsNeeded: number
+}
+
+/** A word of someone else's run as readInterim holds it: a final one (no end, decided), or an interim one at index `at` of the hypothesis. */
+interface RunWord {
+  text: string
+  start: number
+  end?: number
+  at?: number
 }
 
 /**
  * In the order the provider sent them: a final word waiting for its frames;
- * the end of a batch of final words (`finalsThrough`, its last word's end);
- * or the provider's UtteranceEnd after the word ending at `utteranceEnd`.
+ * the end of a batch of final words (`finalsThrough`, its last word's end;
+ * `finalsHeard`, the final words sent up to it); or the provider's
+ * UtteranceEnd after the word ending at `utteranceEnd`.
  */
-type Pending = SttWord | { finalsThrough: number } | { utteranceEnd: number }
+type Pending = SttWord | { finalsThrough: number; finalsHeard: number } | { utteranceEnd: number }
 
 export interface SessionOptions {
   clock: Clock
@@ -371,6 +391,8 @@ export class Session {
   private tentatives: Tentative[] = []
   /** Every name caught in the open conversation, from the finals or an interim, by where its name word starts: an interim never catches one twice. */
   private caughtAt: { key: string; start: number }[] = []
+  /** How many final words the provider has sent (PT, risk-1). */
+  private finalsHeard = 0
 
   // The conversation.
   private inConversation = false
@@ -627,7 +649,8 @@ export class Session {
   words(words: readonly SttWord[]): void {
     const finals = words.filter((w) => w.isFinal)
     for (const w of finals) this.pending.push(w)
-    if (finals.length > 0) this.pending.push({ finalsThrough: Math.max(...finals.map((w) => w.end)) })
+    this.finalsHeard += finals.length
+    if (finals.length > 0) this.pending.push({ finalsThrough: Math.max(...finals.map((w) => w.end)), finalsHeard: this.finalsHeard })
     if (finals.length < words.length) {
       this.interim = words.filter((w) => !w.isFinal)
     } else if (finals.length > 0) {
@@ -785,8 +808,8 @@ export class Session {
       }
       if ('finalsThrough' in next) {
         this.pending.shift()
-        // The batch's words are judged: one it reached past without giving the name was misheard (PT).
-        for (const t of this.tentatives.filter((x) => x.decideAt <= next.finalsThrough)) this.withdraw(t)
+        // The batch's words are judged: one it reached past, by time and by count, without giving the name was misheard (PT, risk-1).
+        for (const t of this.tentatives.filter((x) => x.decideAt <= next.finalsThrough && next.finalsHeard >= x.finalsNeeded)) this.withdraw(t)
         continue
       }
       if (!timedOut && next.end > this.coveredUntil) {
@@ -837,7 +860,7 @@ export class Session {
     let wearer = [...this.wearerRun]
     const ownNow = new Set<string>()
     // Someone else's run as the final path holds it, then the interim words: the final ones have no end here, and are decided already.
-    let run: { text: string; start: number; end?: number }[] = this.otherRun.map((text, i) => ({ text, start: this.otherRunStarts[i]! }))
+    let run: RunWord[] = this.otherRun.map((text, i) => ({ text, start: this.otherRunStarts[i]! }))
     let decided = run.length
     heard.forEach((w, i) => {
       if (sides[i] === 'wearer') {
@@ -854,13 +877,13 @@ export class Session {
       // D129: the first conversation after Catch starts begins on anyone's speech.
       if (!this.begun && w.end > this.pressedAt) open = true
       // As in the final path: someone else's words outside a conversation make no run.
-      if (open) run.push({ text: w.text, start: w.start, end: w.end })
+      if (open) run.push({ text: w.text, start: w.start, end: w.end, at: i })
     })
     this.catchTentative(run, decided, ownNow)
   }
 
   /** The introductions in one run of someone else's words that end in its interim part, held tentatively and shown (PT). */
-  private catchTentative(run: { text: string; start: number; end?: number }[], decided: number, ownNow: ReadonlySet<string>): void {
+  private catchTentative(run: RunWord[], decided: number, ownNow: ReadonlySet<string>): void {
     if (run.length <= decided) return
     for (const { name, index, how, last } of findIntroductionsHow(run.map((w) => w.text))) {
       // Complete in the final words: the final path has caught it or passed it over.
@@ -872,7 +895,8 @@ export class Session {
       if (this.caughtAt.some((c) => c.key === key && Math.abs(c.start - start) <= SAME_WORD_S)) continue
       this.caughtAt.push({ key, start })
       const { heard, ref } = this.names.hearTentative(name, this.clock.now(), how)
-      const tentative: Tentative = { ref, key, start, decideAt: (run[last]!.start + run[last]!.end!) / 2 }
+      const lastWord = run[last]!
+      const tentative: Tentative = { ref, key, start, decideAt: (lastWord.start + lastWord.end!) / 2, finalsNeeded: this.finalsHeard + lastWord.at! + 1 }
       this.tentatives.push(tentative)
       this.showLine(heard.line)
       if (this.view.kind === 'line' && this.view.text === heard.line) this.tentativeShowing = tentative

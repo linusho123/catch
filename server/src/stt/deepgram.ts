@@ -44,20 +44,26 @@ export function parseDeepgramMessage(raw: string): SttWord[] {
   return event?.kind === 'words' ? event.words : []
 }
 
-/** What one Deepgram message says: words (a Results message), an utterance end, or nothing Catch reads. */
-export type DeepgramEvent = { kind: 'words'; words: SttWord[] } | { kind: 'utteranceEnd'; lastWordEnd: number }
+/**
+ * What one Deepgram message says: words (a Results message; `speechFinal` when
+ * its endpointing ended the speech there), an utterance end, or nothing Catch reads.
+ */
+export type DeepgramEvent = { kind: 'words'; words: SttWord[]; speechFinal: boolean } | { kind: 'utteranceEnd'; lastWordEnd: number }
 
 export function parseDeepgramEvent(raw: string): DeepgramEvent | undefined {
   const msg = JSON.parse(raw) as {
     type?: string
     is_final?: boolean
+    speech_final?: boolean
     channel?: { alternatives?: { words?: DeepgramWord[] }[] }
     last_word_end?: number
   }
   // UtteranceEnd: no words for utterance_end_ms after the word ending at last_word_end (seconds on the stream's clock).
   if (msg.type === 'UtteranceEnd') return typeof msg.last_word_end === 'number' && msg.last_word_end >= 0 ? { kind: 'utteranceEnd', lastWordEnd: msg.last_word_end } : undefined
   if (msg.type !== 'Results') return undefined
-  return { kind: 'words', words: toWords(msg.channel?.alternatives?.[0]?.words ?? [], msg.is_final === true) }
+  const isFinal = msg.is_final === true
+  // speech_final: the endpointing heard a pause after these final words (PT, operator answer 4).
+  return { kind: 'words', words: toWords(msg.channel?.alternatives?.[0]?.words ?? [], isFinal), speechFinal: isFinal && msg.speech_final === true }
 }
 
 function toWords(words: DeepgramWord[], isFinal: boolean): SttWord[] {
@@ -108,7 +114,12 @@ export function deepgram(apiKey: string, opts: DeepgramOptions = {}): SpeechToTe
       socket.on('message', (data) => {
         try {
           const event = parseDeepgramEvent(data.toString())
-          if (event?.kind === 'words' && event.words.length > 0) onWords(event.words)
+          if (event?.kind === 'words' && event.words.length > 0) {
+            onWords(event.words)
+            // The endpointing's pause ends the utterance at these words, as an UtteranceEnd would a second later;
+            // the session ends a sentence once, so the UtteranceEnd that may follow changes nothing (operator answer 4).
+            if (event.speechFinal) onUtteranceEnd?.(Math.max(...event.words.map((w) => w.end)))
+          }
           if (event?.kind === 'utteranceEnd') onUtteranceEnd?.(event.lastWordEnd)
         } catch (err) {
           onError(err)
