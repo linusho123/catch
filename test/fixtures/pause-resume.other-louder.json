@@ -1,0 +1,336 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "pause-resume",
+  "variant": "other-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "So how was the drive in this morning?"
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "Not bad, the traffic was light for once."
+    },
+    {
+      "at": 9,
+      "who": "Dev",
+      "text": "Anyway, the parking was a mess."
+    },
+    {
+      "at": 12,
+      "who": "wearer",
+      "text": "Right, the lot was full."
+    },
+    {
+      "at": 17,
+      "who": "wearer",
+      "text": "Sorry, where were we?"
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "The drive in, it was fine."
+    }
+  ],
+  "words": [
+    {
+      "text": "So",
+      "start": 0,
+      "end": 0.27,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "how",
+      "start": 0.33,
+      "end": 0.645,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "was",
+      "start": 0.705,
+      "end": 1.02,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 1.08,
+      "end": 1.395,
+      "role": "wearer",
+      "loudness": -27.4,
+      "speaker": 0
+    },
+    {
+      "text": "drive",
+      "start": 1.455,
+      "end": 1.86,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "in",
+      "start": 1.92,
+      "end": 2.19,
+      "role": "wearer",
+      "loudness": -24.5,
+      "speaker": 0
+    },
+    {
+      "text": "this",
+      "start": 2.25,
+      "end": 2.61,
+      "role": "wearer",
+      "loudness": -25.9,
+      "speaker": 0
+    },
+    {
+      "text": "morning?",
+      "start": 2.67,
+      "end": 3.165,
+      "role": "wearer",
+      "loudness": -26.2,
+      "speaker": 0
+    },
+    {
+      "text": "Not",
+      "start": 4.165,
+      "end": 4.48,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "bad,",
+      "start": 4.54,
+      "end": 4.855,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 4.915,
+      "end": 5.23,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 1
+    },
+    {
+      "text": "traffic",
+      "start": 5.29,
+      "end": 5.785,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 1
+    },
+    {
+      "text": "was",
+      "start": 5.845,
+      "end": 6.16,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "light",
+      "start": 6.22,
+      "end": 6.625,
+      "role": "other",
+      "loudness": -14,
+      "speaker": 1
+    },
+    {
+      "text": "for",
+      "start": 6.685,
+      "end": 7,
+      "role": "other",
+      "loudness": -15,
+      "speaker": 1
+    },
+    {
+      "text": "once.",
+      "start": 7.06,
+      "end": 7.42,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 1
+    },
+    {
+      "text": "Anyway,",
+      "start": 9,
+      "end": 9.45,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 9.51,
+      "end": 9.825,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 1
+    },
+    {
+      "text": "parking",
+      "start": 9.885,
+      "end": 10.38,
+      "role": "other",
+      "loudness": -14.6,
+      "speaker": 1
+    },
+    {
+      "text": "was",
+      "start": 10.44,
+      "end": 10.755,
+      "role": "other",
+      "loudness": -12.7,
+      "speaker": 1
+    },
+    {
+      "text": "a",
+      "start": 10.815,
+      "end": 11.04,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "mess.",
+      "start": 11.1,
+      "end": 11.46,
+      "role": "other",
+      "loudness": -13.9,
+      "speaker": 1
+    },
+    {
+      "text": "Right,",
+      "start": 12,
+      "end": 12.405,
+      "role": "wearer",
+      "loudness": -26.2,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 12.465,
+      "end": 12.78,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "lot",
+      "start": 12.84,
+      "end": 13.155,
+      "role": "wearer",
+      "loudness": -26.5,
+      "speaker": 0
+    },
+    {
+      "text": "was",
+      "start": 13.215,
+      "end": 13.53,
+      "role": "wearer",
+      "loudness": -25.5,
+      "speaker": 0
+    },
+    {
+      "text": "full.",
+      "start": 13.59,
+      "end": 13.95,
+      "role": "wearer",
+      "loudness": -26.7,
+      "speaker": 0
+    },
+    {
+      "text": "Sorry,",
+      "start": 17,
+      "end": 17.405,
+      "role": "wearer",
+      "loudness": -26.7,
+      "speaker": 0
+    },
+    {
+      "text": "where",
+      "start": 17.465,
+      "end": 17.87,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "were",
+      "start": 17.93,
+      "end": 18.29,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "we?",
+      "start": 18.35,
+      "end": 18.62,
+      "role": "wearer",
+      "loudness": -26.6,
+      "speaker": 0
+    },
+    {
+      "text": "The",
+      "start": 19.62,
+      "end": 19.935,
+      "role": "other",
+      "loudness": -13.3,
+      "speaker": 1
+    },
+    {
+      "text": "drive",
+      "start": 19.995,
+      "end": 20.4,
+      "role": "other",
+      "loudness": -12.8,
+      "speaker": 1
+    },
+    {
+      "text": "in,",
+      "start": 20.46,
+      "end": 20.73,
+      "role": "other",
+      "loudness": -15.4,
+      "speaker": 1
+    },
+    {
+      "text": "it",
+      "start": 20.79,
+      "end": 21.06,
+      "role": "other",
+      "loudness": -13.6,
+      "speaker": 1
+    },
+    {
+      "text": "was",
+      "start": 21.12,
+      "end": 21.435,
+      "role": "other",
+      "loudness": -14.4,
+      "speaker": 1
+    },
+    {
+      "text": "fine.",
+      "start": 21.495,
+      "end": 21.855,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    }
+  ]
+}

@@ -42,8 +42,14 @@ export interface Harness {
   model: ModelClient
   /** Every model pass the server reports failed since the last reset (a missing cassette among them): a scenario fails on any (lens-world.ts). */
   modelErrors: unknown[]
-  /** Stops the last scenario's lenses (their sockets closed, so nothing of theirs is still in flight), forgets the wearer's session, switches thread detection back on, clears the record and the store, and sets the clock to zero. */
+  /** Stops the last scenario's lenses (their sockets closed, so nothing of theirs is still in flight), forgets the wearer's session, switches thread detection back on and pause back off, clears the record and the store, and sets the clock to zero. */
   reset(): Promise<void>
+  /**
+   * The operator's pause switch (CATCH_PAUSE, P6): off after every reset, as
+   * in the demo build (D130, D133); the pause scenarios switch it on. It
+   * holds across restartServer.
+   */
+  setPause(on: boolean): void
   /** Starts the lens against the server; rejects, loudly, if it cannot open /audio. */
   startLens(): Promise<Lens>
   /**
@@ -87,6 +93,7 @@ async function start(): Promise<Harness> {
   const dbPath = join(mkdtempSync(join(tmpdir(), 'catch-harness-')), 'catch.db')
   const realStt = process.env.CATCH_REAL_STT === '1'
   const modelErrors: unknown[] = []
+  let pause = false
   const serve = async () => {
     const started = await startServer({
       port: 0,
@@ -98,6 +105,7 @@ async function start(): Promise<Harness> {
       model,
       notifier: notifications,
       otherAudioTokens: [OTHER_HARNESS_TOKEN],
+      pause,
     })
     stt.attach(started.events)
     started.events.on('modelError', ({ error }) => modelErrors.push(error))
@@ -123,8 +131,9 @@ async function start(): Promise<Harness> {
       for (const socket of others.splice(0)) socket.terminate()
       // The wearer's session outlives a socket (D79); a scenario starts with none.
       server.forgetWearers()
-      // D120's switch back to its default: detection on.
+      // D120's switch back to its default: detection on; and pause off, as in the demo build (P6).
       server.setThreadDetection(true)
+      h.setPause(false)
       stt.reset()
       clock.reset()
       host.reset(clock)
@@ -136,6 +145,10 @@ async function start(): Promise<Harness> {
       db.exec('PRAGMA foreign_keys = OFF')
       for (const { name } of names) db.exec(`DELETE FROM "${name}"`)
       db.exec('PRAGMA foreign_keys = ON')
+    },
+    setPause(on) {
+      pause = on
+      server.setPause(on)
     },
     async startLens() {
       const { evenBridge } = await import('./even-host.ts')

@@ -15,6 +15,11 @@ import { toWireFrame } from './frames.ts'
 // nothing and times nothing; the server decides what shows and for how long.
 // The one thing the lens decides alone is that it cannot hear: while the
 // server is unreachable there is no dot (D37), and it keeps trying to reach it.
+// While the wearer has paused Catch (P6, D86) the server tells the lens to stop
+// listening: the glasses' microphone is closed and no frame leaves the lens
+// until the server says to listen again. Every socket starts muted, and the
+// server says to listen as it takes one unless Catch is paused, so a lens that
+// reconnects during a pause never reopens the microphone.
 // Double-tap is Even's exit. Started from Even's `asr` template; its
 // speech-to-text stub and API key are gone, because the lens never talks to a
 // provider; the server does.
@@ -108,6 +113,8 @@ export const PROMISES_HEADER = 'this conversation 2/2'
 export const NO_PROMISES = 'no promises yet'
 /** What sets a promise owed to the wearer apart on the promises page, after the wearer's own (D43, P5). */
 export const OWED_PREFIX = 'owed: '
+/** The paused mark in the dot's place (D86): an en dash. */
+export const PAUSED_MARK = '–'
 
 /** The containers that draw one view. Exactly one thing at a time. */
 export function containersFor(view: LensView): TextContainerProperty[] {
@@ -116,6 +123,9 @@ export function containersFor(view: LensView): TextContainerProperty[] {
       return [text(1, 'dot', '•', DOT_BOX)]
     case 'deaf':
       return [text(1, 'blank', '', DOT_BOX)]
+    case 'dash':
+      // D86: paused, a dim dash where the dot was, never the empty box of can't-hear (D37).
+      return [text(1, 'dash', PAUSED_MARK, DOT_BOX)]
     case 'line':
       return [text(2, 'line', view.text, LINE_BOX)]
     case 'names':
@@ -166,6 +176,10 @@ export async function startLens(opts: LensOptions): Promise<Lens> {
   const lensId = Math.random().toString(36).slice(2, 12)
   let seq = 0
   let acked = 0
+  /** Whether the server wants the glasses' audio on this socket: off until it says so, and while the wearer has paused Catch (P6, D86). */
+  let listening = false
+  /** Whether the glasses' microphone is open, as the lens last told the bridge. */
+  let micOpen = false
   let stopped = false
   let socket: WebSocket | undefined
   let retry: ReturnType<typeof setTimeout> | undefined
@@ -186,7 +200,8 @@ export async function startLens(opts: LensOptions): Promise<Lens> {
       settleFirst?.resolve()
       settleFirst = undefined
       setStatus(`connected to ${server}`)
-      void bridge.audioControl(true)
+      // Each socket starts muted: the microphone opens, and frames go, only once the server says to listen (P6).
+      listening = false
     })
     ws.addEventListener('message', (msg) => {
       const message = JSON.parse(String(msg.data)) as ServerMessage
@@ -195,6 +210,14 @@ export async function startLens(opts: LensOptions): Promise<Lens> {
         setStatus(`connected to ${server} · ${acked} bytes acknowledged`)
       } else if (message.type === 'show') {
         draw(message.view)
+      } else if (message.type === 'listening') {
+        // P6: the server takes the socket, or the wearer paused or resumed; the microphone follows, and no frame is sent while paused.
+        listening = message.on
+        if (micOpen !== listening) {
+          micOpen = listening
+          void bridge.audioControl(micOpen)
+        }
+        setStatus(listening ? `connected to ${server}` : `connected to ${server} · paused`)
       }
     })
     ws.addEventListener('error', () => setStatus(`cannot reach ${server}`))
@@ -228,7 +251,7 @@ export async function startLens(opts: LensOptions): Promise<Lens> {
 
   const unsubscribe = bridge.onEvenHubEvent((event) => {
     const audio = event.audioEvent
-    if (audio?.audioPcm && socket?.readyState === WebSocket.OPEN) {
+    if (audio?.audioPcm && listening && socket?.readyState === WebSocket.OPEN) {
       socket.send(toWireFrame(audio, seq++, now()))
     }
 
@@ -251,7 +274,7 @@ export async function startLens(opts: LensOptions): Promise<Lens> {
     if (textType === OsEventTypeList.LONG_PRESS_EVENT || sysType === OsEventTypeList.LONG_PRESS_EVENT) {
       sendToServer({ type: 'touch', gesture: 'long-press' })
     }
-    // A swipe down (the SDK's scroll toward the bottom) turns the names page to the promises (D43).
+    // A swipe down (the SDK's scroll toward the bottom): the server knows which of its meanings it has (D43, D40, D86).
     if (textType === OsEventTypeList.SCROLL_BOTTOM_EVENT || sysType === OsEventTypeList.SCROLL_BOTTOM_EVENT) {
       sendToServer({ type: 'touch', gesture: 'swipe-down' })
     }

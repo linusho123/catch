@@ -1,4 +1,4 @@
-import { startServer, threadDetectionFromEnv } from './app.ts'
+import { pauseFromEnv, startServer, threadDetectionFromEnv } from './app.ts'
 import { liveModel } from './llm/client.ts'
 import { splitFromEnv } from './split/split.ts'
 import { deepgram } from './stt/deepgram.ts'
@@ -11,6 +11,8 @@ import { deepgram } from './stt/deepgram.ts'
 // CATCH_SPLIT and CATCH_LOUDNESS_THRESHOLD_DBFS choose and tune the split;
 // CATCH_WEARER_NAME (optional) is the wearer's name, never caught.
 // CATCH_THREAD_DETECTION (on | off, default on) is the operator's D120 switch.
+// CATCH_PAUSE (on | off, default off) is the operator's pause switch (P6, D86):
+// off in the demo build (D130, D133), so a swipe down at the dot means nothing.
 // CATCH_TIME_ZONE (optional, e.g. America/Los_Angeles) is the wearer's zone, for
 // a kept notification that names the time because no name was caught; one the
 // server does not know is warned about at startup and its own zone is used.
@@ -32,12 +34,13 @@ if (!deepgramKey) {
 const split = splitFromEnv()
 const wearerName = process.env.CATCH_WEARER_NAME?.trim() || undefined
 const threadDetection = threadDetectionFromEnv(process.env.CATCH_THREAD_DETECTION)
+const pause = pauseFromEnv(process.env.CATCH_PAUSE)
 const geminiKey = process.env.GEMINI_API_KEY?.trim() ?? ''
 const model = geminiKey ? liveModel({ apiKey: geminiKey }) : undefined
 const timeZone = process.env.CATCH_TIME_ZONE?.trim() || undefined
-const server = await startServer({ port, host, dbPath, audioToken, split, wearerName, threadDetection, model, timeZone, stt: deepgram(deepgramKey) })
+const server = await startServer({ port, host, dbPath, audioToken, split, wearerName, threadDetection, pause, model, timeZone, stt: deepgram(deepgramKey) })
 console.log(
-  `catch server listening on :${port} (/audio, /health), split ${split.name}, thread detection ${threadDetection ? 'on' : 'off'}, promises ${model ? 'on' : 'off (no GEMINI_API_KEY)'}, store at ${dbPath}`,
+  `catch server listening on :${port} (/audio, /health), split ${split.name}, thread detection ${threadDetection ? 'on' : 'off'}, pause ${pause ? 'on' : 'off'}, promises ${model ? 'on' : 'off (no GEMINI_API_KEY)'}, store at ${dbPath}`,
 )
 // A lost speech-to-text stream is retried every second; say why, once per outage.
 let deaf = false

@@ -159,6 +159,47 @@ describe('fast-forwarding on a loaded machine', () => {
   })
 })
 
+// P6's first job, the three-hour workshop's load flake: the frame carrying
+// the wearer's "Got it." was still crossing the socket when the fast-forward
+// jumped the nine minutes to "Okay.", so the jump ran the clock past the ten
+// minutes the wearer's opening line had left, the quiet ended the kept
+// conversation before "Got it." was judged, and its jogger's transcript (the
+// cassette's key) was cut short. A fast-forward jumps only once the server has
+// every word played, on delivery, never on wall time.
+describe('fast-forwarding while a frame is still on its way', () => {
+  it('jumps a silence only once the server has heard every word played before it', async () => {
+    const said = [
+      { text: 'Got', start: 0, end: 0.15 },
+      { text: 'it.', start: 0.2, end: 0.3 },
+      { text: 'Okay.', start: 540, end: 540.2 },
+    ]
+    const words = said.map((x) => ({ ...x, role: 'wearer', loudness: -12, speaker: 0 }))
+    const dir = mkdtempSync(join(tmpdir(), 'catch-fixtures-'))
+    writeFileSync(join(dir, 'in-flight.json'), JSON.stringify({ fixture: 'in-flight', synthetic: true, script: [], variant: 'wearer-louder', lines: [], words }))
+    const clock = new VirtualClock()
+    const waiting: { text: string; end: number }[] = []
+    const heard: { text: string; at: number }[] = []
+    let run!: FixtureRun
+    // The server: each word is heard once the frame carrying its end arrives, ten wall milliseconds after its push.
+    const host = {
+      pushAudio: (_pcm: unknown, _role: unknown, _dir: unknown, at: number) =>
+        setTimeout(() => {
+          while (waiting.length > 0 && waiting[0]!.end <= run.seconds(at) + 1e-6) heard.push({ text: waiting.shift()!.text, at: clock.now() })
+        }, 10),
+    }
+    const stt = {
+      deliver: (ws: { text: string; end: number }[]) => waiting.push(...ws),
+      get holding() {
+        return waiting.length
+      },
+    }
+    run = new FixtureRun('in-flight', { clock, host: host as never, stt: stt as never, fixtureDir: dir })
+    await fastForward({ run, h: { clock } } as never, 541)
+    expect(heard.map((x) => x.text).slice(0, 2), 'the words before the silence').toEqual(['Got', 'it.'])
+    for (const x of heard.slice(0, 2)) expect(run.seconds(x.at), `"${x.text}" reached the server only after the jump`).toBeLessThan(10)
+  })
+})
+
 describe('the network guard', () => {
   it('lets loopback through and nothing else', () => {
     expect(['127.0.0.1', 'localhost', '::1', undefined].every(isLoopback)).toBe(true)
@@ -218,4 +259,27 @@ describe('the network guard', () => {
     const error = await new Promise<Error>((resolve) => socket.on('error', resolve))
     expect(error.message).toMatch(/api\.deepgram\.com.*never do/)
   })
+})
+
+// The fix round's honesty-1: "A second swipe down resumes listening" proves
+// the words said after the resume are heard by finding PAUSE_RESUME.heard in
+// the store, and "nothing said while paused" by not finding PAUSE_RESUME.unheard.
+// A control word said anywhere else in the fixture is found (or missed)
+// whether or not the resume works, so each is said only on its own side.
+describe('the pause-resume fixture: control words said only where they prove something', () => {
+  const said = (fx: ReturnType<typeof loadFixture>, word: string) => fx.words.filter((w) => w.text.toLowerCase().includes(word.toLowerCase()))
+  for (const variant of ['wearer-louder', 'other-louder']) {
+    it(`each "heard" word is said only after the resume, each "unheard" only during the pause (${variant})`, async () => {
+      const { PAUSE_RESUME } = await import('../fixtures/scripts.ts')
+      const fx = loadFixture(`pause-resume.${variant}`)
+      for (const word of PAUSE_RESUME.heard) {
+        expect(said(fx, word).length, `"${word}" is said`).toBeGreaterThan(0)
+        expect(said(fx, word).filter((w) => w.start < PAUSE_RESUME.resumeAt).map((w) => [w.text, w.start]), `"${word}" said before the resume`).toEqual([])
+      }
+      for (const word of PAUSE_RESUME.unheard) {
+        expect(said(fx, word).length, `"${word}" is said`).toBeGreaterThan(0)
+        expect(said(fx, word).filter((w) => w.start < PAUSE_RESUME.pauseAt || w.end > PAUSE_RESUME.resumeAt).map((w) => [w.text, w.start]), `"${word}" said outside the pause`).toEqual([])
+      }
+    })
+  }
 })
