@@ -10,6 +10,7 @@ import { encodeFrame } from '../../shared/wire.ts'
 import { VirtualClock } from '../harness/clock.ts'
 import { pcmAt } from '../harness/player.ts'
 import { find, rows } from '../harness/store-reader.ts'
+import { audioProtocols } from '../../shared/audio-token.ts'
 
 // The server's own boundary rules, on a store of its own (the harness empties
 // its store between scenarios, so the suite cannot see these from there).
@@ -60,7 +61,7 @@ async function start(dbPath: string, model?: ModelClient) {
 
 /** The wearer (loud frames, D126's loudness split) says `text`, one word every 0.3 s, through a real /audio socket. */
 async function wearerSays(server: RunningServer, say: (words: SttWord[]) => void, text: string): Promise<void> {
-  const socket = new WebSocket(`${server.url.replace(/^http/, 'ws')}/audio?token=${TOKEN}&lens=orphans`)
+  const socket = new WebSocket(`${server.url.replace(/^http/, 'ws')}/audio?lens=orphans`, audioProtocols(TOKEN))
   sockets.push(socket)
   await new Promise<void>((resolve, reject) => {
     socket.once('open', () => resolve())

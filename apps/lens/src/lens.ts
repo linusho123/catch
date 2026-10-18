@@ -5,6 +5,7 @@ import {
   OsEventTypeList,
   type EvenAppBridge,
 } from '@evenrealities/even_hub_sdk'
+import { audioProtocols } from '../../../shared/audio-token.ts'
 import type { LensMessage, LensView, ServerMessage } from '../../../shared/lens-protocol.ts'
 import { toWireFrame } from './frames.ts'
 
@@ -39,7 +40,7 @@ export interface LensOptions {
   bridge: EvenAppBridge
   /** The server origin, e.g. wss://catch-g2.fly.dev or ws://localhost:8080. */
   server: string
-  /** The shared token /audio requires; it travels as `?token=` (a browser WebSocket cannot set headers). */
+  /** The shared token /audio requires; it travels as a WebSocket subprotocol, never in the URL (PH, shared/audio-token.ts). */
   token: string
   /** The capture clock for each frame's header. */
   now?: () => number
@@ -177,7 +178,7 @@ export async function startLens(opts: LensOptions): Promise<Lens> {
   function connect(): void {
     retry = undefined
     if (stopped) return
-    const ws = new WebSocket(`${server}/audio?token=${encodeURIComponent(opts.token)}&lens=${lensId}`)
+    const ws = new WebSocket(`${server}/audio?lens=${lensId}`, audioProtocols(opts.token))
     ws.binaryType = 'arraybuffer'
     socket = ws
     closed = new Promise<void>((resolve) => ws.addEventListener('close', () => resolve()))

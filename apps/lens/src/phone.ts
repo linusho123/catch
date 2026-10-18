@@ -10,7 +10,7 @@ import {
 } from '../../../shared/phone-protocol.ts'
 
 // The phone page (D130): the plugin's own page, which the Even app shows on
-// the phone while the glasses run the lens. Two screens and nothing else yet:
+// the phone while the glasses run the lens. Three screens:
 // the history (D100), newest first and grouped by day, each row with the names
 // caught (or "no name"), the time, the open promises (or "all done") and a
 // kept mark, with every open promise counted in the header (the wearer's own,

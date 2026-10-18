@@ -7,6 +7,7 @@ import { VirtualClock } from '../harness/clock.ts'
 import { FixtureStt } from '../harness/player.ts'
 import { startServer, type RunningServer } from '../../server/src/app.ts'
 import type { LensView, ServerMessage } from '../../shared/lens-protocol.ts'
+import { audioProtocols } from '../../shared/audio-token.ts'
 
 // D37 at the server's edge: when the speech-to-text stream drops, the server
 // tells the lens there is no dot, keeps trying the provider, and sends the dot
@@ -32,7 +33,7 @@ describe('the server when speech-to-text drops (D37)', () => {
     it(`sends the dot back within a second of the provider returning, after ${downFor} ms down`, async () => {
       stt.reset()
       const views: { at: number; view: LensView }[] = []
-      const socket = new WebSocket(`${server.url.replace(/^http/, 'ws')}/audio?token=${TOKEN}`)
+      const socket = new WebSocket(`${server.url.replace(/^http/, 'ws')}/audio`, audioProtocols(TOKEN))
       socket.on('message', (raw) => {
         const msg = JSON.parse(String(raw)) as ServerMessage
         if (msg.type === 'show') views.push({ at: clock.now(), view: msg.view })

@@ -148,6 +148,17 @@ export const ALREADY_KEPT = 'already kept'
 const SPLIT_WINDOW_WORDS = 200
 
 /**
+ * How far back the session keeps lens frames, in seconds before the newest
+ * one (PH). A lens left on all day sends a frame every 100 ms whether anyone
+ * speaks or not, so without a horizon an idle session's buffer, and the
+ * frames the split scans for one word, would grow for hours. A word the
+ * provider sends is seconds old, never a minute. A judged word that ends
+ * before the horizon leaves the split's window with its frames, so the split
+ * never judges a word on frames that are gone.
+ */
+export const FRAME_HORIZON_S = 60
+
+/**
  * How far apart (seconds) an interim's name word and a final's may start and
  * still be the one word: the provider's timings move a little between its
  * interim and final results; a second person of the same name is never that close.
@@ -636,8 +647,21 @@ export class Session {
     const end = (frame.captureMs - this.epochMs) / 1000
     this.frames.push({ start: end - seconds, end, role: frame.speakerRole, loudness: pcmLoudnessDbfs(frame.pcm) })
     if (end > this.coveredUntil) this.coveredUntil = end
+    this.forgetBefore(this.coveredUntil - FRAME_HORIZON_S)
     this.drain(false)
     return end - seconds
+  }
+
+  /** Drops the frames, and the judged words, that end before `horizon` (PH, FRAME_HORIZON_S). */
+  private forgetBefore(horizon: number): void {
+    if (this.frames.length > 0 && this.frames[0]!.end < horizon) {
+      const keep = this.frames.findIndex((f) => f.end >= horizon)
+      this.frames.splice(0, keep === -1 ? this.frames.length : keep)
+    }
+    if (this.judged.length > 0 && this.judged[0]!.word.end < horizon) {
+      const keep = this.judged.findIndex((j) => j.word.end >= horizon)
+      this.judged.splice(0, keep === -1 ? this.judged.length : keep)
+    }
   }
 
   /**
