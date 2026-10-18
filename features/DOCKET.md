@@ -1095,3 +1095,10 @@ D134 2026-10-18 [V]
   serves: N4 N8
   touches: D76 D98 D100 D133
 # the visionary, early Sunday: "a way to delete old conversations caught by Catch". Chosen: delete one at a time, from the conversation's own screen, with a confirm; everything goes. Roads not taken: delete all; conversations that expire on their own after some days; keeping a deleted conversation's open promises.
+
+D135 2026-10-18 [V]
+  resp: on a conversation's screen of the plugin's phone page the wearer can add a name, or a promise either their own (YOU) or owed to them (OWED TO YOU), by hand; it is stored with the conversation like one caught, open until ticked, and goes with the conversation if it is deleted [V]
+  -> structural
+  serves: N3 N4
+  touches: D98 D133 D134
+# the visionary, Sunday morning with a real G2 in hand: "manually adding ways to store names + promises (regardless of who owes who)". Roads not taken: editing or removing what was caught; adding to a conversation still open on the lens.

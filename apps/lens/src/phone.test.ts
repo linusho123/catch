@@ -158,6 +158,18 @@ describe('the page', () => {
     expect(isHistory(root.innerHTML)).toBe(true)
   })
 
+  it('adds a promise owed to the wearer by hand and draws the conversation the server answers (D135)', async () => {
+    const after = { ...CONVERSATION, owed: [...CONVERSATION.owed, { id: 99, text: 'Dev sends the agenda', done: false }] }
+    const { asked, fetch } = fakeServer({ '/phone/conversations/3': json(CONVERSATION), '/phone/conversations/3/promises': json(after) })
+    const root = new PhoneScreenRecord(systemClock)
+    const phone = startPhone({ root, server: 'ws://localhost:8080', token: 't0k', fetch, now: () => NOW })
+    await phone.open(3)
+    expect(root.innerHTML).toContain('data-add-promise="3"')
+    await phone.addPromise(3, 'owed', 'Dev sends the agenda')
+    expect(asked.at(-1)!.url).toBe('http://localhost:8080/phone/conversations/3/promises')
+    expect(sectionsOn(root.innerHTML).find((s) => s.title === 'OWED TO YOU')!.promises.map((p) => p.text)).toContain('Dev sends the agenda')
+  })
+
   it('says when the server refuses the token or cannot be reached, with a way to try again', async () => {
     const refused = fakeServer({ '/phone/history': () => new Response('', { status: 401 }) })
     const root = new PhoneScreenRecord(systemClock)

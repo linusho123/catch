@@ -23,6 +23,12 @@ export const PHONE_END_PATH = '/phone/end'
 export const PHONE_CONVERSATION_PATH = '/phone/conversations/'
 /** GET /phone/conversations/<id>/jogger: a kept conversation's jogger (D99). */
 export const PHONE_JOGGER_SUFFIX = '/jogger'
+/** POST `{ name }` to a conversation's path plus this: a name added by hand (D135). */
+export const PHONE_NAMES_SUFFIX = '/names'
+/** POST `{ side: 'you' | 'owed', text }` to a conversation's path plus this: a promise added by hand (D135). */
+export const PHONE_PROMISES_SUFFIX = '/promises'
+/** The longest name or promise a hand can add. */
+export const MAX_ADDED_LENGTH = 300
 /**
  * PUT /phone/promises/<id>/done: ticks one of the wearer's promises off (D39),
  * YOU or OWED TO YOU, and answers that conversation's screen as it now stands

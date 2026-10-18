@@ -10,7 +10,7 @@ The orienting document for the agent that builds Catch, with the human as second
 
 ## Shape
 
-- Four parts: the lens app (an Even Hub plugin running in the Even app's WebView on the phone, driving the glasses' containers and receiving their mic and touch events); and a screenless server that hears, judges and writes. There is no separate iPhone app and no website (D126); the phone's screens (history, conversation screen with tick-off and delete, jogger) live on the plugin's own page in the Even app (D130, D133, D134). [ruled: D102, D103, D126, D130, D133, D134]
+- Four parts: the lens app (an Even Hub plugin running in the Even app's WebView on the phone, driving the glasses' containers and receiving their mic and touch events); and a screenless server that hears, judges and writes. There is no separate iPhone app and no website (D126); the phone's screens (history, conversation screen with tick-off, delete and adding a name or promise by hand, jogger) live on the plugin's own page in the Even app (D130, D133, D134, D135). [ruled: D102, D103, D126, D130, D133, D134, D135]
 - The lens is the only surface during a conversation; the phone and the website are the surfaces after it. Nothing done on the phone shows on the lens. [ruled: D61]
 - The server is where speech-to-text, the wearer/other split, the catch detectors, the joggers and the stores live; the lens app streams audio up and draws what comes down. [chosen]
 - What comes down is a view (the dot, no mark, one line, the names page), each timed on the server's clock; the lens keeps no timer of its own but its reconnect, sends its taps up, and decides alone only that with no server Catch cannot hear. [chosen]
@@ -126,3 +126,4 @@ The orienting document for the agent that builds Catch, with the human as second
 - 2026-10-18 — P10 fix round (the operator's answers 4 and 5, the head reviewer's head-1 and head-2): the names page's `chosen` line changed: a swipe up at the first name restarts the page's five seconds, nothing else; the circle's introductions are spoken briskly (P4's `brisk()`) and the wearer's promise comes three seconds after the last of them; the circle's hand-written promise cassette was re-recorded from the real model, which gave the same answer, so the file is unchanged. No ruled line touched.
 - 2026-10-18 — readability pass on the real G2: one `chosen` line (lens style from the server; Deepgram smart formatting and keyterms). No ruled line touched; D14's 'lowest readable brightness' is now tuned on the glasses themselves.
 - 2026-10-18 — on the real G2: the Even OS keeps long-press, so the phone page gains End conversation; one `chosen` line.
+- 2026-10-18 — D135: names and promises added by hand on the phone page; one ruled line changed.

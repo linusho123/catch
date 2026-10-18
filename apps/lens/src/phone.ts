@@ -4,6 +4,8 @@ import {
   PHONE_END_PATH,
   PHONE_HISTORY_PATH,
   PHONE_JOGGER_SUFFIX,
+  PHONE_NAMES_SUFFIX,
+  PHONE_PROMISES_SUFFIX,
   PHONE_PROMISE_PATH,
   type ConversationResponse,
   type HistoryResponse,
@@ -89,11 +91,17 @@ export interface Phone {
    * history has been drawn. A conversation is listed once its promises are in.
    */
   endConversation(): Promise<void>
+  /** D135: adds a name to conversation `id` by hand, then draws its screen as the server answers it. */
+  addName(id: number, name: string): Promise<void>
+  /** D135: adds a promise by hand, the wearer's (`you`) or owed to the wearer (`owed`), then draws the screen. */
+  addPromise(id: number, side: 'you' | 'owed', text: string): Promise<void>
 }
 
 /** The history's button that ends the open conversation (the glasses' long-press is the Even OS's). */
 export const END_CONVERSATION = 'End conversation'
 /** What the history says while an ended conversation's promises are still being judged. */
+/** What a conversation's screen says when a hand-added name or promise did not reach the server (D135). */
+export const ADD_NOT_SAVED = 'Not added yet. Try again in a moment.'
 export const ENDING_NOTE = 'Ending… it shows here in a few seconds.'
 
 /** The http(s) origin a ws(s) server origin shares a host with. */
@@ -197,8 +205,22 @@ export function conversationMarkup(c: ConversationResponse, now: number, note?: 
     section('owed', 'OWED TO YOU', c.owed) +
     (note ? `<p class="note">${esc(note)}</p>` : '') +
     (c.jogger ? `<button type="button" class="jogger-link" data-jogger="${c.id}">Kept conversation ›</button>` : '') +
+    addControls(c.id) +
     deleteControl(c.id, confirmingDelete) +
     '</main>'
+  )
+}
+
+/** D135: a name, or a promise (the wearer's or owed to the wearer), added by hand to this conversation. */
+function addControls(id: number): string {
+  return (
+    `<section class="add" data-add="${id}">` +
+    '<input type="text" class="add-name" maxlength="300" placeholder="Add a name" aria-label="name">' +
+    `<button type="button" data-add-name="${id}">Add name</button>` +
+    '<input type="text" class="add-promise" maxlength="300" placeholder="Add a promise" aria-label="promise">' +
+    '<select class="add-side" aria-label="whose"><option value="you">Mine (YOU)</option><option value="owed">Owed to me</option></select>' +
+    `<button type="button" data-add-promise="${id}">Add promise</button>` +
+    '</section>'
   )
 }
 
@@ -386,6 +408,20 @@ export function startPhone(opts: PhoneOptions): Phone {
     }, 4000)
   }
 
+  /** POSTs a hand-added name or promise (D135) and draws the conversation as the server answers it. */
+  async function add(id: number, suffix: string, body: unknown): Promise<void> {
+    try {
+      const res = await fetch(`${origin}${PHONE_CONVERSATION_PATH}${id}${suffix}`, { method: 'POST', headers: { ...auth, 'content-type': 'application/json' }, body: JSON.stringify(body) })
+      if (res.ok) {
+        drawConversation((await res.json()) as ConversationResponse)
+        return
+      }
+    } catch {
+      // Unreachable: drawn below as not saved.
+    }
+    if (shown?.id === id) root.innerHTML = conversationMarkup(shown, now(), ADD_NOT_SAVED)
+  }
+
   const phone: Phone = {
     home: () => go(history),
     open: (id) => go(() => conversation(id)),
@@ -399,6 +435,8 @@ export function startPhone(opts: PhoneOptions): Phone {
     tick,
     remove,
     endConversation,
+    addName: (id, name) => add(id, PHONE_NAMES_SUFFIX, { name }),
+    addPromise: (id, side, text) => add(id, PHONE_PROMISES_SUFFIX, { side, text }),
   }
 
   root.addEventListener('click', ({ target }) => {
@@ -416,6 +454,15 @@ export function startPhone(opts: PhoneOptions): Phone {
     else if (kept) void phone.jogger(Number(kept))
     else if (t.closest?.('[data-home]')) void phone.home()
     else if (t.closest?.('[data-end]')) void phone.endConversation()
+    else if (t.closest?.('[data-add-name]') || t.closest?.('[data-add-promise]')) {
+      // D135: read what the wearer typed from the screen's own inputs.
+      const box = t.closest?.('[data-add]') as unknown as { querySelector?: (q: string) => { value?: string } | null } | null
+      const id = Number(box && (box as unknown as { getAttribute(a: string): string | null }).getAttribute('data-add'))
+      const field = (q: string) => box?.querySelector?.(q)?.value?.trim() ?? ''
+      if (t.closest?.('[data-add-name]')) {
+        if (field('.add-name')) void phone.addName(id, field('.add-name'))
+      } else if (field('.add-promise')) void phone.addPromise(id, field('.add-side') === 'owed' ? 'owed' : 'you', field('.add-promise'))
+    }
   })
   return phone
 }
