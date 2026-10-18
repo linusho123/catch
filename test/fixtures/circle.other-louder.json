@@ -1,0 +1,775 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "circle",
+  "variant": "other-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "Hi everyone, let's go around the circle."
+    },
+    {
+      "gap": 1,
+      "who": "Priya",
+      "text": "I'm Priya."
+    },
+    {
+      "gap": 0.4,
+      "who": "Marcus",
+      "text": "I'm Marcus."
+    },
+    {
+      "gap": 0.4,
+      "who": "Dana",
+      "text": "I'm Dana."
+    },
+    {
+      "gap": 0.4,
+      "who": "Ana",
+      "text": "I'm Ana."
+    },
+    {
+      "gap": 0.4,
+      "who": "Ben",
+      "text": "I'm Ben."
+    },
+    {
+      "gap": 0.4,
+      "who": "Chloe",
+      "text": "I'm Chloe."
+    },
+    {
+      "gap": 0.4,
+      "who": "Diego",
+      "text": "I'm Diego."
+    },
+    {
+      "gap": 0.4,
+      "who": "Elena",
+      "text": "I'm Elena."
+    },
+    {
+      "gap": 0.4,
+      "who": "Farid",
+      "text": "I'm Farid."
+    },
+    {
+      "gap": 0.4,
+      "who": "Grace",
+      "text": "I'm Grace."
+    },
+    {
+      "gap": 0.4,
+      "who": "Hiro",
+      "text": "I'm Hiro."
+    },
+    {
+      "gap": 0.4,
+      "who": "Imani",
+      "text": "I'm Imani."
+    },
+    {
+      "gap": 0.4,
+      "who": "Jonas",
+      "text": "I'm Jonas."
+    },
+    {
+      "gap": 0.4,
+      "who": "Kenji",
+      "text": "I'm Kenji."
+    },
+    {
+      "gap": 0.4,
+      "who": "Leila",
+      "text": "I'm Leila."
+    },
+    {
+      "gap": 0.4,
+      "who": "Mateo",
+      "text": "I'm Mateo."
+    },
+    {
+      "gap": 0.4,
+      "who": "Nadia",
+      "text": "I'm Nadia."
+    },
+    {
+      "gap": 0.4,
+      "who": "Omar",
+      "text": "I'm Omar."
+    },
+    {
+      "gap": 0.4,
+      "who": "Petra",
+      "text": "I'm Petra."
+    },
+    {
+      "gap": 0.4,
+      "who": "Quinn",
+      "text": "I'm Quinn."
+    },
+    {
+      "gap": 0.4,
+      "who": "Rosa",
+      "text": "I'm Rosa."
+    },
+    {
+      "gap": 0.4,
+      "who": "Soren",
+      "text": "I'm Soren."
+    },
+    {
+      "gap": 0.4,
+      "who": "Tara",
+      "text": "I'm Tara."
+    },
+    {
+      "gap": 0.4,
+      "who": "Umar",
+      "text": "I'm Umar."
+    },
+    {
+      "gap": 0.4,
+      "who": "Vera",
+      "text": "I'm Vera."
+    },
+    {
+      "gap": 0.4,
+      "who": "Wes",
+      "text": "I'm Wes."
+    },
+    {
+      "gap": 0.4,
+      "who": "Xavier",
+      "text": "I'm Xavier."
+    },
+    {
+      "gap": 0.4,
+      "who": "Yara",
+      "text": "I'm Yara."
+    },
+    {
+      "gap": 0.4,
+      "who": "Zoe",
+      "text": "I'm Zoe."
+    },
+    {
+      "gap": 0.4,
+      "who": "Aiden",
+      "text": "I'm Aiden."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Dev, I'll send you the deck."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Thanks, everyone."
+    }
+  ],
+  "words": [
+    {
+      "text": "Hi",
+      "start": 0,
+      "end": 0.27,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "everyone,",
+      "start": 0.33,
+      "end": 0.87,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "let's",
+      "start": 0.93,
+      "end": 1.29,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "go",
+      "start": 1.35,
+      "end": 1.62,
+      "role": "wearer",
+      "loudness": -27.4,
+      "speaker": 0
+    },
+    {
+      "text": "around",
+      "start": 1.68,
+      "end": 2.13,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 2.19,
+      "end": 2.505,
+      "role": "wearer",
+      "loudness": -24.5,
+      "speaker": 0
+    },
+    {
+      "text": "circle.",
+      "start": 2.565,
+      "end": 3.015,
+      "role": "wearer",
+      "loudness": -25.9,
+      "speaker": 0
+    },
+    {
+      "text": "I'm",
+      "start": 4.015,
+      "end": 4.285,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "Priya.",
+      "start": 4.345,
+      "end": 4.75,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "I'm",
+      "start": 5.15,
+      "end": 5.42,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 2
+    },
+    {
+      "text": "Marcus.",
+      "start": 5.48,
+      "end": 5.93,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 2
+    },
+    {
+      "text": "I'm",
+      "start": 6.33,
+      "end": 6.6,
+      "role": "other",
+      "loudness": -14.2,
+      "speaker": 3
+    },
+    {
+      "text": "Dana.",
+      "start": 6.66,
+      "end": 7.02,
+      "role": "other",
+      "loudness": -13.6,
+      "speaker": 3
+    },
+    {
+      "text": "I'm",
+      "start": 7.42,
+      "end": 7.69,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 4
+    },
+    {
+      "text": "Ana.",
+      "start": 7.75,
+      "end": 8.065,
+      "role": "other",
+      "loudness": -13.8,
+      "speaker": 4
+    },
+    {
+      "text": "I'm",
+      "start": 8.465,
+      "end": 8.735,
+      "role": "other",
+      "loudness": -13.3,
+      "speaker": 5
+    },
+    {
+      "text": "Ben.",
+      "start": 8.795,
+      "end": 9.11,
+      "role": "other",
+      "loudness": -12.8,
+      "speaker": 5
+    },
+    {
+      "text": "I'm",
+      "start": 9.51,
+      "end": 9.78,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 6
+    },
+    {
+      "text": "Chloe.",
+      "start": 9.84,
+      "end": 10.245,
+      "role": "other",
+      "loudness": -13.8,
+      "speaker": 6
+    },
+    {
+      "text": "I'm",
+      "start": 10.645,
+      "end": 10.915,
+      "role": "other",
+      "loudness": -13.2,
+      "speaker": 7
+    },
+    {
+      "text": "Diego.",
+      "start": 10.975,
+      "end": 11.38,
+      "role": "other",
+      "loudness": -12.9,
+      "speaker": 7
+    },
+    {
+      "text": "I'm",
+      "start": 11.78,
+      "end": 12.05,
+      "role": "other",
+      "loudness": -13.3,
+      "speaker": 8
+    },
+    {
+      "text": "Elena.",
+      "start": 12.11,
+      "end": 12.515,
+      "role": "other",
+      "loudness": -15.1,
+      "speaker": 8
+    },
+    {
+      "text": "I'm",
+      "start": 12.915,
+      "end": 13.185,
+      "role": "other",
+      "loudness": -14.2,
+      "speaker": 9
+    },
+    {
+      "text": "Farid.",
+      "start": 13.245,
+      "end": 13.65,
+      "role": "other",
+      "loudness": -15.2,
+      "speaker": 9
+    },
+    {
+      "text": "I'm",
+      "start": 14.05,
+      "end": 14.32,
+      "role": "other",
+      "loudness": -15,
+      "speaker": 10
+    },
+    {
+      "text": "Grace.",
+      "start": 14.38,
+      "end": 14.785,
+      "role": "other",
+      "loudness": -14.4,
+      "speaker": 10
+    },
+    {
+      "text": "I'm",
+      "start": 15.185,
+      "end": 15.455,
+      "role": "other",
+      "loudness": -12.6,
+      "speaker": 11
+    },
+    {
+      "text": "Hiro.",
+      "start": 15.515,
+      "end": 15.875,
+      "role": "other",
+      "loudness": -12.6,
+      "speaker": 11
+    },
+    {
+      "text": "I'm",
+      "start": 16.275,
+      "end": 16.545,
+      "role": "other",
+      "loudness": -15.4,
+      "speaker": 12
+    },
+    {
+      "text": "Imani.",
+      "start": 16.605,
+      "end": 17.01,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 12
+    },
+    {
+      "text": "I'm",
+      "start": 17.41,
+      "end": 17.68,
+      "role": "other",
+      "loudness": -12.5,
+      "speaker": 13
+    },
+    {
+      "text": "Jonas.",
+      "start": 17.74,
+      "end": 18.145,
+      "role": "other",
+      "loudness": -12.8,
+      "speaker": 13
+    },
+    {
+      "text": "I'm",
+      "start": 18.545,
+      "end": 18.815,
+      "role": "other",
+      "loudness": -15,
+      "speaker": 14
+    },
+    {
+      "text": "Kenji.",
+      "start": 18.875,
+      "end": 19.28,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 14
+    },
+    {
+      "text": "I'm",
+      "start": 19.68,
+      "end": 19.95,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 15
+    },
+    {
+      "text": "Leila.",
+      "start": 20.01,
+      "end": 20.415,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 15
+    },
+    {
+      "text": "I'm",
+      "start": 20.815,
+      "end": 21.085,
+      "role": "other",
+      "loudness": -13,
+      "speaker": 16
+    },
+    {
+      "text": "Mateo.",
+      "start": 21.145,
+      "end": 21.55,
+      "role": "other",
+      "loudness": -12.8,
+      "speaker": 16
+    },
+    {
+      "text": "I'm",
+      "start": 21.95,
+      "end": 22.22,
+      "role": "other",
+      "loudness": -12.6,
+      "speaker": 17
+    },
+    {
+      "text": "Nadia.",
+      "start": 22.28,
+      "end": 22.685,
+      "role": "other",
+      "loudness": -14,
+      "speaker": 17
+    },
+    {
+      "text": "I'm",
+      "start": 23.085,
+      "end": 23.355,
+      "role": "other",
+      "loudness": -14.2,
+      "speaker": 18
+    },
+    {
+      "text": "Omar.",
+      "start": 23.415,
+      "end": 23.775,
+      "role": "other",
+      "loudness": -15.1,
+      "speaker": 18
+    },
+    {
+      "text": "I'm",
+      "start": 24.175,
+      "end": 24.445,
+      "role": "other",
+      "loudness": -13.2,
+      "speaker": 19
+    },
+    {
+      "text": "Petra.",
+      "start": 24.505,
+      "end": 24.91,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 19
+    },
+    {
+      "text": "I'm",
+      "start": 25.31,
+      "end": 25.58,
+      "role": "other",
+      "loudness": -14.6,
+      "speaker": 20
+    },
+    {
+      "text": "Quinn.",
+      "start": 25.64,
+      "end": 26.045,
+      "role": "other",
+      "loudness": -13.2,
+      "speaker": 20
+    },
+    {
+      "text": "I'm",
+      "start": 26.445,
+      "end": 26.715,
+      "role": "other",
+      "loudness": -15.4,
+      "speaker": 21
+    },
+    {
+      "text": "Rosa.",
+      "start": 26.775,
+      "end": 27.135,
+      "role": "other",
+      "loudness": -15.3,
+      "speaker": 21
+    },
+    {
+      "text": "I'm",
+      "start": 27.535,
+      "end": 27.805,
+      "role": "other",
+      "loudness": -14.6,
+      "speaker": 22
+    },
+    {
+      "text": "Soren.",
+      "start": 27.865,
+      "end": 28.27,
+      "role": "other",
+      "loudness": -15.1,
+      "speaker": 22
+    },
+    {
+      "text": "I'm",
+      "start": 28.67,
+      "end": 28.94,
+      "role": "other",
+      "loudness": -14.4,
+      "speaker": 23
+    },
+    {
+      "text": "Tara.",
+      "start": 29,
+      "end": 29.36,
+      "role": "other",
+      "loudness": -15,
+      "speaker": 23
+    },
+    {
+      "text": "I'm",
+      "start": 29.76,
+      "end": 30.03,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 24
+    },
+    {
+      "text": "Umar.",
+      "start": 30.09,
+      "end": 30.45,
+      "role": "other",
+      "loudness": -15.3,
+      "speaker": 24
+    },
+    {
+      "text": "I'm",
+      "start": 30.85,
+      "end": 31.12,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 25
+    },
+    {
+      "text": "Vera.",
+      "start": 31.18,
+      "end": 31.54,
+      "role": "other",
+      "loudness": -13.5,
+      "speaker": 25
+    },
+    {
+      "text": "I'm",
+      "start": 31.94,
+      "end": 32.21,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 26
+    },
+    {
+      "text": "Wes.",
+      "start": 32.27,
+      "end": 32.585,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 26
+    },
+    {
+      "text": "I'm",
+      "start": 32.985,
+      "end": 33.255,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 27
+    },
+    {
+      "text": "Xavier.",
+      "start": 33.315,
+      "end": 33.765,
+      "role": "other",
+      "loudness": -13.8,
+      "speaker": 27
+    },
+    {
+      "text": "I'm",
+      "start": 34.165,
+      "end": 34.435,
+      "role": "other",
+      "loudness": -12.9,
+      "speaker": 28
+    },
+    {
+      "text": "Yara.",
+      "start": 34.495,
+      "end": 34.855,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 28
+    },
+    {
+      "text": "I'm",
+      "start": 35.255,
+      "end": 35.525,
+      "role": "other",
+      "loudness": -15.5,
+      "speaker": 29
+    },
+    {
+      "text": "Zoe.",
+      "start": 35.585,
+      "end": 35.9,
+      "role": "other",
+      "loudness": -13.9,
+      "speaker": 29
+    },
+    {
+      "text": "I'm",
+      "start": 36.3,
+      "end": 36.57,
+      "role": "other",
+      "loudness": -13,
+      "speaker": 30
+    },
+    {
+      "text": "Aiden.",
+      "start": 36.63,
+      "end": 37.035,
+      "role": "other",
+      "loudness": -13.5,
+      "speaker": 30
+    },
+    {
+      "text": "Dev,",
+      "start": 38.035,
+      "end": 38.35,
+      "role": "wearer",
+      "loudness": -25,
+      "speaker": 0
+    },
+    {
+      "text": "I'll",
+      "start": 38.41,
+      "end": 38.725,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "send",
+      "start": 38.785,
+      "end": 39.145,
+      "role": "wearer",
+      "loudness": -27,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 39.205,
+      "end": 39.52,
+      "role": "wearer",
+      "loudness": -27.4,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 39.58,
+      "end": 39.895,
+      "role": "wearer",
+      "loudness": -24.7,
+      "speaker": 0
+    },
+    {
+      "text": "deck.",
+      "start": 39.955,
+      "end": 40.315,
+      "role": "wearer",
+      "loudness": -26.2,
+      "speaker": 0
+    },
+    {
+      "text": "Thanks,",
+      "start": 41.315,
+      "end": 41.765,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "everyone.",
+      "start": 41.825,
+      "end": 42.365,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    }
+  ]
+}

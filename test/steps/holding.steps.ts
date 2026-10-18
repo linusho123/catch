@@ -11,9 +11,11 @@ import {
   expectDotOnly,
   fastForward,
   isPage,
+  isPromisesPage,
   LINE_MS,
   lineIn,
   linesShown,
+  LOWEST_READABLE,
   NAME_BOUND_MS,
   namesOn,
   nowSec,
@@ -41,7 +43,11 @@ import {
 // `no promises yet`; P5: the owed line after them, "owed: Dev sends the
 // agenda", from Dev, whose name was caught, so the line names him), and the
 // conversation's end on the lens and, from P2a, on the phone: the
-// notification capture is the phone (D126). Scrolling is P10's; "A long-press
+// notification capture is the phone (D126). Scrolling (P10): thirty names
+// across pages of names, each read off the bridge record in the order the
+// swipes brought them, the promises page only past the last name, and the
+// swipes up back through the same pages to the first, where a further swipe
+// up does nothing. "A long-press
 // ends the conversation now" binds its keep and the kept notification in P4
 // (jogger-world.ts). Every "sees" and every "a tap shows" is
 // read from the bridge stub's record on fixture time (lens-world.ts), every
@@ -115,6 +121,48 @@ async function threeIntroductions(w: LensWorld, fixture: string): Promise<void> 
 /** How many lines a "first" step read off the top of the promises page, for the "after them" step. */
 const firstSeen = new WeakMap<LensWorld, number>()
 
+/**
+ * The G2's text line in pixels: the firmware's LVGL line height is fixed at
+ * 27 px (Even's `text-heavy` template). A capturing text container given more
+ * lines than its box holds is scrolled by the firmware itself, so a page that
+ * overflows would show the wearer names the bridge record cannot place (P10).
+ */
+const G2_LINE_PX = 27
+
+/** The sequence of held pages the swipes brought up (P10): from the tap's names page on, in order. */
+const pagesSeen = new WeakMap<LensWorld, Screen[]>()
+
+/** A names page: its header, its names and its hint, all dim, and nothing else; its names fit its box at the G2's line height. */
+function expectNamesPage(s: Screen, what: string): void {
+  expect(isPage(s), `${what}: the lens shows ${JSON.stringify(visible(s).map((c) => c.content))}`).toBe(true)
+  const header = visible(s).find((c) => c.containerName === 'header')
+  expect(header?.content, `${what}: the header`).toBe('this conversation 1/2')
+  expect(visible(s).find((c) => c.containerName === 'hint')?.content, `${what}: the hint`).toBe('↓ promises')
+  for (const c of visible(s)) expect(c.brightness, `${what}: the ${c.containerName} is dim`).toBe(LOWEST_READABLE)
+  const names = visible(s).find((c) => c.containerName === 'names')!
+  const lines = names.content.split('\n').length
+  expect(lines * G2_LINE_PX, `${what}: ${lines} names in a ${names.box.height} px box`).toBeLessThanOrEqual(names.box.height)
+}
+
+/**
+ * One swipe (the SDK's SCROLL_BOTTOM_EVENT, 2, down; SCROLL_TOP_EVENT, 1, up)
+ * on the container that takes the touches on the page showing, and the screen
+ * it brought up: the first payload after it, within the slack, or none.
+ */
+async function swipeOnce(w: LensWorld, direction: 'down' | 'up'): Promise<{ at: number; shown: Screen | undefined }> {
+  const h = w.h!
+  const showing = screenAt(h, h.clock.now())!
+  const capture = h.host.lastPayload()?.data.textObject as { containerID: number; containerName: string; isEventCapture?: number }[] | undefined
+  const target = capture?.find((c) => c.isEventCapture === 1) ?? { containerID: 3, containerName: 'names' }
+  const before = screens(h).length
+  const at = h.clock.now()
+  h.host.push('textEvent', { containerID: target.containerID, containerName: target.containerName, eventType: direction === 'down' ? 2 : 1 })
+  const shown = await waitFor(w, () => screens(h).slice(before).find((s) => s.at >= at), SLACK_MS)
+  expect(shown === undefined || shown.at - at <= SLACK_MS, `the swipe's page came ${shown ? shown.at - at : 0} ms after it`).toBe(true)
+  expect(showing.at, 'the page was still up when the swipe came').toBeGreaterThan(at - PAGE_MS)
+  return { at, shown }
+}
+
 const holding: Definer<LensWorld & JoggerWorld> = (reg) => {
   // D43
   reg.define(/^in this conversation Priya, Marcus and Dana have each introduced themselves$/, async (w) => {
@@ -167,6 +215,92 @@ const holding: Definer<LensWorld & JoggerWorld> = (reg) => {
     expect(hint!.box.y, 'the hint sits below the names').toBeGreaterThanOrEqual(names.box.y + names.box.height)
     expect(hint!.box.y + hint!.box.height, 'the hint is on the lens').toBeLessThanOrEqual(CANVAS.height)
     expect(hint!.box.y, 'the hint is at the foot of the lens').toBeGreaterThanOrEqual((CANVAS.height * 2) / 3)
+  })
+
+  // D43 (P10): thirty names scroll before the promises page.
+  reg.define(/^in this conversation thirty people have introduced themselves in a circle$/, async (w) => {
+    const h = await begin(w)
+    const run = await startRun(w, `circle.${V}`, 0)
+    // Thirty different people, each giving a different name, one after another, before anything else is said to them.
+    const intros = run.fixture.lines.filter((l) => l.who !== 'wearer')
+    const heard = intros.flatMap((l) => findIntroductions(l.text.split(/\s+/)).map((d) => d.name))
+    expect(heard, 'one name in each introduction').toHaveLength(intros.length)
+    expect(new Set(intros.map((l) => l.who)).size, 'thirty people').toBe(30)
+    expect(new Set(heard).size, 'thirty different names').toBe(30)
+    const last = lineIn(run, intros.at(-1)!.text)
+    await playTo(w, last.end + (NAME_BOUND_MS + SLACK_MS) / 1000)
+    // The lens caught each of them in turn, as they spoke.
+    expect(linesShown(h, w.dotSince!, h.clock.now()).map((l) => l.text), 'the names caught, in the order heard').toEqual(heard)
+    w.heldBefore = heard
+  })
+
+  reg.define(/^the wearer has promised to send Dev the deck$/, async (w) => {
+    const run = w.run!
+    const last = lineIn(run, run.fixture.lines.filter((l) => l.who !== 'wearer').at(-1)!.text)
+    const deck = lineIn(run, "Dev, I'll send you the deck.", last.end)
+    expect(deck.words.every((wd) => wd.role === 'wearer'), 'the wearer promises').toBe(true)
+    await playTo(w, run.fixture.words.at(-1)!.end + PROMISE_DONE_S)
+    const shown = promiseLinesShown(w, run.at(deck.start), w.h!.clock.now())
+    expect(shown.promises, 'the promise, as the lens showed it').toEqual(['promised · send Dev the deck'])
+    expect(shown.owed).toEqual([])
+    expect(shown.others, 'no name caught after the circle').toEqual([])
+  })
+
+  reg.define(/^the wearer taps and then swipes down repeatedly$/, async (w) => {
+    await untilDot(w)
+    const pages: Screen[] = [await tapForPage(w)]
+    // Down until the promises page comes; a swipe that brought nothing, or more swipes than names, stops it.
+    for (let i = 0; i <= w.heldBefore!.length && !isPromisesPage(pages.at(-1)!); i++) {
+      const { shown } = await swipeOnce(w, 'down')
+      if (!shown) break
+      pages.push(shown)
+    }
+    pagesSeen.set(w, pages)
+    w.page = pages.at(-1)
+    w.pageRead = true
+  })
+
+  reg.define(/^the wearer sees all thirty names in the order heard across the swipes$/, (w) => {
+    const pages = pagesSeen.get(w)!
+    const names = pages.filter((s) => !isPromisesPage(s))
+    names.forEach((s, i) => expectNamesPage(s, `names page ${i + 1}`))
+    expect(names.length, 'the names take more than one page').toBeGreaterThan(1)
+    expect(names.flatMap(namesOn), 'the names, page after page').toEqual(w.heldBefore)
+    // Each page came on its swipe, the one after it on the next: nothing else reached the lens in between.
+    const all = screens(w.h!)
+    const from = all.findIndex((s) => s.at === pages[0]!.at && isPage(s))
+    expect(all.slice(from, from + pages.length), 'the lens showed these pages and nothing between them').toEqual(pages)
+  })
+
+  reg.define(/^the wearer sees the promises page only after the last name$/, (w) => {
+    const pages = pagesSeen.get(w)!
+    const at = pages.findIndex(isPromisesPage)
+    expect(at, 'a swipe down turned to the promises page').toBeGreaterThan(0)
+    expect(at, 'the promises page came last').toBe(pages.length - 1)
+    expect(namesOn(pages[at - 1]!).at(-1), 'the page before it ends with the last name').toBe(w.heldBefore!.at(-1))
+    expect(promisesOn(pages[at]!), 'the promises page').toEqual(['send Dev the deck'])
+  })
+
+  reg.define(/^a swipe up scrolls the wearer back through the names$/, async (w) => {
+    const h = w.h!
+    const forward = pagesSeen.get(w)!.filter((s) => !isPromisesPage(s))
+    expect(isPromisesPage(screenAt(h, h.clock.now())!), 'the promises page is up').toBe(true)
+    // Up from the promises page: the names pages again, last first, each on its swipe, down to the first.
+    const back: Screen[] = []
+    for (let i = 0; i < forward.length; i++) {
+      const { shown } = await swipeOnce(w, 'up')
+      expect(shown, `swipe up ${i + 1} brought nothing`).toBeDefined()
+      expectNamesPage(shown!, `back, page ${forward.length - i}`)
+      back.push(shown!)
+    }
+    expect(back.map(namesOn), 'the same pages of names, in reverse').toEqual(forward.map(namesOn).reverse())
+    // At the first name a swipe up does nothing: no keep prompt, no other page; the first page stays.
+    const first = screenAt(h, h.clock.now())!
+    const { shown } = await swipeOnce(w, 'up')
+    expect(shown, 'a swipe up at the first name changed the lens').toBeUndefined()
+    await playTo(w, nowSec(w) + SLACK_MS / 1000)
+    expect(screenAt(h, h.clock.now()), 'the first page of names is still up').toEqual(first)
+    expect(namesOn(first), 'the first page begins with the first name').toEqual(forward[0] ? namesOn(forward[0]) : [])
   })
 
   // D43, D31: the page dismisses itself after five seconds with no touch.
