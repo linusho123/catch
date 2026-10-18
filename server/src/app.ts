@@ -49,7 +49,8 @@ import type { SpeechToText, SttStream, SttWord } from './stt/types.ts'
 // copy is the Fly secret CATCH_AUDIO_TOKEN. Neither is ever committed.
 //
 // The phone page (D130) reads the history and each conversation's screen from
-// the read-only phone API under /phone/ (phone/api.ts), with the same token.
+// the phone API under /phone/ (phone/api.ts), with the same token, and ticks
+// promises off there (P7, D133), the one write it makes.
 // Each conversation that ends is offered to the history (phone/history.ts),
 // which keeps it only if it produced a promise or a keep (D76, D100), with
 // the wearer's promises as commands under YOU; one with promises also sends
@@ -187,7 +188,7 @@ interface Feed {
 
 const CORS = {
   'access-control-allow-origin': '*',
-  'access-control-allow-methods': 'GET, OPTIONS',
+  'access-control-allow-methods': 'GET, PUT, OPTIONS',
   'access-control-allow-headers': 'content-type, authorization',
 }
 

@@ -9,8 +9,10 @@ import type { Store } from '../store.ts'
 // server keys its sessions, by the digest of the shared token.
 //
 // The server writes a conversation once, as it ends (app.ts, from the
-// session's end), and a kept one's jogger once it is written (D99, D116); the
-// phone API (api.ts) only reads.
+// session's end), and a kept one's jogger once it is written (D99, D116). The
+// phone API (api.ts) reads, and writes one thing: a promise ticked off on the
+// phone page (D39, P7), `done` set once and never unset, in the same file, so
+// a tick outlives a reload and a restart.
 
 /** A conversation as it ends, with what it leaves for the phone. P2a fills `you`, P4 `kept`, P5 `owed`. */
 export interface ConversationRecord {
@@ -131,6 +133,22 @@ export class History {
       .get(id, wearer) as (Pick<ConversationRow, 'id' | 'started_at' | 'ended_at' | 'names'> & { bullets: string }) | undefined
     if (!row) return undefined
     return { id: row.id, startedAt: row.started_at, endedAt: row.ended_at, names: JSON.parse(row.names) as string[], bullets: JSON.parse(row.bullets) as string[] }
+  }
+
+  /**
+   * Ticks one of the wearer's promises off (D39), YOU or OWED TO YOU, and
+   * answers its conversation's screen as it now stands; undefined when the
+   * wearer has no such promise (another wearer's is never touched).
+   * Idempotent: a promise already done stays done, and nothing else changes.
+   */
+  tick(wearer: string, promise: number): ConversationResponse | undefined {
+    const db = this.store.db
+    const row = db
+      .prepare('SELECT p.conversation_id AS id FROM promises p JOIN conversations c ON c.id = p.conversation_id WHERE p.id = ? AND c.wearer = ?')
+      .get(promise, wearer) as { id: number } | undefined
+    if (!row) return undefined
+    db.prepare('UPDATE promises SET done = 1 WHERE id = ? AND done = 0').run(promise)
+    return this.conversation(wearer, row.id)
   }
 
   /** One of the wearer's conversations as its screen shows it; undefined when the wearer has no such conversation. */
