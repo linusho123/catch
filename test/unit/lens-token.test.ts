@@ -41,6 +41,11 @@ describe('the lens token check behind lens:pack', () => {
     expect(checkLensToken(lensDir({ '.env.local': '# local\nVITE_CATCH_TOKEN="from-file"\n' }), {})).toEqual({ token: 'from-file' })
   })
 
+  it('keeps a rotated base64 token whole, + / and = included (PH)', () => {
+    const rotated = 'q+3/Zk9xP0aB7cD/Ee+FfGgHh1Ii2Jj3Kk4Ll5Mm6N0='
+    expect(checkLensToken(lensDir({ '.env.local': `VITE_CATCH_TOKEN=${rotated}\n` }), {})).toEqual({ token: rotated })
+  })
+
   it('does not count an empty VITE_CATCH_TOKEN line as a token', () => {
     expect(checkLensToken(lensDir({ '.env.local': 'VITE_CATCH_TOKEN=\n' }), {}).error).toMatch(/VITE_CATCH_TOKEN/)
   })

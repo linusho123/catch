@@ -19,7 +19,9 @@
 
 **Privacy:** nothing survives a conversation unless it produced a promise or you kept it; the transcript and audio are deleted when it ends, a kept one's once its jogger is written (D76). Speech-to-text is Deepgram with model-improvement opted out; the promise detector sends sentences with a commitment in them, yours and other people's, and a few before them, and a kept conversation's transcript (for its jogger's two passes) to Gemini on the free tier, under which Google may use that content to improve its models.
 
-**Built at LA Hacks:** the spec (`features/`, `docs/BUILD-PLAN.md`) was written before the event; every line of code was written during it, through a reviewed build pipeline. Not built: a website, phone push notifications and pause (see `features/OUT-OF-SCOPE.md`).
+**Built at LA Hacks:** the spec (`features/`, `docs/BUILD-PLAN.md`) was written before the event; every line of code was written during it, through a reviewed build pipeline. Not built: a website, phone push notifications, and pause (see `features/OUT-OF-SCOPE.md`).
+
+**Timeline:** the specification (`features/`, `docs/BUILD-PLAN.md`) was written before the event. In the history before Saturday 2026-10-17 12:00 PDT, the repository holds only that specification and its review notes, a `package.json` (with its lock file) whose scripts only lint the specification, a `.gitignore`, and a spec-lint script (`scripts/validate.cjs`) that was in the repository from Thursday 22:26 to 22:58 PDT before being moved out. The first code commit is "P0a: scaffold, two lanes, server skeleton, Deepgram adapter, the split, synthetic fixtures", on Saturday at 13:40 PDT, line 20 of: `git log --reverse --format='%ad %s' --date=iso | head -25`. (In the original monorepo, where this tree is `catch/`, the same check is `git log --reverse --format='%ad %s' --date=iso -- catch | head -25`.)
 
 **Run it without glasses:** see "Run Catch on this machine" below (the Even Hub simulator plus a local server).
 
@@ -44,11 +46,11 @@ The contract is `features/` (feature files, fence, ledger, DESIGN.md, docket); t
 | `scripts/lane.mjs` | The two lanes. |
 | `scripts/pack-lens.mjs` | `npm run lens:pack`: `catch.ehpk` for Even Beta, pointed at `wss://catch-g2.fly.dev` with the shared token built in. |
 
-Lanes: `npm run test:fast` (oxlint, one typecheck, unit, the feature files in `FEATURES`, all when unset) inside a phase; `npm test` (feature lint, oxlint, one typecheck, every Vitest project, all of `features/`) at the gate. `npm run test:fast -- --realtime` runs the fixture clock at real time for timing probes; `test/integration/lane-timing.test.ts` (full lane) proves the fast lane passes in under a minute. `npm run manifest` writes and stages `run-manifest.ndjson`. `npm run validate` is the scope lint.
+Lanes: `npm run test:fast` (oxlint, one typecheck, unit, the feature files in `FEATURES`, all when unset) inside a phase; `npm test` (feature lint, oxlint, one typecheck, every Vitest project, all of `features/`) at the gate. `npm run test:fast -- --realtime` runs the fixture clock at real time for timing probes; `test/integration/lane-timing.test.ts` (full lane) proves the fast lane passes in under a minute. `npm run manifest` writes and stages `run-manifest.ndjson`. `npm run validate` is the scope lint: it runs an external script, `~/Documents/RefLib/scope-tools/scope-validate.cjs`, which is not in this repository and lints only the feature files; it is not needed to build, run or test Catch.
 
 ## Run Catch on this machine (D128)
 
-Nothing needs Fly. Copy `.env.example` to `.env` in `catch/` (untracked) and fill in `DEEPGRAM_API_KEY` and `CATCH_AUDIO_TOKEN` (any long random string; it is the shared token `/audio` demands). Then, in two terminals:
+Nothing needs Fly. Copy `.env.example` to `.env` in `catch/` (untracked) and fill in `DEEPGRAM_API_KEY` and `CATCH_AUDIO_TOKEN` (any long random string, `openssl rand -base64 32` for one; it is the shared token `/audio` demands; the lens sends it as a WebSocket subprotocol, `catch.` and its base64url, never in the URL, and the phone page as `Authorization: Bearer`). Then, in two terminals:
 
     npm run local          # the server on ws://localhost:8080, the lens dev server on http://localhost:5173 pointed at it
     npm run lens:simulate  # the Even Hub simulator on the lens, with the laptop mic as the glasses mic

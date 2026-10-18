@@ -13,6 +13,7 @@ import { encodeFrame } from '../../shared/wire.ts'
 import { VirtualClock } from '../harness/clock.ts'
 import { pcmAt } from '../harness/player.ts'
 import { find, rows } from '../harness/store-reader.ts'
+import { audioProtocols } from '../../shared/audio-token.ts'
 
 // A restart of the server process (P9, D73), through real sockets on a store
 // of its own, closed and started again on the same file: what the second
@@ -96,7 +97,7 @@ async function stop(server: RunningServer): Promise<void> {
 
 /** One plugin launch's lens: a socket, the views the server sent it, and where its stream's first audio was captured. */
 async function lens(server: RunningServer, launch: string) {
-  const socket = new WebSocket(`${server.url.replace(/^http/, 'ws')}/audio?token=${TOKEN}&lens=${launch}`)
+  const socket = new WebSocket(`${server.url.replace(/^http/, 'ws')}/audio?lens=${launch}`, audioProtocols(TOKEN))
   sockets.push(socket)
   const views: LensView[] = []
   let acks = 0

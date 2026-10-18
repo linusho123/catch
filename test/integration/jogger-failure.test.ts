@@ -14,6 +14,7 @@ import { VirtualClock } from '../harness/clock.ts'
 import { NotificationCapture } from '../harness/notifications.ts'
 import { pcmAt } from '../harness/player.ts'
 import { find, rows } from '../harness/store-reader.ts'
+import { audioProtocols } from '../../shared/audio-token.ts'
 
 // Fix round, test-3: a kept conversation whose jogger pass fails. The
 // transcript is already gone (D76), so the conversation stays kept with no
@@ -71,7 +72,7 @@ describe('a kept conversation whose jogger pass fails (test-3)', () => {
     const modelErrors: unknown[] = []
     server.events.on('modelError', ({ error }) => modelErrors.push(error))
 
-    const socket = new WebSocket(`${server.url.replace(/^http/, 'ws')}/audio?token=${TOKEN}&lens=jogger-failure`)
+    const socket = new WebSocket(`${server.url.replace(/^http/, 'ws')}/audio?lens=jogger-failure`, audioProtocols(TOKEN))
     sockets.push(socket)
     const views: LensView[] = []
     let acks = 0

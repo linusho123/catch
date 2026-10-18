@@ -64,21 +64,60 @@ afterEach(() => {
   g.WebSocket = saved.WebSocket
 })
 
+/**
+ * Loads the entry and runs its bridge wait to the end, then says what the page
+ * did. The module load is real I/O and may take any wall time (PH, answer 6:
+ * under a loaded full lane it outlasted a fixed count of event-loop turns), so
+ * it is awaited on the real loop until the page has done something (set a
+ * timer, written its status line, dialled a socket, or finished); the bridge
+ * wait itself then runs on the fake clock alone, its 1.5 s and half a second
+ * past it, whatever the machine's load. Returns the entry, for the test to
+ * await once it has read what the page did.
+ */
+async function loadEntry(): Promise<Promise<unknown>> {
+  // Settled, resolved or rejected: a lens started by mistake fails on this stand-in SDK, and its rejection is the test's to read.
+  let loaded = false
+  const entry = import('./main.ts')
+  entry.then(
+    () => (loaded = true),
+    () => (loaded = true),
+  )
+  await vi.waitFor(
+    () => {
+      if (!loaded && vi.getTimerCount() === 0 && status.textContent === '' && opened.length === 0) throw new Error('the entry has done nothing yet')
+    },
+    { timeout: LOAD_TIMEOUT_MS, interval: 5 },
+  )
+  // The bridge wait, and a little after it: a lens started now would have dialled /audio.
+  for (let waited = 0; !loaded && waited <= BRIDGE_WAIT_MS + 500; waited += 25) await vi.advanceTimersByTimeAsync(25)
+  return entry
+}
+
+/** Wall time the entry's module load may take; the tests' own timeout sits above it. */
+const LOAD_TIMEOUT_MS = 20_000
+
 describe("the plugin page's entry (main.ts) with no Even bridge on its window", () => {
   it('test-gap-2: hands boot the page\'s own window, so a plain browser tab shows the phone page only and never opens /audio', async () => {
-    let loaded = false
-    const entry = import('./main.ts').then(() => (loaded = true))
-    // The bridge wait, and a little after it: a lens started now would have dialled /audio.
-    let waited = 0
-    for (let turns = 0; turns < 2000 && !loaded && waited <= BRIDGE_WAIT_MS + 500; turns++) {
-      await new Promise((resolve) => setImmediate(resolve))
-      if (status.textContent !== '' || opened.length > 0 || vi.getTimerCount() > 0) {
-        await vi.advanceTimersByTimeAsync(25)
-        waited += 25
-      }
-    }
+    const entry = await loadEntry()
     expect(opened.filter((u) => u.includes('/audio')), 'a socket was opened to /audio').toEqual([])
     expect(status.textContent, 'the status line').toBe(NO_BRIDGE_STATUS)
     await entry
-  })
+  }, LOAD_TIMEOUT_MS + 5_000)
+
+  it('test-gap-2 (PH, answer 6): holds when the entry takes wall time to load, as under a loaded full lane', async () => {
+    // A module load that takes real time (node's own timers, which the fake clock does not touch),
+    // as the transform of main.ts's imports does on a machine running two phases' full lanes.
+    vi.doMock('./phone.ts', async (importOriginal) => {
+      await (await import('node:timers/promises')).setTimeout(300)
+      return importOriginal()
+    })
+    try {
+      const entry = await loadEntry()
+      expect(opened.filter((u) => u.includes('/audio')), 'a socket was opened to /audio').toEqual([])
+      expect(status.textContent, 'the status line').toBe(NO_BRIDGE_STATUS)
+      await entry
+    } finally {
+      vi.doUnmock('./phone.ts')
+    }
+  }, LOAD_TIMEOUT_MS + 5_000)
 })
