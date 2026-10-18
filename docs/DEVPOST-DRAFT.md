@@ -8,9 +8,9 @@ You forget a name five seconds after the handshake. You promise something mid-co
 ## What it does
 Catch is one interaction: **it holds what you were about to lose**. It stays dark (one dim dot) until a slip, shows one dim line, and lets it go:
 - **A name:** "Hi, I'm Priya" → `Priya`.
-- **A promise you make:** "I'll send you the deck tonight" → `promised · send … the deck tonight`.
+- **A promise you make:** "I'll send you the deck tonight" → `promised · send … the deck tonight`; one made to you ("I'll send you the slides" from Dev) → `Dev promised · sends the slides`.
 - **The dropped thread:** you stop mid-sentence and someone takes the floor → `…and the second reason is` waits until you speak again.
-Tap to see the names held; swipe down for your promises; swipe up and tap to keep a conversation; long-press to end it. Afterwards, Catch's own page in the Even app shows your promises and, for a kept conversation, a short jogger of its key points with the technical terms in bold.
+Tap to see the names held; swipe down for your promises; swipe up and tap to keep a conversation; long-press to end it. Afterwards, Catch's own page in the Even app shows your promises, the ones owed to you and, for a kept conversation, a short jogger of its key points with the technical terms in bold.
 
 ## How we built it
 - Even Hub plugin (TypeScript, Vite, SDK 0.0.16) streams glasses audio to a TypeScript/Node server on Fly.io.
@@ -28,7 +28,7 @@ Tap to see the names held; swipe down for your promises; swipe up and tap to kee
 
 ## What we learned / What's next
 - [your words]
-- Next: promises owed to you, pause, restart persistence, phone push notifications.
+- Next: pause, restart persistence, phone push notifications.
 
 ## Built with
 TypeScript, Even Hub SDK, Vite, Node.js, SQLite, Deepgram, Gemini, Fly.io, Vitest, Gherkin
