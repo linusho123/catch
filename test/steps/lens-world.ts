@@ -196,6 +196,12 @@ export async function fastForward(w: LensWorld, t: number): Promise<void> {
     // The frame carrying the last word said is played before the jump, so the provider has heard it.
     const said = run.fixture.words.filter((wd) => wd.end <= nowSec(w) + 1e-9).at(-1)
     if (said && run.frameEnd(said.end) > nowSec(w)) await run.playTo(Math.min(to, run.frameEnd(said.end)))
+    // And the server has judged every word played before the clock jumps (P6, the three-hour workshop's load
+    // flake): a frame still crossing the socket when the jump ran the clock past the wearer's ten minutes left
+    // the wearer's last word unjudged, so the quiet ended the conversation under it, and its jogger's transcript
+    // (the cassette's key) was cut short. Waited for on delivery, never on wall time; only once the frame
+    // carrying that word's end has been played (a next word that starts inside it leaves no silence to jump).
+    if (said && run.next > run.frameEnd(said.end) + 1e-9) await run.delivered()
     if (to > nowSec(w)) run.skipTo(to)
   }
   for (const wd of run.fixture.words) {

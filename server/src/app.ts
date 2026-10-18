@@ -97,6 +97,20 @@ import type { SpeechToText, SttStream, SttWord } from './stt/types.ts'
 // leaves the conversation kept with no jogger; a pass still out when the
 // wearers are forgotten or the server closes is cancelled, and its answer
 // touches nothing.
+//
+// Pause (P6, D86, D81), behind the operator's CATCH_PAUSE (off by default and
+// in the demo build, D130, D133): when the wearer's session pauses, its lens
+// is told to stop listening, the socket's speech-to-text stream is closed
+// (nothing more goes to the provider, so nothing said is transcribed; a
+// fresh stream opens at the resume, and its words are placed from its own
+// first audio, M1, because a provider's clock counts only the audio it was
+// sent and a pause sends none), and any frame that still arrives is
+// discarded: neither acknowledged nor handed to the session or the provider.
+// The final words the closing stream still gives for what was said before
+// the swipe are taken; any past it never are (risk-1). Every socket starts
+// muted on the lens and is told to listen as it is taken, unless paused: a
+// lens that connects to a paused session is told so at once and opens no
+// stream until the wearer resumes.
 
 export interface ServerOptions {
   port: number
@@ -119,6 +133,13 @@ export interface ServerOptions {
    * its own and a tap at the dot gives the thread back on the held page.
    */
   threadDetection?: boolean
+  /**
+   * Pause (P6, D86): whether a swipe down at the bare dot pauses Catch. Off by
+   * default (CATCH_PAUSE unset or `off`), and off in the demo build (D130,
+   * D133): a swipe down at the dot then means nothing, and the names page's
+   * and the keep prompt's swipe downs are as they were.
+   */
+  pause?: boolean
   /** The model client the detectors and the jogger writer call (P1a on). */
   model?: ModelClient
   /** Where phone notifications go (P2a on); without one, the phone page's history is the only way promises reach the phone. */
@@ -146,6 +167,8 @@ export interface ServerEvents {
   endError: [{ at: number; error: unknown }]
   /** A kept conversation's tidy pass (P7): tidied, or why its first draft was stored as it is. */
   joggerTidy: [{ at: number; conversation: number; outcome: TidyOutcome }]
+  /** The wearer paused (true) or resumed (false) Catch on this socket's lens, or a lens joined a paused Catch (P6). */
+  paused: [{ session: number; at: number; paused: boolean }]
 }
 
 /** How soon a lost speech-to-text stream is tried again: the dot returns within this of the provider coming back (D37). */
@@ -216,6 +239,8 @@ export interface RunningServer {
   forgetWearers(): void
   /** The operator's D120 switch, set while the server runs: every session, open or new, reads it from the next word or tap. */
   setThreadDetection(on: boolean): void
+  /** The operator's pause switch (CATCH_PAUSE, P6), set while the server runs: every session reads it at the next swipe down. */
+  setPause(on: boolean): void
   close(): Promise<void>
 }
 
@@ -223,6 +248,12 @@ export interface RunningServer {
 interface Feed {
   stt?: SttStream
   zero?: number
+  /**
+   * Set as the wearer pauses (P6): where the audio heard ends on the
+   * session's timeline. The stream is closing; the final words it still
+   * gives for what was said before then are taken, any past it never are.
+   */
+  cutoff?: number
 }
 
 const CORS = {
@@ -245,6 +276,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   const split = opts.split ?? createSplit()
   const events = new EventEmitter<ServerEvents>()
   let threadDetection = opts.threadDetection ?? true
+  let pause = opts.pause ?? false
   // The outbox's table is opened with or without a notifier, so a delete (D134) always reaches what a previous process left waiting.
   const waiting = new StoredOutbox(store)
   const outbox = opts.notifier ? new Outbox(opts.notifier, clock, waiting) : undefined
@@ -293,6 +325,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       onSaveError: (error) => console.error(`a session's state could not be saved, so a restart would lose it: ${loggable(error)}`),
       wearerName: opts.wearerName,
       threadDetection: () => threadDetection,
+      pause: () => pause,
       promises,
       onModelError: (error) => {
         console.error(`a promise pass failed, so that promise is lost: ${loggable(error)}`)
@@ -382,32 +415,70 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     let attempt: object | undefined
     let retry: TimerHandle | undefined
     let closed = false
+    /** The wearer has paused Catch (P6): no stream, and every frame that arrives is discarded. */
+    let paused = false
+    /** The first stream has been asked for; until then a resume leaves opening it to the connection. */
+    let started = false
+    /**
+     * The wearer paused (P6): the stream is closed with CloseStream, and its
+     * late callbacks count only for what was said before the swipe (risk-1,
+     * the operator's answer 4): Deepgram answers CloseStream with the final
+     * words it still holds, then closes.
+     */
+    const drainStream = () => {
+      if (stream) stream.cutoff = lens.heardUntil
+      dropStream()
+    }
+    /** The stream goes, and its late callbacks count for nothing. */
+    const dropStream = () => {
+      attempt = undefined
+      if (retry) clock.clearTimeout(retry)
+      retry = undefined
+      stream?.stt?.close()
+      stream = undefined
+    }
     const stopStream = () => {
       closed = true
-      if (retry) clock.clearTimeout(retry)
-      stream?.stt?.close()
+      dropStream()
     }
     const attachment = lens.attach((view: LensView) => send({ type: 'show', view }), {
       lens: params(req).get('lens') ?? undefined,
       onReplaced: stopStream,
+      // P6: paused, the lens stops streaming and the provider hears nothing; resumed, a fresh stream (M1).
+      onPaused: (now) => {
+        paused = now
+        events.emit('paused', { session, at: clock.now(), paused: now })
+        send({ type: 'listening', on: !now })
+        if (now) drainStream()
+        else if (started && !stream) openStream()
+      },
     })
-    const openStream = () => {
+    // Every socket starts muted on the lens, so its microphone never opens during a pause (the operator's answer 3): say to listen, unless paused.
+    if (!paused) send({ type: 'listening', on: true })
+    function openStream(): void {
       retry = undefined
-      if (!opts.stt || closed) return
+      if (!opts.stt || closed || paused) return
       const mine: Feed = {}
       attempt = mine
       let lost = false
       const live = () => attempt === mine && !lost && attachment.active
+      /** Closing at a pause: only the final words said before it still count (P6, risk-1). */
+      const draining = () => attempt !== mine && mine.cutoff !== undefined && !lost && attachment.active
+      const beforeCutoff = (end: number) => end <= mine.cutoff! + 1e-6
       let opened: SttStream | undefined = undefined
       opened = opts.stt.open(
         (raw) => {
-          if (!live()) return
+          if (!live() && !draining()) return
           const zero = mine.zero ?? 0
-          const words = raw.map((w) => ({ ...w, start: w.start + zero, end: w.end + zero }))
+          let words = raw.map((w) => ({ ...w, start: w.start + zero, end: w.end + zero }))
+          if (!live()) words = words.filter((w) => w.isFinal && beforeCutoff(w.end))
+          if (words.length === 0) return
           events.emit('words', { session, at: clock.now(), words })
           lens.words(words)
         },
         (error) => {
+          // A closing stream's failure only ends what it could still give.
+          if (draining()) lost = true
           if (!live()) return
           lost = true
           events.emit('sttError', { session, at: clock.now(), error })
@@ -421,13 +492,15 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         },
         // PT: the provider heard a second with no words; its time is the stream's, moved like its words.
         (lastWordEnd) => {
-          if (live()) lens.utteranceEnd(lastWordEnd + (mine.zero ?? 0))
+          const at = lastWordEnd + (mine.zero ?? 0)
+          if (live() || (draining() && beforeCutoff(at))) lens.utteranceEnd(at)
         },
       )
       mine.stt = opened
       if (live()) stream = mine
       else opened.close()
     }
+    started = true
     openStream()
 
     // The socket goes, the conversation stays (D79): the session only learns it cannot hear this lens.
@@ -453,6 +526,8 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       try {
         const frame = decodeFrame(bytes)
         events.emit('frame', { session, at: clock.now(), frame })
+        // P6: a frame that arrives while the wearer has paused Catch is discarded, unheard and unacknowledged.
+        if (paused) return
         const startsAt = lens.frame(frame)
         if (stream) {
           stream.zero ??= startsAt
@@ -490,6 +565,9 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     setThreadDetection(on) {
       threadDetection = on
     },
+    setPause(on) {
+      pause = on
+    },
     async close() {
       // No session hands anything on after this (a deferred end, a quiet timer), so nothing touches the store once it is closed (risk-3).
       // Each saves its state as it closes: the open conversation waits in the store for the next process (P9).
@@ -503,6 +581,19 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       store.close()
     },
   }
+}
+
+/**
+ * CATCH_PAUSE: `off` (the default, also when unset or empty; the demo build,
+ * D130, D133) or `on` (P6: a swipe down at the dot pauses Catch, D86).
+ * Anything else is refused, so a typo never silently leaves the operator's
+ * choice undone.
+ */
+export function pauseFromEnv(value: string | undefined): boolean {
+  const v = (value ?? '').trim().toLowerCase()
+  if (v === '' || v === 'off') return false
+  if (v === 'on') return true
+  throw new Error(`CATCH_PAUSE must be on or off, got ${JSON.stringify(value)}`)
 }
 
 /**

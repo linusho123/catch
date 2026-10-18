@@ -87,7 +87,10 @@ function exchange(messages: Uint8Array[]): Promise<unknown[]> {
   return new Promise((resolve, reject) => {
     socket.on('open', () => messages.forEach((m) => socket.send(m)))
     socket.on('message', (data) => {
-      replies.push(JSON.parse(data.toString()))
+      const reply = JSON.parse(data.toString()) as { type: string }
+      // The server's greeting, telling the lens to listen (P6), answers none of the messages sent.
+      if (reply.type === 'listening') return
+      replies.push(reply)
       if (replies.length === messages.length) {
         socket.close()
         resolve(replies)

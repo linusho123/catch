@@ -50,15 +50,7 @@ const WIP: WipEntry[] = [
   },
   // promises.feature has left the register: P2a bound the wearer's own (D89,
   // D90, D47, rows 1, 2 and 4), P5 the owed list (row 3, D91, D113).
-  // P1a binds D14, D16 and D37; P5 D32 (its catch is Dev's promise); these wait for P6 (pause).
-  {
-    feature: 'staying-dark',
-    scenarios: [
-      'A swipe down pauses Catch and shows the dash',
-      'A second swipe down resumes listening',
-      'A pause freezes the conversation',
-    ],
-  },
+  // staying-dark.feature has left the register: P1a bound D14, D16 and D37, P5 D32, P6 the pause (D86, D81).
 ]
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- each feature's world type is its own
