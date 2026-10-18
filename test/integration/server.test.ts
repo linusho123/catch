@@ -7,7 +7,7 @@ import { DatabaseSync } from 'node:sqlite'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import WebSocket from 'ws'
 import { MAX_AUDIO_MESSAGE_BYTES, startServer, type RunningServer } from '../../server/src/app.ts'
-import { AUDIO_PROTOCOL, audioProtocols, tokenProtocol } from '../../shared/audio-token.ts'
+import { AUDIO_PROTOCOL, TOKEN_PROTOCOL_PREFIX, audioProtocols, tokenProtocol } from '../../shared/audio-token.ts'
 import { encodeFrame } from '../../shared/wire.ts'
 
 // The server skeleton, started once for this file: the health endpoint, the
@@ -201,9 +201,11 @@ describe('the server skeleton', () => {
       const right = await connect(TOKEN)
       expect(right.opened).toBe(true)
       right.socket.close()
+      // test-gap-1: the token in none of its forms, raw, as its subprotocol, or as the
+      // base64url after `catch.` (a logged Sec-WebSocket-Protocol header decodes straight back).
+      const forms = [wrong, TOKEN].flatMap((token) => [token, tokenProtocol(token), tokenProtocol(token).slice(TOKEN_PROTOCOL_PREFIX.length)])
       for (const line of said) {
-        expect(line).not.toContain(wrong)
-        expect(line).not.toContain(TOKEN)
+        for (const form of forms) expect(line, 'a log line carries the token').not.toContain(form)
       }
     } finally {
       for (const spy of spies) spy.mockRestore()
