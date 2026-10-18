@@ -5,7 +5,7 @@ import { pcmLoudnessDbfs, type FrameSignal, type Side, type SplitWord, type Wear
 import type { SttWord } from '../stt/types.ts'
 import { HeldNames } from './held-names.ts'
 import { findIntroductionsHow, findSelfIntroductions } from './introductions.ts'
-import { CONTEXT_SENTENCES, PromisePassError, type PromiseDetector, type Said } from './promises.ts'
+import { CONTEXT_SENTENCES, isCandidate, owedLine, PromisePassError, type PromiseDetector, type Said } from './promises.ts'
 import { Thread } from './thread.ts'
 import type { TranscriptWord } from './transcript.ts'
 
@@ -61,6 +61,20 @@ import type { TranscriptWord } from './transcript.ts'
 // on its transcript as the store held it (D73), where the wearer's promises
 // were said, and the spans Catch could not hear (D53), so the jogger can be
 // written; the store's copy is deleted at the end all the same (D76).
+//
+// Promises owed to the wearer (P5, D91, D26, D113): every sentence of someone
+// else's that carries a commitment cue gets a pass of its own (promises.ts,
+// `detectOwed`), which answers the action alone. Who promised is never
+// guessed from the voice (Catch cannot tell voices apart): it is the last name
+// caught in the conversation when the sentence was said, or, before any name
+// is caught, an unnamed promiser, numbered in the order heard on the promises
+// page, `they (1)`, `they (2)`. A name caught later attaches to the most
+// recent promiser if that one is unnamed, and to nobody else (D113). The lens
+// shows `Dev promised · send the agenda` (or `they promised · …`) for a second
+// and a half under the same three seconds as the wearer's; the promises page
+// lists the owed after the wearer's own; the end hands them on as "who does
+// what", `Dev sends the agenda`, for the notification's second line and the
+// phone page's OWED TO YOU (D28, D117, D98).
 
 /** D17: a catch line holds for a second and a half. A ruling, not a tuning value. */
 export const LINE_MS = 1500
@@ -130,7 +144,7 @@ export interface Gap {
   ms: number
 }
 
-/** A conversation as it ends, on the session's clock (ms). P5 adds the owed promises. */
+/** A conversation as it ends, on the session's clock (ms). */
 export interface EndedConversation {
   startedAt: number
   endedAt: number
@@ -140,6 +154,8 @@ export interface EndedConversation {
   promises: string[]
   /** Where each of `promises` was said: the end of its sentence on the session's timeline (seconds). */
   promiseTimes: number[]
+  /** The promises owed to the wearer, in the order made, each "who does what": `Dev sends the agenda`, `they (1) sends the deck tonight` (P5). */
+  owed: string[]
   /** Whether the wearer kept it (D40, D111). */
   kept: boolean
   /** A kept conversation's transcript as the store held it, in the order heard (D73), for its jogger; empty when it was not kept. */
@@ -148,11 +164,27 @@ export interface EndedConversation {
   gaps: Gap[]
 }
 
+/** One promise owed to the wearer, from the moment its sentence ends (P5). */
+interface OwedSlot {
+  /** Until its pass answers; `no` when it was no promise, or its pass was lost. */
+  state: 'out' | 'yes' | 'no'
+  /** What the promiser will do, once the pass has said it is a promise: `send the agenda`. */
+  action?: string
+  /** The name the promiser goes by: the last name caught when the sentence was said, or one caught after it (D113). */
+  name?: string
+  /** The name came after the sentence (D113): if the pass then says no promise, the name passes to the promiser before. */
+  namedLater?: boolean
+  /** It was held with no name, so it counts among the numbered unnamed promisers, `they (n)` (D113). */
+  heldUnnamed?: boolean
+}
+
 /** One conversation's promises: a slot per pass, in the order the sentences were said, and the passes still out. */
 interface Promises {
   slots: (string | undefined)[]
   /** Where each slot's sentence ended, on the session's timeline (seconds). */
   times: number[]
+  /** The promises owed to the wearer, a slot per pass, in the order the sentences were said (P5). */
+  owed: OwedSlot[]
   /** What the end waits for: one per pass, settled at its answer or at its deadline, whichever comes first. */
   inflight: Set<Promise<void>>
   /** Every pass not yet answered, deadline or not: cancelled once the end has handed the promises on. */
@@ -161,10 +193,27 @@ interface Promises {
   done: boolean
 }
 
-const noPromises = (): Promises => ({ slots: [], times: [], inflight: new Set(), out: new Set(), done: false })
+const noPromises = (): Promises => ({ slots: [], times: [], owed: [], inflight: new Set(), out: new Set(), done: false })
 
 const held = (p: Promises) => p.slots.filter((s): s is string => s !== undefined)
 const heldTimes = (p: Promises) => p.times.filter((_, i) => p.slots[i] !== undefined)
+
+/**
+ * The owed promises held, in the order made, as "who does what". The unnamed
+ * promisers are numbered in the order heard among those held unnamed, so a
+ * name that comes later leaves the others' numbers alone (D113: `they (2)`
+ * becomes `Dev`, `they (1)` stays `they (1)`).
+ */
+function heldOwed(p: Promises): string[] {
+  let they = 0
+  const out: string[] = []
+  for (const slot of p.owed) {
+    if (slot.state !== 'yes' || slot.action === undefined) continue
+    const n = slot.heldUnnamed ? ++they : 0
+    out.push(owedLine(slot.name ?? `they (${n})`, slot.action))
+  }
+  return out
+}
 
 /** One lens's hold on the session: what its socket may still do. */
 export interface Attachment {
@@ -250,6 +299,8 @@ export class Session {
   private deafSince: { at: number; clock: number } | undefined
   /** The open conversation's spans not heard (D53). */
   private gaps: Gap[] = []
+  /** The last name caught in the open conversation: who an owed promise said now is from (P5, D91, D26). */
+  private lastCaught: string | undefined
 
   // What the lens shows.
   private hearing = false
@@ -374,7 +425,10 @@ export class Session {
     if (this.view.kind === 'dot') {
       // D120: with detection off, the page gives the thread back as its first line.
       const thread = this.threadDetection() ? undefined : this.thread.line()
-      this.view = { kind: 'names', names: this.names.list(), ...(thread ? { thread } : {}) }
+      const names = this.names.list()
+      // With no names but promises held (either way), the names page leads on to them; D31's empty page is for nothing held.
+      const promisesHeld = names.length === 0 && (held(this.promises).length > 0 || heldOwed(this.promises).length > 0)
+      this.view = { kind: 'names', names, ...(thread ? { thread } : {}), ...(promisesHeld ? { promisesHeld: true as const } : {}) }
       this.viewTimer = this.clock.setTimeout(() => this.backToDot(), PAGE_MS)
     } else {
       // A line or a page goes; an unanswered prompt comes back in its place (D42).
@@ -398,7 +452,7 @@ export class Session {
     }
     if (this.view.kind !== 'names') return
     this.clearView()
-    this.view = { kind: 'promises', you: held(this.promises) }
+    this.view = { kind: 'promises', you: held(this.promises), owed: heldOwed(this.promises) }
     this.viewTimer = this.clock.setTimeout(() => this.backToDot(), PAGE_MS)
     this.render()
   }
@@ -521,6 +575,7 @@ export class Session {
       if (this.ownNames.has(name.toLowerCase()) || name.toLowerCase() === this.wearerName) continue
       const heard = this.names.hear(name, this.clock.now(), how)
       this.showLine(heard.line)
+      this.nameCaught(heard.line)
     }
   }
 
@@ -542,7 +597,10 @@ export class Session {
 
   private finishOther(): void {
     if (this.otherSentence.length === 0) return
-    this.remember({ who: 'other', text: this.otherSentence.splice(0).join(' ') })
+    const text = this.otherSentence.splice(0).join(' ')
+    const before = this.said.slice()
+    this.remember({ who: 'other', text })
+    if (this.inConversation && this.detector) this.judgeOwed(text, before)
   }
 
   private finishWearer(): void {
@@ -559,15 +617,92 @@ export class Session {
   }
 
   /**
-   * One model pass (D89, D90, D47), with D89's three seconds on the clock
-   * (risk-2). A promise is held in this conversation's slot, and shown if it
-   * came within the three seconds and the conversation is still open; one
-   * that came later is held without a line (answer 9).
+   * One model pass of the wearer's (D89, D90, D47), with D89's three seconds
+   * on the clock (risk-2). A promise is held in this conversation's slot, and
+   * shown if it came within the three seconds and the conversation is still
+   * open; one that came later is held without a line (answer 9).
    */
   private judgePromise(text: string, before: Said[], at: number): void {
+    // A sentence with no commitment cue costs no pass, and so no deadline either.
+    if (!isCandidate(text)) return
     const promises = this.promises
     const slot = promises.slots.push(undefined) - 1
     promises.times[slot] = at
+    const names = this.names.list()
+    this.pass(
+      promises,
+      (signal) => this.detector!.detect(text, before, names, signal),
+      (summary, late) => {
+        promises.slots[slot] = summary
+        if (!late && this.promises === promises) this.showLine(`promised · ${summary}`)
+      },
+    )
+  }
+
+  /**
+   * One model pass of someone else's sentence (P5, D91, D26, D113), on the
+   * same three seconds. The promiser is named as the sentence ends, by the last
+   * name caught, and stays unnamed when none has been; a promise is held and
+   * shown as `Dev promised · …` or `they promised · …`.
+   */
+  private judgeOwed(text: string, before: Said[]): void {
+    if (!isCandidate(text)) return
+    const promises = this.promises
+    const slot: OwedSlot = { state: 'out', ...(this.lastCaught !== undefined ? { name: this.lastCaught } : {}) }
+    promises.owed.push(slot)
+    this.pass(
+      promises,
+      (signal) => this.detector!.detectOwed(text, before, signal),
+      (action, late) => {
+        slot.state = 'yes'
+        slot.action = action
+        if (slot.name === undefined) slot.heldUnnamed = true
+        if (!late && this.promises === promises) this.showLine(`${slot.name ?? 'they'} promised · ${action}`)
+      },
+      () => this.noOwed(promises, slot),
+    )
+  }
+
+  /**
+   * A name is caught (P5, D113): it is the one later owed promises are from,
+   * and it attaches to the most recent promiser, if that one has no name yet
+   * (a pass still out counts; one that said no promise does not).
+   */
+  private nameCaught(name: string): void {
+    this.lastCaught = name
+    const last = this.promises.owed.findLast((s) => s.state !== 'no')
+    if (last && last.name === undefined) {
+      last.name = name
+      last.namedLater = true
+    }
+  }
+
+  /** An owed pass said no promise, or was lost: a name that came after it belongs to the promiser before it, if unnamed (D113). */
+  private noOwed(promises: Promises, slot: OwedSlot): void {
+    slot.state = 'no'
+    if (!slot.namedLater) return
+    const before = promises.owed.slice(0, promises.owed.indexOf(slot)).findLast((s) => s.state !== 'no')
+    if (before && before.name === undefined) {
+      before.name = slot.name
+      before.namedLater = true
+    }
+    slot.name = undefined
+    slot.namedLater = false
+  }
+
+  /**
+   * The machinery of one pass (risk-2): D89's three seconds on the clock,
+   * after which the end of its conversation waits for it no longer; its
+   * cancellation once the end has handed the promises on; `promised` for an
+   * answer that is a promise (`late` once the three seconds have passed),
+   * `none` for one that is not, or for a pass lost.
+   */
+  private pass(
+    promises: Promises,
+    ask: (signal: AbortSignal) => Promise<string | undefined>,
+    promised: (summary: string, late: boolean) => void,
+    none: () => void = () => {},
+  ): void {
     const abort = new AbortController()
     promises.out.add(abort)
     let late = false
@@ -583,14 +718,14 @@ export class Session {
       if (!promises.done) this.onLatePass()
       left()
     }, PROMISE_MS)
-    this.detector!.detect(text, before, this.names.list(), abort.signal)
+    ask(abort.signal)
       .then((summary) => {
-        if (summary === undefined) return
+        if (summary === undefined) return none()
         if (promises.done) throw new PromisePassError('the promise pass answered after its conversation had ended, so that promise is lost')
-        promises.slots[slot] = summary
-        if (!late && this.promises === promises) this.showLine(`promised · ${summary}`)
+        promised(summary, late)
       })
       .catch((error: unknown) => {
+        none()
         if (this.closed) return
         this.onModelError(abort.signal.aborted ? new PromisePassError('the conversation ended before the promise pass answered, so that promise is lost') : error)
       })
@@ -624,8 +759,9 @@ export class Session {
   private endConversation(): void {
     if (this.quietTimer) this.clock.clearTimeout(this.quietTimer)
     this.quietTimer = undefined
-    // A sentence of the wearer's cut short by the end is still a candidate.
+    // A sentence cut short by the end, the wearer's or someone else's, is still a candidate.
     this.finishWearer()
+    this.finishOther()
     // A span not heard runs to the end at most (D53).
     this.closeGap()
     // Snapshot, reset, then the hook: the conversation is over whatever the hook does (fix round, M4).
@@ -647,6 +783,7 @@ export class Session {
     this.keep = 'none'
     this.gaps = []
     this.deafSince = undefined
+    this.lastCaught = undefined
     // An unanswered prompt asked about the conversation that has ended: it goes (D40).
     if (this.promptShowing) this.backToDot()
     this.names.clear()
@@ -675,7 +812,7 @@ export class Session {
       this.stopPasses(promises)
       if (this.closed) return
       try {
-        this.onEnd?.({ ...ended, promises: held(promises), promiseTimes: heldTimes(promises) })
+        this.onEnd?.({ ...ended, promises: held(promises), promiseTimes: heldTimes(promises), owed: heldOwed(promises) })
       } catch (error) {
         this.onEndError(error)
       }

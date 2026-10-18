@@ -13,8 +13,8 @@ import type { Clock, TimerHandle } from '../../shared/clock.ts'
 // wearer's promises as commands on its first line, "Send Dev the deck tonight
 // and introduce Dev to Sam" (D117); a list too long for a line is cut off
 // with an ellipsis, and opening the notification opens the conversation's
-// screen, which has them all (`data.conversation`). The second line, owed to
-// the wearer, comes with P5. A kept conversation sends a second notification
+// screen, which has them all (`data.conversation`). The second line is the
+// promises owed to the wearer, "Owed to you: Dev sends the agenda" (P5). A kept conversation sends a second notification
 // once its jogger is written, "Kept: conversation with Ana", which opens the
 // jogger (P4, D24). Every notification waits in the outbox until the
 // phone takes it, however long that is (D114), tried again every
@@ -57,16 +57,25 @@ export function cutLine(line: string, max = NOTIFICATION_LINE_CHARS): string {
   return `${(space > 0 ? room.slice(0, space) : room).replace(/[,;:]$/, '')}…`
 }
 
+/** The second line's lead: the promises owed to the wearer (D28, D117). */
+export const OWED_LEAD = 'Owed to you: '
+
 /**
- * The notification for a conversation that ended with the wearer's promises
- * (`you`, as commands), or undefined when it produced none (D51: no
- * notification at all).
+ * The notification for a conversation that ended with promises: the wearer's
+ * (`you`, as commands) on its first line, those owed to the wearer (`owed`,
+ * "Dev sends the agenda") on a second, "Owed to you: …" (D28, D117, P5); each
+ * line cut on its own when it is too long. Undefined when nothing was promised
+ * in either direction (D51: no notification at all).
  */
-export function promiseNotification(conversation: number | undefined, you: readonly string[]): PhoneNotification | undefined {
-  if (you.length === 0) return undefined
-  const [first, ...rest] = you
-  const line = listOf([first!, ...rest.map((c) => c.charAt(0).toLowerCase() + c.slice(1))])
-  return { title: 'Catch', body: cutLine(line), ...(conversation === undefined ? {} : { data: { conversation: String(conversation) } }) }
+export function promiseNotification(conversation: number | undefined, you: readonly string[], owed: readonly string[] = []): PhoneNotification | undefined {
+  if (you.length === 0 && owed.length === 0) return undefined
+  const lines: string[] = []
+  if (you.length > 0) {
+    const [first, ...rest] = you
+    lines.push(cutLine(listOf([first!, ...rest.map((c) => c.charAt(0).toLowerCase() + c.slice(1))])))
+  }
+  if (owed.length > 0) lines.push(cutLine(`${OWED_LEAD}${listOf(owed)}`))
+  return { title: 'Catch', body: lines.join('\n'), ...(conversation === undefined ? {} : { data: { conversation: String(conversation) } }) }
 }
 
 /** Whether `zone` is a time zone this runtime knows (Intl throws a RangeError on one it does not). */

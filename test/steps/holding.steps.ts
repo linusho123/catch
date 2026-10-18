@@ -36,10 +36,10 @@ import {
   type Screen,
 } from './lens-world.ts'
 
-// holding.feature (P1b, P2a): the names page, its five seconds, the empty
+// holding.feature (P1b, P2a, P5): the names page, its five seconds, the empty
 // page, the promises page on a swipe down (P2a: the wearer's own promises and
-// `no promises yet`; the owed line is P5's, so "A swipe down turns to the
-// promises page" stays scenario-scoped wip with that step unbound), and the
+// `no promises yet`; P5: the owed line after them, "owed: Dev sends the
+// agenda", from Dev, whose name was caught, so the line names him), and the
 // conversation's end on the lens and, from P2a, on the phone: the
 // notification capture is the phone (D126). Scrolling is P10's; "A long-press
 // ends the conversation now" binds its keep and the kept notification in P4
@@ -66,11 +66,18 @@ const ACCOUNT = wearerOf(HARNESS_TOKEN)
 /** D89: a promise line within three seconds. */
 const PROMISE_BOUND_MS = 3000
 
-/** The promise lines (`promised · …`) shown in [from, to], as the lens showed them, and the lens's other lines. */
-function promiseLinesShown(w: LensWorld, from: number, to: number): { promises: string[]; others: string[] } {
+/** The wearer's promise lines (`promised · …`) shown in [from, to], as the lens showed them, the owed ones (`Dev promised · …`, P5), and the lens's other lines. */
+function promiseLinesShown(w: LensWorld, from: number, to: number): { promises: string[]; owed: string[]; others: string[] } {
   const lines = linesShown(w.h!, from, to).map((l) => l.text)
-  return { promises: lines.filter((l) => l.startsWith('promised · ')), others: lines.filter((l) => !l.startsWith('promised · ')) }
+  return {
+    promises: lines.filter((l) => l.startsWith('promised · ')),
+    owed: lines.filter((l) => l.includes(' promised · ')),
+    others: lines.filter((l) => !l.includes('promised · ')),
+  }
 }
+
+/** D89: a promise line within three seconds, and the second and a half it stays. */
+const PROMISE_DONE_S = (PROMISE_BOUND_MS + LINE_MS + SLACK_MS) / 1000
 
 /** The page a tap shows: the one a step before has just brought up and nobody has read yet, or a new tap's. */
 async function pageFromTap(w: LensWorld): Promise<Screen> {
@@ -105,6 +112,9 @@ async function threeIntroductions(w: LensWorld, fixture: string): Promise<void> 
   w.heldBefore = ['Priya', 'Marcus', 'Dana']
 }
 
+/** How many lines a "first" step read off the top of the promises page, for the "after them" step. */
+const firstSeen = new WeakMap<LensWorld, number>()
+
 const holding: Definer<LensWorld & JoggerWorld> = (reg) => {
   // D43
   reg.define(/^in this conversation Priya, Marcus and Dana have each introduced themselves$/, async (w) => {
@@ -122,7 +132,10 @@ const holding: Definer<LensWorld & JoggerWorld> = (reg) => {
       const agenda = lineIn(run, "Great, I'll send you the agenda.", sam.end)
       for (const line of [deck, sam]) expect(line.words.every((wd) => wd.role === 'wearer'), 'the wearer promises').toBe(true)
       expect(agenda.words.every((wd) => wd.role === 'other'), 'Dev promises').toBe(true)
-      await playTo(w, agenda.end)
+      // Every promise line (the owed one included, P5) comes and goes before the tap the When makes. Dev never
+      // introduced himself here, so his promise is named by the last name caught (P5's rule); this scenario reads
+      // only the names page (P5's open question on this fixture).
+      await playTo(w, agenda.end + PROMISE_DONE_S)
     },
   )
 
@@ -323,22 +336,24 @@ const holding: Definer<LensWorld & JoggerWorld> = (reg) => {
     expect(phoneShows(w).promises[0]!.at).toBeLessThanOrEqual(n.at)
   })
 
-  // D43, D112: the promises page (P2a; the owed line after them is P5's).
+  // D43, D112: the promises page (P2a), the owed line after the wearer's (P5).
   reg.define(/^the names page of a conversation with two promises made and one owed is showing$/, async (w) => {
     const h = await begin(w)
-    const run = await startRun(w, `held-page.${V}`, 0)
-    const deck = lineIn(run, "Dev, I'll send you the deck.")
+    const run = await startRun(w, `owed-page.${V}`, 0)
+    const dev = lineIn(run, "Hi, I'm Dev.")
+    const deck = lineIn(run, "Dev, I'll send you the deck.", dev.end)
     const sam = lineIn(run, "And I'll introduce you to Sam.", deck.end)
     const agenda = lineIn(run, "Great, I'll send you the agenda.", sam.end)
+    for (const line of [dev, agenda]) expect(line.words.every((wd) => wd.role === 'other'), 'Dev says it').toBe(true)
     for (const line of [deck, sam]) expect(line.words.every((wd) => wd.role === 'wearer'), 'the wearer promises').toBe(true)
-    expect(agenda.words.every((wd) => wd.role === 'other'), 'Dev promises').toBe(true)
-    await playTo(w, run.fixture.words.at(-1)!.end + LINE_DONE_S)
+    await playTo(w, run.fixture.words.at(-1)!.end + PROMISE_DONE_S)
     const shown = promiseLinesShown(w, w.dotSince!, h.clock.now())
     expect(shown.promises, 'the two promises the wearer made, as the lens showed them').toEqual(['promised · send Dev the deck', 'promised · introduce Dev to Sam'])
-    expect(shown.others, 'the names caught').toEqual(['Priya', 'Marcus', 'Dana'])
+    expect(shown.owed, "Dev's, as the lens showed it").toEqual(['Dev promised · send the agenda'])
+    expect(shown.others, 'the names caught').toEqual(['Dev'])
     await untilDot(w)
     const page = await tapForPage(w)
-    expect(namesOn(page)).toEqual(['Priya', 'Marcus', 'Dana'])
+    expect(namesOn(page)).toEqual(['Dev'])
   })
 
   reg.define(/^Priya and Marcus have introduced themselves and nothing has been promised in either direction$/, async (w) => {
@@ -366,6 +381,14 @@ const holding: Definer<LensWorld & JoggerWorld> = (reg) => {
 
   reg.define(/^the wearer sees (".+") first$/, (w, listArg) => {
     expect(promisesOn(w.page!).slice(0, quoted(String(listArg)).length), 'the promises page, from the top').toEqual(quoted(String(listArg)))
+    firstSeen.set(w, quoted(String(listArg)).length)
+  })
+
+  // P5: the owed, after the wearer's own, and nothing after them.
+  reg.define(/^the wearer sees "([^"]+)" after them$/, (w, owedArg) => {
+    const first = firstSeen.get(w)
+    expect(first, 'the step before read the first lines').toBeDefined()
+    expect(promisesOn(w.page!).slice(first), 'the promises page, after the wearer\'s own').toEqual([String(owedArg)])
   })
 
   reg.define(/^the wearer sees the promises page reading "([^"]+)"$/, (w, textArg) => {

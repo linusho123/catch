@@ -105,6 +105,8 @@ export const NOTHING_HELD = 'this conversation · nothing held'
 export const PROMISES_HEADER = 'this conversation 2/2'
 /** The promises page when nothing is promised (D112). */
 export const NO_PROMISES = 'no promises yet'
+/** What sets a promise owed to the wearer apart on the promises page, after the wearer's own (D43, P5). */
+export const OWED_PREFIX = 'owed: '
 
 /** The containers that draw one view. Exactly one thing at a time. */
 export function containersFor(view: LensView): TextContainerProperty[] {
@@ -119,7 +121,7 @@ export function containersFor(view: LensView): TextContainerProperty[] {
       // Text containers, not the SDK's list container: a list has no brightness, and every mark Catch draws is dim (D14).
       if (view.thread !== undefined) {
         // D120: the thread line first, above the rest of D31's page; it takes the touches.
-        if (view.names.length === 0) return [text(6, 'thread', view.thread, THREAD_BOX), text(3, 'empty', NOTHING_HELD, EMPTY_UNDER_THREAD_BOX, false)]
+        if (view.names.length === 0 && !view.promisesHeld) return [text(6, 'thread', view.thread, THREAD_BOX), text(3, 'empty', NOTHING_HELD, EMPTY_UNDER_THREAD_BOX, false)]
         return [
           text(6, 'thread', view.thread, THREAD_BOX),
           text(4, 'header', NAMES_HEADER, HEADER_UNDER_THREAD_BOX, false),
@@ -127,18 +129,18 @@ export function containersFor(view: LensView): TextContainerProperty[] {
           text(5, 'hint', PROMISES_HINT, HINT_BOX, false),
         ]
       }
-      if (view.names.length === 0) return [text(3, 'empty', NOTHING_HELD, PAGE_BOX)]
+      // D31's empty page only when nothing at all is held; with promises held and no names, the names page leads on to them (P5).
+      if (view.names.length === 0 && !view.promisesHeld) return [text(3, 'empty', NOTHING_HELD, PAGE_BOX)]
       return [
         text(4, 'header', NAMES_HEADER, HEADER_BOX, false),
         text(3, 'names', view.names.join('\n'), NAMES_BOX),
         text(5, 'hint', PROMISES_HINT, HINT_BOX, false),
       ]
-    case 'promises':
-      // D43, D112: the header, then the wearer's promises one per line, or `no promises yet`.
-      return [
-        text(4, 'header', PROMISES_HEADER, HEADER_BOX, false),
-        text(7, 'promises', view.you.length > 0 ? view.you.join('\n') : NO_PROMISES, PROMISES_BOX),
-      ]
+    case 'promises': {
+      // D43, D112: the header, then the wearer's promises one per line, then those owed (P5), or `no promises yet`.
+      const lines = [...view.you, ...view.owed.map((o) => `${OWED_PREFIX}${o}`)]
+      return [text(4, 'header', PROMISES_HEADER, HEADER_BOX, false), text(7, 'promises', lines.length > 0 ? lines.join('\n') : NO_PROMISES, PROMISES_BOX)]
+    }
   }
 }
 

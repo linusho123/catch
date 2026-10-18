@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { ModelClient } from '../llm/client.ts'
 import { PROMISE_MODEL } from '../llm/gemini.ts'
-import { command, isCandidate, parsePromise, PromiseDetector, promisePrompt } from './promises.ts'
+import { command, isCandidate, owedLine, owedPrompt, parsePromise, PromiseDetector, promisePrompt, thirdPerson } from './promises.ts'
 
 // The commitment detector on its own: which sentences are worth a model pass,
 // what the pass is asked, and how its answer is read.
@@ -69,5 +69,42 @@ describe('the promise detector', () => {
 
   it('writes a summary as a command for the phone', () => {
     expect(command('send Dev the deck tonight')).toBe('Send Dev the deck tonight')
+  })
+})
+
+describe('the owed prompt and the owed line (P5, D91)', () => {
+  it("asks about the other person's sentence, never puts a name in the action, and leaves the wearer's \"you\" out", () => {
+    const prompt = owedPrompt("I'll send you the agenda.", [{ who: 'wearer', text: "Dev, I'll send you the deck." }])
+    expect(prompt).toMatch(/^The other person now says: I'll send you the agenda\.$/m)
+    expect(prompt).not.toMatch(/^The wearer now says:/m)
+    expect(prompt).toMatch(/Wearer: Dev, I'll send you the deck\./)
+    expect(prompt).toMatch(/never "send Dev the deck tonight"/)
+    expect(prompt).toMatch(/never put the promiser's name or the wearer's in it/)
+    // It is another prompt than the wearer's, so it has its own cassette.
+    expect(prompt).not.toBe(promisePrompt("I'll send you the agenda.", [{ who: 'wearer', text: "Dev, I'll send you the deck." }], []))
+  })
+
+  it('puts the action\'s verb in the third person behind the promiser: "Dev sends the agenda"', () => {
+    expect(owedLine('Dev', 'send the agenda')).toBe('Dev sends the agenda')
+    expect(owedLine('they (1)', 'send the deck tonight')).toBe('they (1) sends the deck tonight')
+    expect(thirdPerson('share the notes')).toBe('shares the notes')
+    expect(thirdPerson('introduce you to Sam')).toBe('introduces you to Sam')
+    expect(thirdPerson('fix the build')).toBe('fixes the build')
+    expect(thirdPerson('push the branch')).toBe('pushes the branch')
+    expect(thirdPerson('watch the demo')).toBe('watches the demo')
+    expect(thirdPerson('carry the boxes')).toBe('carries the boxes')
+    expect(thirdPerson('pay you back')).toBe('pays you back')
+    expect(thirdPerson('do it')).toBe('does it')
+    expect(thirdPerson('go over the plan')).toBe('goes over the plan')
+    expect(thirdPerson('have it ready by Friday')).toBe('has it ready by Friday')
+  })
+
+  it('costs no model pass for a sentence of theirs with no commitment cue', async () => {
+    const asked: string[] = []
+    const detector = new PromiseDetector({ complete: async (_m, prompt) => (asked.push(prompt), '{"promise": false}') })
+    expect(await detector.detectOwed('Great, see you then.', [])).toBeUndefined()
+    expect(asked).toEqual([])
+    expect(await detector.detectOwed("I'll think about it.", [])).toBeUndefined()
+    expect(asked).toHaveLength(1)
   })
 })

@@ -378,6 +378,63 @@ export const SCRIPTS: Record<string, ScriptLine[]> = {
     { at: 14, who: 'wearer', text: 'Anyway, good to see you.' },
   ],
 
+  // P5, promises owed to the wearer (D91, D26, D113, D32). Each has the
+  // promise come after any line before it has faded, and the wearer speak
+  // again after any line has come and gone.
+  // promises.feature row 3: Dev, caught at the start, says "About that deck."
+  // and then promises it.
+  'owed-deck': [
+    ...DEV_OPENING,
+    { at: 5, who: 'Dev', text: 'About that deck.' },
+    { gap: 0.6, who: 'Dev', text: "I'll send you the deck tonight." },
+    { at: 14, who: 'wearer', text: 'Anyway, good to see you.' },
+  ],
+  // D91: the wearer promises Dev the deck tonight (as in promise-deck), then Dev promises the agenda.
+  'owed-agenda': [
+    ...DEV_OPENING,
+    { at: 5, who: 'Dev', text: 'Are you free tonight?' },
+    { gap: 0.6, who: 'wearer', text: "I'll send you the deck tonight." },
+    { at: 13, who: 'Dev', text: "I'll send you the agenda." },
+    { at: 20, who: 'wearer', text: 'Anyway, good to see you.' },
+  ],
+  // D26, D113: nobody has introduced themselves when Dev promises the deck;
+  // the wearer answers; at second 20 Dev gives his name.
+  'owed-unnamed': [
+    { at: 0, who: 'wearer', text: 'Morning, how was the trip?' },
+    { gap: 0.8, who: 'Dev', text: 'Long, but worth it.' },
+    { at: 5, who: 'Dev', text: "I'll send you the deck tonight." },
+    { at: 14, who: 'wearer', text: 'Sounds good.' },
+    { at: 20, who: 'Dev', text: "By the way, I'm Dev." },
+    { gap: 1, who: 'wearer', text: 'Nice to meet you, Dev.' },
+  ],
+  // D113: two unnamed people promise, Ana the deck, then Dev the slides; then Dev gives his name.
+  'owed-two': [
+    { at: 0, who: 'wearer', text: 'Morning, everyone.' },
+    { at: 2, who: 'Ana', text: "I'll send you the deck tonight." },
+    { at: 6, who: 'wearer', text: 'Thanks.' },
+    { at: 8, who: 'Dev', text: "I'll send you the slides." },
+    { at: 12, who: 'wearer', text: 'Great.' },
+    { at: 17, who: 'Dev', text: "By the way, I'm Dev." },
+    { gap: 1, who: 'wearer', text: 'Nice to meet you, Dev.' },
+  ],
+  // holding.feature, the promises page with two promises made and one owed:
+  // Dev introduces himself, the wearer promises him the deck and an intro to
+  // Sam, Dev promises the agenda.
+  'owed-page': [
+    ...DEV_OPENING,
+    { at: 4, who: 'wearer', text: "Dev, I'll send you the deck." },
+    { gap: 1, who: 'wearer', text: "And I'll introduce you to Sam." },
+    { gap: 1, who: 'Dev', text: "Great, I'll send you the agenda." },
+    { gap: 1, who: 'wearer', text: 'Perfect, thanks.' },
+  ],
+  // D32: the scenario taps at second 3.5 (Dev's line has faded); while the
+  // names page is up, Dev promises the deck.
+  'newest-wins': [
+    ...DEV_OPENING,
+    { at: 5, who: 'Dev', text: "I'll send you the deck." },
+    { at: 14, who: 'wearer', text: 'Anyway, good to see you.' },
+  ],
+
   // P2a, the phone handoff. D117: two promises of the wearer's and one of
   // Dev's, then the wearer says nothing (the scenario lets ten minutes pass).
   handoff: [

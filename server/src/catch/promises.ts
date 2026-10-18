@@ -12,6 +12,16 @@ import { SafeModelError } from '../llm/errors.ts'
 // person just said when the wearer's words lack one (D90), "you" turned into
 // the person's name. The lens shows the summary; the phone gets it as a
 // command (`command`).
+//
+// Promises owed to the wearer (P5, D91, D26, D113): the same cue on another
+// person's sentence earns a pass with its own prompt (`owedPrompt`), which
+// writes the action alone, with no subject and no name in it ("I'll send you
+// the deck tonight" becomes "send the deck tonight"): the "you" there is the
+// wearer, the one receiving, and is left out, never turned into a name. Who
+// promised is never the model's guess (Catch cannot tell voices apart, the
+// fence's "Speaker identification"): the session names the promiser by the
+// last name caught, or "they", and writes the owed line with the verb in the
+// third person (`owedLine`: "Dev sends the deck tonight").
 
 /** One sentence heard in this conversation, for the model's context. */
 export interface Said {
@@ -46,6 +56,39 @@ export function promisePrompt(utterance: string, before: readonly Said[], names:
     'Answer with JSON only, one line: {"promise": true, "summary": "send Dev the deck tonight"} or {"promise": false}.',
   ].join('\n')
 }
+
+/** The prompt for another person's candidate sentence (P5). Its words are the cassette's key, as for the wearer's. */
+export function owedPrompt(utterance: string, before: readonly Said[]): string {
+  const context = before.length > 0 ? before.map((s) => `${s.who === 'wearer' ? 'Wearer' : 'Other'}: ${s.text}`).join('\n') : '(nothing yet)'
+  return [
+    'You read a live conversation for a person wearing smart glasses (the wearer) and decide whether someone other than the wearer has just promised the wearer something.',
+    '',
+    'What was said just before, oldest first:',
+    context,
+    '',
+    `The other person now says: ${utterance}`,
+    '',
+    'A promise is the other person committing to do something ("I\'ll send you the agenda"; "Sure, I\'ll do it" in answer to the wearer\'s request). Considering, hedging or declining is not a promise ("I\'ll think about it", "I would if I could", "maybe").',
+    'If it is a promise, write only what they will do, as a short action with no subject: start with the verb in lower case and in its plain form ("send", never "sends", "will send" or "I\'ll send"); never put the promiser\'s name or the wearer\'s in it, because the glasses add who promised; leave "you" out where it only names the wearer as the one receiving ("send you the deck tonight" becomes "send the deck tonight", never "send Dev the deck tonight" and never "send you the deck tonight"), and keep it where the action needs it ("call you on Monday", "introduce you to Sam"); their own "my" becomes "their"; keep every other word they said, articles included; keep any stated time or condition word for word ("tonight", "by Friday"); when their words lack the object, take it from what the wearer just asked; write "intro" as "introduce".',
+    'Answer with JSON only, one line: {"promise": true, "summary": "send the agenda"} or {"promise": false}.',
+  ].join('\n')
+}
+
+/** Verbs whose third person is not the regular one. */
+const IRREGULAR: Record<string, string> = { be: 'is', have: 'has', do: 'does', go: 'goes' }
+
+/** An action in the plain form with its first word, the verb, in the third person: "send the deck" becomes "sends the deck". */
+export function thirdPerson(action: string): string {
+  const [verb = '', ...rest] = action.split(' ')
+  const lower = verb.toLowerCase()
+  const third =
+    IRREGULAR[lower] ??
+    (/(s|x|z|ch|sh)$/.test(lower) ? `${verb}es` : /[^aeiou]y$/.test(lower) ? `${verb.slice(0, -1)}ies` : `${verb}s`)
+  return [third, ...rest].join(' ')
+}
+
+/** An owed promise as Catch holds it: who promised, then what they will do. "Dev sends the agenda", "they (1) sends the deck tonight". */
+export const owedLine = (promiser: string, action: string) => `${promiser} ${thirdPerson(action)}`
 
 /**
  * A promise pass that failed, described without a word of the conversation:
@@ -99,6 +142,13 @@ export class PromiseDetector {
   async detect(utterance: string, before: readonly Said[], names: readonly string[], signal?: AbortSignal): Promise<string | undefined> {
     if (!isCandidate(utterance)) return undefined
     const prompt = promisePrompt(utterance, before.slice(-CONTEXT_SENTENCES), names)
+    return parsePromise(await this.model.complete(PROMISE_MODEL, prompt, signal ? { signal } : undefined))
+  }
+
+  /** The action another person has promised the wearer in `utterance` (P5, D91), or undefined; no pass for a sentence with no cue. */
+  async detectOwed(utterance: string, before: readonly Said[], signal?: AbortSignal): Promise<string | undefined> {
+    if (!isCandidate(utterance)) return undefined
+    const prompt = owedPrompt(utterance, before.slice(-CONTEXT_SENTENCES))
     return parsePromise(await this.model.complete(PROMISE_MODEL, prompt, signal ? { signal } : undefined))
   }
 }

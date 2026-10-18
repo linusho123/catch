@@ -18,6 +18,27 @@ describe('the promise notification', () => {
     expect(promiseNotification(7, [])).toBeUndefined()
   })
 
+  it('carries a second line for the promises owed to the wearer, "Owed to you: …" (D28, D117, P5)', () => {
+    expect(promiseNotification(7, ['Send Dev the deck tonight', 'Introduce Dev to Sam'], ['Dev sends the agenda'])).toEqual({
+      title: 'Catch',
+      body: 'Send Dev the deck tonight and introduce Dev to Sam\nOwed to you: Dev sends the agenda',
+      data: { conversation: '7' },
+    })
+    expect(promiseNotification(7, [], ['they (1) sends the deck tonight', 'Dev sends the slides'])?.body, 'only owed: one line').toBe(
+      'Owed to you: they (1) sends the deck tonight and Dev sends the slides',
+    )
+    expect(promiseNotification(7, [], []), 'nothing in either direction: no notification (D51)').toBeUndefined()
+  })
+
+  it('cuts each line on its own when it is too long (D28)', () => {
+    const owed = ['Dev sends the agenda for the offsite', 'Dev shares the notes from the planning call', 'Dev books the van for Friday morning']
+    const body = promiseNotification(7, ['Send Dev the deck tonight'], owed)!.body.split('\n')
+    expect(body[0]).toBe('Send Dev the deck tonight')
+    expect(body[1]!.endsWith('…')).toBe(true)
+    expect(body[1]!.length).toBeLessThanOrEqual(NOTIFICATION_LINE_CHARS)
+    expect(body[1]!.startsWith('Owed to you: Dev sends the agenda')).toBe(true)
+  })
+
   it('cuts a line too long for the notification at a word, with an ellipsis (D28)', () => {
     const long = 'Send Dev the deck tonight, introduce Dev to Sam, book the room for Thursday, email Dev the budget and call Dev on Monday'
     const cut = cutLine(long)

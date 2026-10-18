@@ -7,7 +7,7 @@ import { History } from '../../server/src/phone/history.ts'
 import type { Store } from '../../server/src/store.ts'
 import { HARNESS_TOKEN, OTHER_HARNESS_TOKEN } from '../harness/index.ts'
 import { linesOf, type Captured } from '../harness/notifications.ts'
-import { isHistory, joggerLinkOn, openPhone, rowsOn, type PhoneScreen } from '../harness/phone.ts'
+import { isHistory, joggerLinkOn, openPhone, rowsOn, sectionsOn, type PhoneScreen } from '../harness/phone.ts'
 import { find, rows, tables } from '../harness/store-reader.ts'
 import {
   expectFlat,
@@ -36,9 +36,14 @@ import {
   namesOn,
   nowSec,
   playTo,
+  promisesOn,
+  screens,
   SLACK_MS,
   startRun,
+  swipeDown,
+  tap,
   tapForPage,
+  untilDot,
   visible,
   waitFor,
   type LensWorld,
@@ -66,9 +71,11 @@ import {
 // "The team, reading the server" reads the SQLite file directly
 // (test/harness/store-reader.ts) and its raw bytes, never the API whose job is
 // to delete. Bound in full: D51, D76, D79, and from P4 D114 (the kept
-// conversation's notification waits with the promise one). Bound in part,
-// with the rest unbound and the scenario held in wip: D117 (its owed line is
-// P5's), D28 (its "opens in full" needs both owed promises, P5's).
+// conversation's notification waits with the promise one). P5 binds the rest
+// of D117 (the notification's second line, "Owed to you: Dev sends the
+// agenda") and of D28 ("opens in full": the notification opened on the phone
+// page, the conversation's screen with every promise of the wearer's under
+// YOU and both of Dev's under OWED TO YOU, compared with what the lens held).
 //
 // P4 binds the iPhone rows of the history and jogger outlines against the
 // phone page (D130), with steps that match only the "iPhone app" surface: the
@@ -129,6 +136,9 @@ function expectedLine(summaries: string[]): string {
 interface HandoffWorld extends PhoneWorld, JoggerWorld {
   /** The wearer's promises as the lens showed them (`promised · <summary>`), in order. */
   promised?: string[]
+  /** The promises owed to the wearer as the lens showed them (`Dev promised · <action>`), and as its promises page held them (`owed: Dev sends …`), P5. */
+  owedShown?: string[]
+  owedHeld?: string[]
   /** The names the conversation caught, as the lens showed them. */
   caught?: string[]
   /** D76: the transcript's words a reader could find, and the conversations in the store before the boundary. */
@@ -140,12 +150,13 @@ interface HandoffWorld extends PhoneWorld, JoggerWorld {
   day?: { names: string[]; promised: string[]; at: number }[]
 }
 
-/** The lens's lines since the scenario's fixture began: the promise summaries, and the names. */
-function lensLines(w: LensWorld): { promised: string[]; names: string[] } {
+/** The lens's lines since the scenario's fixture began: the wearer's promise summaries, the owed lines (`Dev promised · …`, P5), and the names. */
+function lensLines(w: LensWorld): { promised: string[]; owed: string[]; names: string[] } {
   const lines = linesShown(w.h!, w.dotSince!, w.h!.clock.now()).map((l) => l.text)
   return {
     promised: lines.filter((l) => l.startsWith('promised · ')).map((l) => l.slice('promised · '.length)),
-    names: lines.filter((l) => !l.startsWith('promised · ')),
+    owed: lines.filter((l) => l.includes(' promised · ')),
+    names: lines.filter((l) => !l.includes('promised · ')),
   }
 }
 
@@ -153,9 +164,26 @@ function lensLines(w: LensWorld): { promised: string[]; names: string[] } {
 async function playAll(w: HandoffWorld, fixture: string): Promise<void> {
   const run = await startRun(w, fixture, 0)
   await playTo(w, run.fixture.words.at(-1)!.end + PROMISE_DONE_S)
-  const { promised, names } = lensLines(w)
+  const { promised, owed, names } = lensLines(w)
   w.promised = promised
+  w.owedShown = owed
   w.caught = names
+}
+
+/** A tap and a swipe down on the lens: the owed lines its promises page holds (P5), as "who does what"; then a tap puts the page away. */
+async function owedOnLens(w: HandoffWorld): Promise<string[]> {
+  const h = w.h!
+  await untilDot(w)
+  const names = await tapForPage(w)
+  expect(namesOn(names), 'the names page').toEqual(w.caught)
+  const held = promisesOn(await swipeDown(w))
+  expect(held.slice(0, w.promised!.length), "the wearer's own, first").toEqual(w.promised)
+  const at = tap(w)
+  await waitFor(w, () => (screens(h).some((s) => s.at >= at && visible(s).length === 1 && visible(s)[0]!.content === '•') ? true : undefined))
+  return held.slice(w.promised!.length).map((l) => {
+    expect(l.startsWith('owed: '), `"${l}" after the wearer's own is not an owed line`).toBe(true)
+    return l.slice('owed: '.length)
+  })
 }
 
 /** LONG_PRESS_EVENT (9), then its release (10), from the glasses' temple (D52). */
@@ -204,6 +232,7 @@ const phoneHandoff: Definer<HandoffWorld> = (reg) => {
     await playTo(w, second.end + PROMISE_DONE_S)
     const { promised, names } = lensLines(w)
     expect(names, 'the conversation is with Dev, whose name was caught').toEqual(['Dev'])
+    expect(promised, "the wearer's two promises, each seen on the lens").toHaveLength(2)
     w.promised = promised
     w.caught = names
   })
@@ -213,6 +242,17 @@ const phoneHandoff: Definer<HandoffWorld> = (reg) => {
     const said = lineIn(run, `${String(devArg)}.`)
     expect(said.words.every((wd) => wd.role === 'other'), 'Dev says it').toBe(true)
     await playTo(w, said.end + PROMISE_DONE_S)
+    // P5: Dev's promise, seen on the lens as his and held in the owed list.
+    const { promised, owed } = lensLines(w)
+    expect(promised, "the wearer's promises").toEqual(w.promised)
+    expect(owed, "Dev's promise, seen on the lens").toEqual(['Dev promised · send the agenda'])
+    w.owedShown = owed
+  })
+
+  reg.define(/^the phone shows a second line in it reading "([^"]+)"$/, (w, lineArg) => {
+    const lines = linesOf(theNotification(w).notification)
+    expect(lines, 'the notification: its title, the wearer\'s promises, and the owed line').toHaveLength(3)
+    expect(lines[2], 'its second line').toBe(String(lineArg))
   })
 
   reg.define(/^ten minutes pass in which the wearer does not speak$/, async (w) => {
@@ -240,7 +280,7 @@ const phoneHandoff: Definer<HandoffWorld> = (reg) => {
     expect(visible(page).map((c) => c.containerName), 'nothing from the old conversation is held').toEqual(['empty'])
   })
 
-  // D28 ("opens in full" needs the two owed promises, P5's, and stays unbound).
+  // D28, with "opens in full" (P5: both owed promises on the phone page's OWED TO YOU).
   reg.define(/^in a conversation with Dev the wearer made five promises and Dev made two$/, async (w) => {
     await begin(w)
     await playAll(w, `long-list.${V}`)
@@ -248,6 +288,28 @@ const phoneHandoff: Definer<HandoffWorld> = (reg) => {
     expect(w.promised, 'the wearer made five promises, each seen on the lens').toHaveLength(5)
     const devs = w.run!.fixture.lines.filter((l) => l.who === 'Dev' && /\bI'll\b/.test(l.text))
     expect(devs, 'Dev made two').toHaveLength(2)
+    for (const line of devs) expect(lineIn(w.run!, line.text).words.every((wd) => wd.role === 'other'), 'Dev says it').toBe(true)
+    expect(w.owedShown, "Dev's two, each seen on the lens as his").toHaveLength(2)
+    for (const l of w.owedShown!) expect(l.startsWith('Dev promised · '), l).toBe(true)
+    w.owedHeld = await owedOnLens(w)
+    expect(w.owedHeld, "Dev's two, held on the lens's promises page").toHaveLength(2)
+  })
+
+  reg.define(/^opening the notification shows all five of the wearer's promises and both owed promises$/, async (w) => {
+    const h = w.h!
+    const n = theNotification(w)
+    const { phone, record } = await openPhone({ server: h.server.url, token: HARNESS_TOKEN, clock: h.clock })
+    await phone.openNotification(n.notification.data)
+    const markup = record.screens.at(-1)!.markup
+    const sections = sectionsOn(markup).map((sec) => [sec.title, sec.promises.map((p) => p.text)])
+    // Every promise in full, whatever the notification cut: the wearer's as commands, Dev's as the lens held them.
+    expect(sections, "the conversation's screen").toEqual([
+      ['YOU', w.promised!.map(asCommand)],
+      ['OWED TO YOU', w.owedHeld!.map(asCommand)],
+    ])
+    expect(sections[0]![1], 'all five').toHaveLength(5)
+    expect(sections[1]![1], 'both owed').toHaveLength(2)
+    expect(markup, 'the screen is that conversation, with Dev').toContain('<h1 class="names">Dev</h1>')
   })
 
   reg.define(/^the conversation ends$/, async (w) => {
@@ -320,6 +382,8 @@ const phoneHandoff: Definer<HandoffWorld> = (reg) => {
     expect(n.at - w.backAt!, 'it came once the phone was back on').toBeGreaterThanOrEqual(0)
     expect(n.at - w.backAt!, 'it came then').toBeLessThanOrEqual(NOTIFY_RETRY_MS + SLACK_MS)
     expect(promiseLineOf(n), 'every promise intact').toBe(expectedLine(w.promised!))
+    // Dev's, too (P5): the owed line under it.
+    expect(linesOf(n.notification)[2], 'the owed promise intact').toBe('Owed to you: Dev sends the agenda')
   })
 
   reg.define(/^the phone shows the kept-conversation notification then, with the jogger intact$/, async (w) => {

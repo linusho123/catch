@@ -87,7 +87,11 @@ async function play(split: SplitName, fixture: string, until: number, opts: { to
     // Every word played; the silences between them skipped, except around an outage.
     for (const wd of run.fixture.words) {
       if (wd.start >= until) break
-      if (wd.end <= now()) continue
+      // A word the clock has already passed (a loaded machine) has its frame played, late and in order, before any skip (P5: as fastForward does).
+      if (wd.end <= now()) {
+        await run.playTo(run.frameEnd(wd.end))
+        continue
+      }
       if (wd.start > now() && !opts.outage) run.skipTo(wd.start)
       await run.playTo(run.frameEnd(wd.end))
     }

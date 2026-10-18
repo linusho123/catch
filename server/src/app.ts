@@ -250,11 +250,11 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
           events.emit('endError', { at: clock.now(), error })
         },
         transcript: { add: (word) => transcript.add(wearer, word), words: () => transcript.words(wearer), delete: () => transcript.delete(wearer) },
-        // P5 gives the history the owed promises.
-        onEnd: ({ promises: said, promiseTimes, kept, transcript: words, gaps, ...ended }) => {
+        // The wearer's promises as commands, and those owed to the wearer (P5), go to the history and the notification.
+        onEnd: ({ promises: said, promiseTimes, kept, transcript: words, gaps, owed, ...ended }) => {
           const you = said.map(command)
-          const id = history.record(wearer, { ...ended, you, owed: [], kept })
-          const notification = promiseNotification(id, you)
+          const id = history.record(wearer, { ...ended, you, owed: owed.map(command), kept })
+          const notification = promiseNotification(id, you, owed)
           if (notification) outbox?.enqueue(wearer, notification)
           if (!kept || id === undefined) return
           if (!opts.model) {

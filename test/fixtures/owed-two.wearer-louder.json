@@ -1,0 +1,245 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "owed-two",
+  "variant": "wearer-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "Morning, everyone."
+    },
+    {
+      "at": 2,
+      "who": "Ana",
+      "text": "I'll send you the deck tonight."
+    },
+    {
+      "at": 6,
+      "who": "wearer",
+      "text": "Thanks."
+    },
+    {
+      "at": 8,
+      "who": "Dev",
+      "text": "I'll send you the slides."
+    },
+    {
+      "at": 12,
+      "who": "wearer",
+      "text": "Great."
+    },
+    {
+      "at": 17,
+      "who": "Dev",
+      "text": "By the way, I'm Dev."
+    },
+    {
+      "gap": 1,
+      "who": "wearer",
+      "text": "Nice to meet you, Dev."
+    }
+  ],
+  "words": [
+    {
+      "text": "Morning,",
+      "start": 0,
+      "end": 0.495,
+      "role": "wearer",
+      "loudness": -13,
+      "speaker": 0
+    },
+    {
+      "text": "everyone.",
+      "start": 0.555,
+      "end": 1.095,
+      "role": "wearer",
+      "loudness": -10.8,
+      "speaker": 0
+    },
+    {
+      "text": "I'll",
+      "start": 2,
+      "end": 2.315,
+      "role": "other",
+      "loudness": -27.2,
+      "speaker": 1
+    },
+    {
+      "text": "send",
+      "start": 2.375,
+      "end": 2.735,
+      "role": "other",
+      "loudness": -27.2,
+      "speaker": 1
+    },
+    {
+      "text": "you",
+      "start": 2.795,
+      "end": 3.11,
+      "role": "other",
+      "loudness": -28.9,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 3.17,
+      "end": 3.485,
+      "role": "other",
+      "loudness": -26.7,
+      "speaker": 1
+    },
+    {
+      "text": "deck",
+      "start": 3.545,
+      "end": 3.905,
+      "role": "other",
+      "loudness": -27.6,
+      "speaker": 1
+    },
+    {
+      "text": "tonight.",
+      "start": 3.965,
+      "end": 4.46,
+      "role": "other",
+      "loudness": -27.1,
+      "speaker": 1
+    },
+    {
+      "text": "Thanks.",
+      "start": 6,
+      "end": 6.45,
+      "role": "wearer",
+      "loudness": -12.9,
+      "speaker": 0
+    },
+    {
+      "text": "I'll",
+      "start": 8,
+      "end": 8.315,
+      "role": "other",
+      "loudness": -28,
+      "speaker": 2
+    },
+    {
+      "text": "send",
+      "start": 8.375,
+      "end": 8.735,
+      "role": "other",
+      "loudness": -29.4,
+      "speaker": 2
+    },
+    {
+      "text": "you",
+      "start": 8.795,
+      "end": 9.11,
+      "role": "other",
+      "loudness": -29.2,
+      "speaker": 2
+    },
+    {
+      "text": "the",
+      "start": 9.17,
+      "end": 9.485,
+      "role": "other",
+      "loudness": -26.7,
+      "speaker": 2
+    },
+    {
+      "text": "slides.",
+      "start": 9.545,
+      "end": 9.995,
+      "role": "other",
+      "loudness": -28,
+      "speaker": 2
+    },
+    {
+      "text": "Great.",
+      "start": 12,
+      "end": 12.405,
+      "role": "wearer",
+      "loudness": -11.9,
+      "speaker": 0
+    },
+    {
+      "text": "By",
+      "start": 17,
+      "end": 17.27,
+      "role": "other",
+      "loudness": -28,
+      "speaker": 2
+    },
+    {
+      "text": "the",
+      "start": 17.33,
+      "end": 17.645,
+      "role": "other",
+      "loudness": -26.9,
+      "speaker": 2
+    },
+    {
+      "text": "way,",
+      "start": 17.705,
+      "end": 18.02,
+      "role": "other",
+      "loudness": -29,
+      "speaker": 2
+    },
+    {
+      "text": "I'm",
+      "start": 18.08,
+      "end": 18.35,
+      "role": "other",
+      "loudness": -27.2,
+      "speaker": 2
+    },
+    {
+      "text": "Dev.",
+      "start": 18.41,
+      "end": 18.725,
+      "role": "other",
+      "loudness": -27.8,
+      "speaker": 2
+    },
+    {
+      "text": "Nice",
+      "start": 19.725,
+      "end": 20.085,
+      "role": "wearer",
+      "loudness": -12,
+      "speaker": 0
+    },
+    {
+      "text": "to",
+      "start": 20.145,
+      "end": 20.415,
+      "role": "wearer",
+      "loudness": -10.8,
+      "speaker": 0
+    },
+    {
+      "text": "meet",
+      "start": 20.475,
+      "end": 20.835,
+      "role": "wearer",
+      "loudness": -13.5,
+      "speaker": 0
+    },
+    {
+      "text": "you,",
+      "start": 20.895,
+      "end": 21.21,
+      "role": "wearer",
+      "loudness": -10.7,
+      "speaker": 0
+    },
+    {
+      "text": "Dev.",
+      "start": 21.27,
+      "end": 21.585,
+      "role": "wearer",
+      "loudness": -12.9,
+      "speaker": 0
+    }
+  ]
+}

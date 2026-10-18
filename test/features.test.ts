@@ -28,50 +28,33 @@ const FEATURE_DIR = join(ROOT, 'features')
 const WIP: WipEntry[] = [
   // P1b binds D43's names page, D31 and the dismissal; P2a the promises page
   // (D112) and the phone's half of the quiet end; P4 the keep in the
-  // long-press end. These wait: the owed line on the promises page for P5,
-  // scrolling for P10.
-  {
-    feature: 'holding',
-    scenarios: ['A swipe down turns to the promises page', 'Thirty names scroll before the promises page'],
-  },
+  // long-press end; P5 the owed line on the promises page. Scrolling waits for P10.
+  { feature: 'holding', scenarios: ['Thirty names scroll before the promises page'] },
   // P4 binds the keep and the jogger; the restart waits for P9 (D73).
   { feature: 'kept-conversations', scenarios: ['Everything survives a restart mid-conversation'] },
   // P2b′ (D130) binds the phone page's "nothing to keep" scenario; P2a binds D51,
-  // D76 and D79 in full, and the bound halves of D117 (its owed line waits for
-  // P5) and D28 (its "opens in full" needs both owed promises, P5); P4 binds
-  // D114 in full (its kept half) and the iPhone rows of the history and jogger
-  // outlines, with steps that match only the "iPhone app" surface. The
+  // D76 and D79 in full; P4 binds D114 in full (its kept half) and the iPhone
+  // rows of the history and jogger outlines, with steps that match only the
+  // "iPhone app" surface; P5 binds D117 (its owed line) and D28 (its "opens in
+  // full", with both owed promises on the phone page's OWED TO YOU). The
   // tick-off outlines and every website row are cut (D126, D130); the history
   // and jogger outlines stay scenario-scoped wip while their website rows are
   // unbound (deferred by D126, operator answer 3).
   {
     feature: 'phone-handoff',
     scenarios: [
-      'One notification carries both lines',
-      'A long list is cut off and opens in full',
       "Ticking off a promise removes it from the conversation's screen on the <surface>",
       'An owed promise can be ticked off the same way on the <surface>',
       'The home lists conversations newest first on the <surface>',
       'The jogger reads the same on the <surface>',
     ],
   },
-  // P2a binds the wearer's own promises: D89, D90, D47, and rows 1, 2 and 4 of
-  // the outline (row 1 by D132). Its row 3 and the owed list wait for P5 (D91, D113).
-  {
-    feature: 'promises',
-    scenarios: [
-      'A catch line appears and fades',
-      "Dev's promise is held in the owed list, apart from the wearer's own",
-      'A promise from someone unnamed is held as theirs',
-      'An owed promise takes the name once it is caught',
-      'Two unnamed promisers are numbered, and a name attaches to the most recent',
-    ],
-  },
-  // P1a binds D14, D16 and D37; these wait for P3 (D32, the promise line), P6 (pause).
+  // promises.feature has left the register: P2a bound the wearer's own (D89,
+  // D90, D47, rows 1, 2 and 4), P5 the owed list (row 3, D91, D113).
+  // P1a binds D14, D16 and D37; P5 D32 (its catch is Dev's promise); these wait for P6 (pause).
   {
     feature: 'staying-dark',
     scenarios: [
-      'The newest catch replaces a page that is showing',
       'A swipe down pauses Catch and shows the dash',
       'A second swipe down resumes listening',
       'A pause freezes the conversation',

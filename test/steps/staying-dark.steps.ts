@@ -5,24 +5,47 @@ import {
   begin,
   expectDotOnly,
   isDotOnly,
+  isLine,
+  isPage,
+  LINE_MS,
+  lineIn,
+  linesShown,
+  namesOn,
+  PAGE_MS,
   pend,
   playTo,
+  promisesOn,
   screenAt,
   screens,
   screensDuring,
   SLACK_MS,
   startRun,
+  tapForPage,
+  tapToPromises,
+  untilDot,
   visible,
   type LensWorld,
 } from './lens-world.ts'
 
-// staying-dark.feature, the three scenarios P1a binds (D14, D16, D37); the
-// rest stay scenario-scoped wip for P2a, P3 and P6. Every "sees" is read from
+// staying-dark.feature, the three scenarios P1a binds (D14, D16, D37), and
+// D32's, whose catch is Dev's promise (P5): the names page is up when Dev
+// promises the deck, and his line takes its place at once (the newest wins);
+// the promise is held in the owed list all the same. Pause stays
+// scenario-scoped wip for P6. Every "sees" is read from
 // the bridge stub's record on fixture time (lens-world.ts). The fixture is
 // three minutes of talk with Dev (test/fixtures/scripts.ts, `small-talk`), on
 // the default split, wearer louder.
 
 const TALK = 'small-talk.wearer-louder'
+
+/** D32: Dev introduces himself, the scenario taps once his line has faded, and Dev promises the deck while the names page is up. */
+const NEWEST = 'newest-wins.wearer-louder'
+
+/** D89: a promise line within three seconds. */
+const PROMISE_BOUND_MS = 3000
+
+/** The owed line the lens shows for Dev's promise (P5): who promised, then the action. */
+const DEV_LINE = 'Dev promised · send the deck'
 
 /**
  * D37's "the moment Catch can hear again": the dot is back within a second of
@@ -98,6 +121,62 @@ const stayingDark: Definer<LensWorld> = (reg) => {
     const during = screensDuring(w.h!, w.dotSince!, w.run!.at(180))
     expect(during.length).toBeGreaterThan(0)
     for (const s of during) expectDotOnly(s, 'in the three minutes')
+  })
+
+  // D32 (P5): the newest catch, Dev's promise, replaces the names page.
+  reg.define(/^the wearer has tapped and the names page is showing$/, async (w) => {
+    const h = await begin(w)
+    const run = await startRun(w, NEWEST, 0)
+    const dev = lineIn(run, "Hi, I'm Dev.")
+    expect(dev.words.every((wd) => wd.role === 'other'), 'Dev introduces himself').toBe(true)
+    // Dev's name line has come and gone; the wearer has spoken, so the conversation is under way.
+    await playTo(w, 3.5)
+    expect(linesShown(h, w.dotSince!, h.clock.now()).map((l) => l.text)).toEqual(['Dev'])
+    expect(run.fixture.words.some((wd) => wd.role === 'wearer' && wd.end < 3.5)).toBe(true)
+    await untilDot(w)
+    const page = await tapForPage(w)
+    expect(namesOn(page), 'the names page').toEqual(['Dev'])
+  })
+
+  reg.define(/^Dev says "([^"]+)"$/, async (w, wordsArg) => {
+    const h = w.h!
+    const said = lineIn(w.run!, `${String(wordsArg)}.`)
+    expect(said.words.every((wd) => wd.role === 'other'), 'Dev, not the wearer, says it').toBe(true)
+    // He says it while the names page is up, and it is still up when he finishes.
+    expect(w.run!.at(said.start)).toBeGreaterThan(w.page!.at)
+    expect(w.run!.at(said.end), "Dev finishes before the page's five seconds are out").toBeLessThan(w.page!.at + PAGE_MS)
+    await playTo(w, said.end)
+    for (const s of screensDuring(h, w.page!.at, h.clock.now())) expect(visible(s), 'the names page until Dev finishes').toEqual(visible(w.page!))
+    w.saidAt = w.run!.at(said.end)
+    await playTo(w, said.end + (PROMISE_BOUND_MS + SLACK_MS) / 1000)
+  })
+
+  reg.define(/^the wearer sees the promise line in place of the names page at once$/, (w) => {
+    const h = w.h!
+    const all = screens(h)
+    const next = all[all.findIndex((s) => s.at === w.page!.at) + 1]
+    expect(next, 'nothing replaced the names page').toBeDefined()
+    // The line takes the page's place: the very next thing on the lens, alone, dim, in the lower third.
+    expect(isLine(next!, DEV_LINE), `the names page gave way to ${JSON.stringify(visible(next!).map((c) => c.content))}`).toBe(true)
+    expect(next!.at - w.saidAt!, `the line came ${next!.at - w.saidAt!} ms after Dev's words`).toBeLessThanOrEqual(PROMISE_BOUND_MS)
+    expect(next!.at - w.page!.at, 'while the page was still up').toBeLessThan(PAGE_MS)
+    w.lineAt = next!.at
+  })
+
+  reg.define(/^the wearer no longer sees the names page$/, async (w) => {
+    const h = w.h!
+    // Past the line's second and a half and the page's own five seconds: the page never comes back.
+    await playTo(w, w.run!.seconds(Math.max(w.lineAt! + LINE_MS, w.page!.at + PAGE_MS)) + SLACK_MS / 1000)
+    for (const s of screensDuring(h, w.lineAt!, h.clock.now())) expect(isPage(s), `the names page is back at ${s.at} ms`).toBe(false)
+    const after = screens(h).find((s) => s.at > w.lineAt!)
+    expect(after, 'the line never went').toBeDefined()
+    expectDotOnly(after, 'when the line goes')
+  })
+
+  reg.define(/^a tap and a swipe down show "([^"]+)" held for this conversation$/, async (w, heldArg) => {
+    await untilDot(w)
+    const page = await tapToPromises(w, ['Dev'])
+    expect(promisesOn(page), 'the promises page').toEqual([String(heldArg)])
   })
 
   // D37

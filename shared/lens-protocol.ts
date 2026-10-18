@@ -18,14 +18,18 @@ export type LensView =
    * The names page (D43): the held names in the order heard; none held is
    * D31's empty page. With automatic thread detection off, `thread` is the
    * wearer's last words, the page's first line, above the names (D120).
+   * `promisesHeld` says that, with no names held, promises are (either way,
+   * P5): the page is then the names page, its header and its hint to the
+   * promises, not D31's `nothing held`.
    */
-  | { kind: 'names'; names: string[]; thread?: string }
+  | { kind: 'names'; names: string[]; thread?: string; promisesHeld?: true }
   /**
    * The promises page (D43), after the names page on a swipe down: the
-   * wearer's own promises in the order made, or `no promises yet` when there
-   * are none (D112). P5 adds those owed to the wearer, after them.
+   * wearer's own promises in the order made, then those owed to the wearer
+   * (P5, D91), each "who does what" (`Dev sends the agenda`, drawn as
+   * `owed: Dev sends the agenda`); `no promises yet` when there are none (D112).
    */
-  | { kind: 'promises'; you: string[] }
+  | { kind: 'promises'; you: string[]; owed: string[] }
 
 /** Server to lens. */
 export type ServerMessage =

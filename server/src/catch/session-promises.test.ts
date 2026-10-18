@@ -19,21 +19,27 @@ import type { TranscriptWord } from './transcript.ts'
 const WEARER = -12
 const OTHER = -28
 
-/** A model that answers from `answers` by the sentence judged; `hold` keeps every answer until `release()`. */
+/**
+ * A model that answers from `answers` by the sentence judged; `hold` keeps
+ * every answer until `release()`. `asked` lists the wearer's sentences it was
+ * asked about, `askedOwed` someone else's (P5's owed prompt).
+ */
 function fakeModel(answers: Record<string, string | undefined>, hold = false) {
   const asked: string[] = []
+  const askedOwed: string[] = []
   const waiting: (() => void)[] = []
   const model: ModelClient = {
     complete(_m, prompt) {
-      const said = /^The wearer now says: (.*)$/m.exec(prompt)![1]!
-      asked.push(said)
+      const wearer = /^The wearer now says: (.*)$/m.exec(prompt)?.[1]
+      const said = wearer ?? /^The other person now says: (.*)$/m.exec(prompt)![1]!
+      ;(wearer !== undefined ? asked : askedOwed).push(said)
       const summary = answers[said]
       const response = JSON.stringify(summary === undefined ? { promise: false } : { promise: true, summary })
       if (!hold) return Promise.resolve(response)
       return new Promise((resolve) => waiting.push(() => resolve(response)))
     },
   }
-  return { model, asked, release: () => waiting.splice(0).forEach((go) => go()) }
+  return { model, asked, askedOwed, release: () => waiting.splice(0).forEach((go) => go()) }
 }
 
 // A test that asserts a boundary to the millisecond passes a near-frozen speed, so only advance() moves
@@ -83,17 +89,19 @@ describe("a session's promises", () => {
     expect(views.at(-1)!.view).toEqual({ kind: 'dot' })
     session.tap()
     session.swipeDown()
-    expect(views.at(-1)!.view).toEqual({ kind: 'promises', you: ['send Dev the deck tonight'] })
+    expect(views.at(-1)!.view).toEqual({ kind: 'promises', you: ['send Dev the deck tonight'], owed: [] })
   })
 
-  it("never asks about someone else's sentences, nor about the wearer's with no commitment in them", async () => {
-    const { model, asked } = fakeModel({})
+  it("asks about someone else's sentence only as an owed promise (P5), and never about a sentence with no commitment in it", async () => {
+    const { model, asked, askedOwed } = fakeModel({})
     const { session, say, settle } = setup(model)
     session.setHearing(true)
     say("Sure, I'll send you the agenda.", 0, OTHER)
     say('Sounds good to me.', 3, WEARER)
+    say('Great, see you then.', 6, OTHER)
     await settle()
-    expect(asked).toEqual([])
+    expect(asked, "the wearer's prompt").toEqual([])
+    expect(askedOwed, 'the owed prompt').toEqual(["Sure, I'll send you the agenda."])
   })
 
   it('turns the names page to the promises page on a swipe down, `no promises yet` when none, for five seconds (D43, D112)', async () => {
@@ -108,7 +116,7 @@ describe("a session's promises", () => {
     session.tap()
     clock.advance(PAGE_MS - 1000)
     session.swipeDown()
-    expect(views.at(-1)!.view).toEqual({ kind: 'promises', you: [] })
+    expect(views.at(-1)!.view).toEqual({ kind: 'promises', you: [], owed: [] })
     // The swipe is a touch: the promises page has its own five seconds.
     clock.advance(PAGE_MS - 1)
     expect(views.at(-1)!.view.kind).toBe('promises')
@@ -197,7 +205,7 @@ describe("a session's promises", () => {
     clock.advance(LINE_MS)
     session.tap()
     session.swipeDown()
-    expect(views.at(-1)!.view, 'the promises page, in the order made').toEqual({ kind: 'promises', you: ['send Dev the deck tonight', 'introduce Dev to Sam', 'book the room'] })
+    expect(views.at(-1)!.view, 'the promises page, in the order made').toEqual({ kind: 'promises', you: ['send Dev the deck tonight', 'introduce Dev to Sam', 'book the room'], owed: [] })
   })
 })
 
@@ -260,7 +268,7 @@ describe('a promise pass past its three seconds (risk-2, answer 9)', () => {
     expect(lineViews(views), 'no promise line past three seconds').toEqual(['Dev'])
     session.tap()
     session.swipeDown()
-    expect(views.at(-1)!.view, 'held for the promises page').toEqual({ kind: 'promises', you: ['send Dev the deck tonight'] })
+    expect(views.at(-1)!.view, 'held for the promises page').toEqual({ kind: 'promises', you: ['send Dev the deck tonight'], owed: [] })
     session.longPress()
     await settle()
     expect(ended.map((e) => e.promises), 'and for the end').toEqual([['send Dev the deck tonight']])
