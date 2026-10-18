@@ -17,8 +17,9 @@ export type LensView =
   /** One catch: a dim line in the lower third, for a second and a half (D17) or, the dropped thread, until cleared (D35). */
   | { kind: 'line'; text: string }
   /**
-   * The names page (D43): the held names in the order heard; none held is
-   * D31's empty page. With automatic thread detection off, `thread` is the
+   * The names page (D43): the held names in the order heard, as many as one
+   * page lists (`NAMES_PER_PAGE`; the server scrolls past them, P10); none
+   * held is D31's empty page. With automatic thread detection off, `thread` is the
    * wearer's last words, the page's first line, above the names (D120).
    * `promisesHeld` says that, with no names held, promises are (either way,
    * P5): the page is then the names page, its header and its hint to the
@@ -32,6 +33,23 @@ export type LensView =
    * `owed: Dev sends the agenda`); `no promises yet` when there are none (D112).
    */
   | { kind: 'promises'; you: string[]; owed: string[] }
+
+/**
+ * The G2's text line, in pixels: the firmware's LVGL line height is fixed at
+ * 27 px (Even's `text-heavy` template). A text container that holds more lines
+ * than fit is scrolled by the firmware itself, out of the server's sight, when
+ * it takes the touches; so the names page never sends more than fit (P10).
+ */
+export const LINE_PX = 27
+
+/**
+ * How many names one names page lists (P10, D43): as many as fit the names
+ * container at the G2's line height, 7 in its 208 px, or 6 in the 168 px
+ * under the thread line (D120). Past them a swipe down scrolls to the next
+ * page of names, and only at the last name turns to the promises page.
+ */
+export const NAMES_PER_PAGE = 7
+export const NAMES_PER_PAGE_UNDER_THREAD = 6
 
 /** Server to lens. */
 export type ServerMessage =
@@ -48,11 +66,13 @@ export type ServerMessage =
   | { type: 'listening'; on: boolean }
 
 /**
- * A tap; a long-press ends the conversation now (D52); a swipe down turns the
- * names page to the promises page (D43), declines the keep prompt (D40), and,
- * with the pause switched on (CATCH_PAUSE, P6), pauses Catch at the bare dot
- * and resumes it at the dash (D86); a swipe up asks to keep the conversation
- * (D40). Double-tap is Even's exit and never leaves the lens.
+ * A tap; a long-press ends the conversation now (D52); a swipe down scrolls
+ * the names page and, past its last name, turns to the promises page (D43),
+ * declines the keep prompt (D40), and, with the pause switched on
+ * (CATCH_PAUSE, P6), pauses Catch at the bare dot and resumes it at the dash
+ * (D86); a swipe up asks to keep the conversation at the dot (D40) and
+ * scrolls a held page back (D43, P10). Double-tap is Even's exit and never
+ * leaves the lens.
  */
 export type Gesture = 'tap' | 'long-press' | 'swipe-down' | 'swipe-up'
 

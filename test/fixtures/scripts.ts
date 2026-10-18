@@ -214,6 +214,13 @@ const WORKSHOP: ScriptLine[] = (() => {
   return brisk(lines)
 })()
 
+/** P10: the thirty in the circle, in the order they speak. */
+export const CIRCLE = [
+  'Priya', 'Marcus', 'Dana', 'Ana', 'Ben', 'Chloe', 'Diego', 'Elena', 'Farid', 'Grace',
+  'Hiro', 'Imani', 'Jonas', 'Kenji', 'Leila', 'Mateo', 'Nadia', 'Omar', 'Petra', 'Quinn',
+  'Rosa', 'Soren', 'Tara', 'Umar', 'Vera', 'Wes', 'Xavier', 'Yara', 'Zoe', 'Aiden',
+]
+
 export const SCRIPTS: Record<string, ScriptLine[]> = {
   // Priya, Marcus, Dana; a second Priya inside two minutes; a late re-introduction.
   // The wearer speaks at least every ten minutes, so the conversation never ends (D92).
@@ -518,6 +525,17 @@ export const SCRIPTS: Record<string, ScriptLine[]> = {
     { gap: 1, who: 'Dev', text: "Great, I'll send you the agenda." },
     { gap: 1, who: 'Dev', text: "And I'll share the notes." },
   ],
+  // P10, D43: thirty people introduce themselves around a circle, each a
+  // different voice, one after another, every name different (so D87 never
+  // numbers one); then the wearer promises Dev the deck. Brisk (P4), so the
+  // thirty introductions stay cheap to play (head-2).
+  circle: brisk([
+    { at: 0, who: 'wearer', text: "Hi everyone, let's go around the circle." },
+    ...CIRCLE.map((name, i): ScriptLine => ({ gap: i === 0 ? 1 : 0.4, who: name, text: `I'm ${name}.` })),
+    // Past the last name's two-second bound, so the promise's line never falls inside them; the silence costs nothing.
+    { gap: 3, who: 'wearer', text: "Dev, I'll send you the deck." },
+    { gap: 1, who: 'wearer', text: 'Thanks, everyone.' },
+  ]),
   // D51: Priya and Marcus introduce themselves and nobody promises anything; then the wearer says nothing.
   'names-only': [
     { at: 0, who: 'wearer', text: 'Hi everyone, good to see you all.' },

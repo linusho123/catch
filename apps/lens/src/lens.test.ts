@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseLensMessage } from '../../../shared/lens-protocol.ts'
+import { LINE_PX, NAMES_PER_PAGE, NAMES_PER_PAGE_UNDER_THREAD, parseLensMessage } from '../../../shared/lens-protocol.ts'
 import { containersFor, DIM, NAMES_HEADER, NO_PROMISES, NOTHING_HELD, PAUSED_MARK, PROMISES_HEADER, PROMISES_HINT } from './lens.ts'
 
 // What the lens hands the bridge for one view: the containers as the SDK
@@ -64,6 +64,20 @@ describe('promises owed to the wearer on the lens (P5, D43, D91)', () => {
     const threaded = containersFor({ kind: 'names', names: [], promisesHeld: true, thread: '…and the second reason is' })
     expect(threaded.filter((c) => (c.content ?? '').trim() !== '').map((c) => c.content)).toEqual(['…and the second reason is', NAMES_HEADER, PROMISES_HINT])
     expect(containersFor({ kind: 'names', names: [] }).map((c) => c.content)).toEqual([NOTHING_HELD])
+  })
+})
+
+describe('a page of names fits the lens (P10, D43)', () => {
+  const names = (n: number) => Array.from({ length: n }, (_, i) => `Name${i + 1}`)
+  const box = (view: Parameters<typeof containersFor>[0]) => containersFor(view).find((c) => c.containerName === 'names')!
+
+  it('holds as many names as the server sends on one page at the G2\'s line height, and not one more', () => {
+    // The firmware scrolls a capturing text container that overflows on its own, out of the server's sight: a page never does.
+    const plain = box({ kind: 'names', names: names(NAMES_PER_PAGE) })
+    expect(Math.floor((plain.height ?? 0) / LINE_PX)).toBe(NAMES_PER_PAGE)
+    expect(plain.content).toBe(names(NAMES_PER_PAGE).join('\n'))
+    const threaded = box({ kind: 'names', names: names(NAMES_PER_PAGE_UNDER_THREAD), thread: '…and the second reason is' })
+    expect(Math.floor((threaded.height ?? 0) / LINE_PX)).toBe(NAMES_PER_PAGE_UNDER_THREAD)
   })
 })
 

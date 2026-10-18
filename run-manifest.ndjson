@@ -17,7 +17,7 @@
 {"file":"features/holding.feature","title":"Quiet ends a conversation at ten minutes [1]","status":"passed"}
 {"file":"features/holding.feature","title":"Quiet ends a conversation at ten minutes [2]","status":"passed"}
 {"file":"features/holding.feature","title":"The promises page with nothing promised","status":"passed"}
-{"file":"features/holding.feature","title":"Thirty names scroll before the promises page","status":"unbound"}
+{"file":"features/holding.feature","title":"Thirty names scroll before the promises page","status":"passed"}
 {"file":"features/kept-conversations.feature","title":"A kept call produces a jogger","status":"passed"}
 {"file":"features/kept-conversations.feature","title":"A kept conversation of any length gets a jogger [1]","status":"passed"}
 {"file":"features/kept-conversations.feature","title":"A kept conversation of any length gets a jogger [2]","status":"passed"}

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { fixtureNames, loadFixture } from '../fixtures/fixture.ts'
 import { buildFixture, fixtureFileName } from '../fixtures/make-fixtures.ts'
+import { DEFAULT_SPEED } from '../harness/clock.ts'
 import { SCRIPTS, VARIANTS } from '../fixtures/scripts.ts'
 
 // The synthetic word-timing fixtures (D126): one per script and variant,
@@ -56,5 +57,24 @@ describe('the synthetic fixtures', () => {
     // The one-second "mm-hm" in the cut-off fixture.
     const mmhm = loadFixture('cut-off.other-louder').words.find((w) => w.text === 'Mm-hm.')!
     expect(mmhm.end - mmhm.start).toBeCloseTo(1, 3)
+  })
+
+  // head-2: a scenario over two seconds in the fast lane is a finding. The
+  // player plays every word at the fixture clock's speed (the silences are
+  // skipped, fastForward), so the circle's thirty introductions are spoken
+  // briskly, as P4's long fixtures are: all its speech, played at twenty
+  // times, takes well under a second of wall time.
+  it.each(VARIANTS)('speaks the circle briskly, so its words play in under three quarters of a second (%s)', (variant) => {
+    const fx = loadFixture(`circle.${variant}`)
+    // A line is a run of one speaker's words with no more than a word gap between them.
+    const lines: { start: number; end: number }[] = []
+    fx.words.forEach((wd, i) => {
+      const prev = fx.words[i - 1]
+      if (prev && wd.speaker === prev.speaker && wd.start - prev.end <= 0.2) lines.at(-1)!.end = wd.end
+      else lines.push({ start: wd.start, end: wd.end })
+    })
+    expect(lines, 'the wearer, thirty introductions, the wearer twice').toHaveLength(33)
+    const spoken = lines.reduce((sum, l) => sum + (l.end - l.start), 0)
+    expect((spoken / DEFAULT_SPEED) * 1000, `${spoken.toFixed(1)} s of speech, in ms of wall time`).toBeLessThan(750)
   })
 })

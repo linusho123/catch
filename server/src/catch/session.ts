@@ -1,5 +1,5 @@
 import type { Clock, TimerHandle } from '../../../shared/clock.ts'
-import type { LensView } from '../../../shared/lens-protocol.ts'
+import { NAMES_PER_PAGE, NAMES_PER_PAGE_UNDER_THREAD, type LensView } from '../../../shared/lens-protocol.ts'
 import type { AudioFrame } from '../../../shared/wire.ts'
 import { pcmLoudnessDbfs, type FrameSignal, type Side, type SplitWord, type WearerSplit } from '../split/split.ts'
 import type { SttWord } from '../stt/types.ts'
@@ -38,7 +38,11 @@ import type { TranscriptWord } from './transcript.ts'
 // commitment cue goes to the promise detector (promises.ts) with the
 // sentences before it and the names caught; a promise shows as `promised ·
 // <summary>` for a second and a half and is held for the conversation, and a
-// swipe down on the names page turns to the promises page (D43, D112). At the
+// swipe down on the names page turns to the promises page (D43, D112): past a
+// page of names (as many as fit the lens, NAMES_PER_PAGE) it first scrolls to
+// the next, and turns only at the last name; a swipe up scrolls a held page
+// back, the promises page to the last names, and at the first name does
+// nothing (P10). At the
 // end the conversation's promises go to the phone (onEnd, once every pass in
 // flight has answered or reached its deadline), and its transcript is
 // deleted, in the store and in the session's memory (D76).
@@ -372,6 +376,15 @@ interface Promises {
 const noPromises = (): Promises => ({ slots: [], times: [], owed: [], inflight: new Set(), out: new Set(), done: false })
 
 const held = (p: Promises) => p.slots.filter((s): s is string => s !== undefined)
+
+/** How many names one names page lists: what fits the lens, a line fewer under the thread (P10, D120). */
+const namesPerPage = (thread: string | undefined) => (thread === undefined ? NAMES_PER_PAGE : NAMES_PER_PAGE_UNDER_THREAD)
+
+/** The index of the first name on the last names page, for `count` names held (0 with none). */
+function lastPageFrom(count: number, thread: string | undefined): number {
+  const per = namesPerPage(thread)
+  return count === 0 ? 0 : Math.floor((count - 1) / per) * per
+}
 const heldTimes = (p: Promises) => p.times.filter((_, i) => p.slots[i] !== undefined)
 
 /**
@@ -514,6 +527,13 @@ export class Session {
   private threadShowing = false
   /** The view showing is the keep prompt: it stays until a tap or a swipe down (D40, D41). */
   private promptShowing = false
+  /**
+   * The held page showing, while one is (P10): the thread line it opened
+   * with (D120), and the index of the first name on the names page in view,
+   * so a swipe scrolls from there and a swipe up from the promises page comes
+   * back to the last names.
+   */
+  private heldPage: { thread: string | undefined; from: number } | undefined
   /** The line showing is this name caught from an interim, not yet confirmed: withdrawn, it is taken down (PT). */
   private tentativeShowing: Tentative | undefined
   /** The lens starts with no dot (it cannot hear until told), so the first view worth sending is the dot. */
@@ -815,24 +835,25 @@ export class Session {
       this.save()
       return
     }
-    this.clearView()
     if (this.view.kind === 'dot') {
       // D120: with detection off, the page gives the thread back as its first line.
       const thread = this.threadDetection() ? undefined : this.thread.line()
-      this.view = this.namesPage(thread)
-      this.viewTimer = this.clock.setTimeout(() => this.backToDot(), PAGE_MS)
-    } else {
-      // A line or a page goes; an unanswered prompt comes back in its place (D42).
-      this.toRest()
+      this.showNames(thread, 0)
+      return
     }
+    // A line or a page goes; an unanswered prompt comes back in its place (D42).
+    this.clearView()
+    this.toRest()
     this.render()
   }
 
   /**
-   * A swipe down: on the names page, the promises page, for five seconds
-   * (D43, D112); on the keep prompt, no (D40); with the pause switched on
-   * (P6, D86), at the bare dot it pauses Catch, and at the dash it resumes.
-   * Anywhere else (a catch line, the promises page) it means nothing.
+   * A swipe down: on the names page, the next page of names while there are
+   * names past the ones in view, and at the last name the promises page, each
+   * for five seconds of its own (D43, D112, P10); on the keep prompt, no
+   * (D40); with the pause switched on (P6, D86), at the bare dot it pauses
+   * Catch, and at the dash it resumes. Anywhere else (a catch line, the
+   * promises page) it means nothing.
    */
   swipeDown(): void {
     if (this.closed) return
@@ -846,29 +867,56 @@ export class Session {
       this.save()
       return
     }
-    // D86: at the bare dot, the swipe pauses (only with the operator's switch on).
-    if (this.view.kind === 'dot') {
-      if (this.pauseEnabled()) this.pause()
-      return
+    switch (this.view.kind) {
+      case 'names': {
+        const page = this.heldPage ?? { thread: this.view.thread, from: 0 }
+        const next = page.from + namesPerPage(page.thread)
+        if (next < this.names.list().length) this.showNames(page.thread, next)
+        else this.showPromises()
+        return
+      }
+      case 'dot':
+        // D86: at the bare dot, the swipe pauses (only with the operator's switch on).
+        if (this.pauseEnabled()) this.pause()
+        return
+      default:
+        // A line, the promises page: nothing.
+        return
     }
-    if (this.view.kind !== 'names') return
-    this.clearView()
-    this.view = { kind: 'promises', you: held(this.promises), owed: heldOwed(this.promises) }
-    this.viewTimer = this.clock.setTimeout(() => this.backToDot(), PAGE_MS)
-    this.render()
   }
 
   /**
    * A swipe up at the bare dot in an open conversation: the keep prompt, which
    * waits for a tap or a swipe down however long it takes (D40, D41); in a
    * conversation already kept, `already kept` for a second and a half (D54).
-   * On the prompt it changes nothing (the prompt stays, D41); on a line or a
-   * page it means nothing yet (P10 scrolls a page back). With no conversation
-   * open there is nothing to keep, and it does nothing.
+   * On the prompt it changes nothing (the prompt stays, D41); on a line it
+   * means nothing. On a held page it scrolls back (D43, P10): the names page
+   * to the page of names before, the promises page to the last names; at the
+   * first name it changes nothing on the lens, never the prompt, but restarts
+   * the page's five seconds (a touch). With no conversation open
+   * there is nothing to keep, and it does nothing.
    */
   swipeUp(): void {
     if (!this.hearing || this.closed || this.promptShowing || this.paused) return
-    if (this.view.kind !== 'dot' || !this.inConversation) return
+    switch (this.view.kind) {
+      case 'names': {
+        const page = this.heldPage ?? { thread: this.view.thread, from: 0 }
+        if (page.from > 0) this.showNames(page.thread, Math.max(0, page.from - namesPerPage(page.thread)))
+        // At the first name nothing changes on the lens, but a touch restarts the page's five seconds (D43; the operator's answer 4).
+        else this.restartPage()
+        return
+      }
+      case 'promises': {
+        const page = this.heldPage ?? { thread: undefined, from: 0 }
+        this.showNames(page.thread, lastPageFrom(this.names.list().length, page.thread))
+        return
+      }
+      case 'dot':
+        break
+      default:
+        return
+    }
+    if (!this.inConversation) return
     if (this.keep === 'kept') {
       this.showLine(ALREADY_KEPT)
       return
@@ -1136,18 +1184,52 @@ export class Session {
     for (const t of this.tentatives.filter((x) => x.start <= at + slop)) this.withdraw(t)
   }
 
-  /** The names page: the held names in the order heard (D18), with the thread on top when detection is off (D120). */
-  private namesPage(thread?: string): LensView {
-    const names = this.names.list()
+  /**
+   * The names page from the name at `from`: the held names in the order heard
+   * (D18), as many as fit the lens (P10), with the thread on top when
+   * detection is off (D120). Past the last page it shows the last.
+   */
+  private namesPage(thread: string | undefined, from: number): { view: LensView; from: number } {
+    const all = this.names.list()
+    const first = Math.min(from, lastPageFrom(all.length, thread))
+    const names = all.slice(first, first + namesPerPage(thread))
     // With no names but promises held (either way), the names page leads on to them; D31's empty page is for nothing held.
-    const promisesHeld = names.length === 0 && (held(this.promises).length > 0 || heldOwed(this.promises).length > 0)
-    return { kind: 'names', names, ...(thread ? { thread } : {}), ...(promisesHeld ? { promisesHeld: true as const } : {}) }
+    const promisesHeld = all.length === 0 && (held(this.promises).length > 0 || heldOwed(this.promises).length > 0)
+    return { view: { kind: 'names', names, ...(thread ? { thread } : {}), ...(promisesHeld ? { promisesHeld: true as const } : {}) }, from: first }
   }
 
-  /** A names page showing lists the held names as they stand now (a name withdrawn is gone from it). */
+  /** Shows the names page from the name at `from`, for five seconds of its own (D31, D43). */
+  private showNames(thread: string | undefined, from: number): void {
+    this.clearView()
+    const page = this.namesPage(thread, from)
+    this.view = page.view
+    this.heldPage = { thread, from: page.from }
+    this.viewTimer = this.clock.setTimeout(() => this.backToDot(), PAGE_MS)
+    this.render()
+  }
+
+  /** The page showing stays, its five seconds counted again from now (D43: "5 seconds pass with no touch"). */
+  private restartPage(): void {
+    if (this.viewTimer) this.clock.clearTimeout(this.viewTimer)
+    this.viewTimer = this.clock.setTimeout(() => this.backToDot(), PAGE_MS)
+  }
+
+  /** Shows the promises page, for five seconds of its own (D43, D112): the wearer's own, then those owed (P5). */
+  private showPromises(): void {
+    const page = this.heldPage
+    this.clearView()
+    this.view = { kind: 'promises', you: held(this.promises), owed: heldOwed(this.promises) }
+    this.heldPage = page
+    this.viewTimer = this.clock.setTimeout(() => this.backToDot(), PAGE_MS)
+    this.render()
+  }
+
+  /** A names page showing lists the held names as they stand now (a name withdrawn is gone from it), from where it was scrolled to. */
   private refreshNamesPage(): void {
     if (this.view.kind !== 'names') return
-    this.view = this.namesPage(this.view.thread)
+    const page = this.namesPage(this.heldPage?.thread, this.heldPage?.from ?? 0)
+    this.view = page.view
+    this.heldPage = { thread: this.heldPage?.thread, from: page.from }
     this.render()
   }
 
@@ -1543,6 +1625,7 @@ export class Session {
     this.threadShowing = false
     this.promptShowing = false
     this.tentativeShowing = undefined
+    this.heldPage = undefined
   }
 
   private render(): void {

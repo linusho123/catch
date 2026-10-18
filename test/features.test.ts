@@ -26,10 +26,10 @@ const FEATURE_DIR = join(ROOT, 'features')
 
 // The wip register: features (or scenarios) not yet bound. It only shrinks.
 const WIP: WipEntry[] = [
-  // P1b binds D43's names page, D31 and the dismissal; P2a the promises page
-  // (D112) and the phone's half of the quiet end; P4 the keep in the
-  // long-press end; P5 the owed line on the promises page. Scrolling waits for P10.
-  { feature: 'holding', scenarios: ['Thirty names scroll before the promises page'] },
+  // holding.feature has left the register: P1b bound D43's names page, D31 and
+  // the dismissal; P2a the promises page (D112) and the phone's half of the
+  // quiet end; P4 the keep in the long-press end; P5 the owed line on the
+  // promises page; P10 the scrolling past a page of names.
   // kept-conversations.feature has left the register: P4 bound the keep and the jogger, P9 the restart (D73).
   // P2b′ (D130) binds the phone page's "nothing to keep" scenario; P2a binds D51,
   // D76 and D79 in full; P4 binds D114 in full (its kept half) and the iPhone
