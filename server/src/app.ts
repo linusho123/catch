@@ -390,8 +390,9 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   })
 
   // P9: every wearer the last process held, taken up again before any socket is taken, so a lens that comes back finds its conversation and never begins a second.
-  for (const { wearer, state } of left) wearers.set(wearer, makeSession(wearer, state))
+  // The waiting notifications are queued first: a conversation ended as it is taken up (its quiet ran out while no server ran) enqueues its own, and resuming after it would queue that one twice (contract-1, D114).
   outbox?.resume()
+  for (const { wearer, state } of left) wearers.set(wearer, makeSession(wearer, state))
 
   await new Promise<void>((resolve) => http.listen(opts.port, opts.host ?? '0.0.0.0', resolve))
   const { port } = http.address() as AddressInfo

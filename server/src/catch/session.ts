@@ -995,9 +995,10 @@ export class Session {
     this.otherSentence = []
     this.said = []
     this.judged = []
-    if (ended) this.transcript?.delete()
     // The store's state no longer holds a conversation (P9): a restart now finds none to take up.
+    // Saved before the transcript goes, so the scrub that follows it also overwrites the old state's page, names and all (head-1, D76).
     this.save()
+    if (ended) this.transcript?.delete()
     if (!ended) {
       this.stopPasses(promises)
       return
