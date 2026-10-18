@@ -1,12 +1,12 @@
 {"run-manifest":1}
-{"file":"features/dropped-thread.feature","title":"A normal turn shows nothing","status":"unbound"}
-{"file":"features/dropped-thread.feature","title":"A tap clears a line without opening the held page","status":"unbound"}
-{"file":"features/dropped-thread.feature","title":"Silence alone shows nothing","status":"unbound"}
-{"file":"features/dropped-thread.feature","title":"Someone else takes the floor [1]","status":"unbound"}
-{"file":"features/dropped-thread.feature","title":"Someone else takes the floor [2]","status":"unbound"}
-{"file":"features/dropped-thread.feature","title":"Someone else takes the floor [3]","status":"unbound"}
-{"file":"features/dropped-thread.feature","title":"The thread clears when the wearer resumes","status":"unbound"}
-{"file":"features/dropped-thread.feature","title":"With automatic detection off, a tap gives the thread back","status":"unbound"}
+{"file":"features/dropped-thread.feature","title":"A normal turn shows nothing","status":"passed"}
+{"file":"features/dropped-thread.feature","title":"A tap clears a line without opening the held page","status":"passed"}
+{"file":"features/dropped-thread.feature","title":"Silence alone shows nothing","status":"passed"}
+{"file":"features/dropped-thread.feature","title":"Someone else takes the floor [1]","status":"passed"}
+{"file":"features/dropped-thread.feature","title":"Someone else takes the floor [2]","status":"passed"}
+{"file":"features/dropped-thread.feature","title":"Someone else takes the floor [3]","status":"passed"}
+{"file":"features/dropped-thread.feature","title":"The thread clears when the wearer resumes","status":"passed"}
+{"file":"features/dropped-thread.feature","title":"With automatic detection off, a tap gives the thread back","status":"passed"}
 {"file":"features/holding.feature","title":"A held page dismisses on its own [1]","status":"passed"}
 {"file":"features/holding.feature","title":"A held page dismisses on its own [2]","status":"passed"}
 {"file":"features/holding.feature","title":"A held page dismisses on its own [3]","status":"passed"}

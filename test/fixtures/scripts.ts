@@ -236,6 +236,56 @@ export const SCRIPTS: Record<string, ScriptLine[]> = {
     { gap: 0.6, who: 'Marcus', text: "And I'm Marcus." },
     { gap: 1, who: 'wearer', text: 'Good to see you.' },
   ],
+
+  // P3, the dropped thread (D35, D48-D50, D33, D36, D34, D120).
+
+  // D35: Priya introduces herself, Dev asks a question, the wearer starts to
+  // answer and stops mid-sentence; Dev cuts in for about six seconds, then
+  // nobody speaks for fifteen (the wearer looks back at the lens), and the
+  // wearer picks the sentence back up. Also D34's line, and D120's thread
+  // with Priya held below it.
+  'dropped-thread': [
+    { at: 0, who: 'wearer', text: 'Morning, everyone.' },
+    { gap: 1, who: 'Priya', text: "Hi, I'm Priya." },
+    { gap: 1, who: 'Dev', text: 'So why did you pick this vendor?' },
+    { gap: 0.6, who: 'wearer', text: 'There are two reasons for this. The first is cost, and the second reason is' },
+    { gap: 0.5, who: 'Dev', text: 'Sorry, can I ask a quick question about the cost part first? How much was it?' },
+    { gap: 15, who: 'wearer', text: 'The second reason is cost.' },
+  ],
+  // D49: "and that's why we chose it", a pause with nobody speaking, "Well, the"; Dev cuts in.
+  'thread-continuous': [
+    { at: 0, who: 'wearer', text: 'Morning, Dev.' },
+    { gap: 0.8, who: 'Dev', text: 'Morning! Why did you go with this one?' },
+    { gap: 0.6, who: 'wearer', text: "It was the cheapest, and that's why we chose it." },
+    { gap: 1.2, who: 'wearer', text: 'Well, the' },
+    { gap: 0.5, who: 'Dev', text: 'Hold on, before you go on, can I ask about the price?' },
+    { gap: 15, who: 'wearer', text: 'Sure, go ahead.' },
+  ],
+  // D50: the same, but Dev says "Makes sense." between, which ends the wearer's run.
+  'thread-across-turn': [
+    { at: 0, who: 'wearer', text: 'Morning, Dev.' },
+    { gap: 0.8, who: 'Dev', text: 'Morning! Why did you go with this one?' },
+    { gap: 0.6, who: 'wearer', text: "It was the cheapest, and that's why we chose it." },
+    { gap: 0.6, who: 'Dev', text: 'Makes sense.' },
+    { gap: 0.6, who: 'wearer', text: 'Well, the' },
+    { gap: 0.5, who: 'Dev', text: 'Hold on, before you go on, can I ask about the price?' },
+    { gap: 15, who: 'wearer', text: 'Sure, go ahead.' },
+  ],
+  // D33: the wearer finishes the sentence; Marcus starts a second and a half later and talks for over three seconds.
+  'normal-turn': [
+    { at: 0, who: 'wearer', text: 'Morning, Marcus.' },
+    { gap: 0.8, who: 'Marcus', text: 'Morning! Why did you go with this one?' },
+    { gap: 0.6, who: 'wearer', text: "It was the cheapest, and that's why we chose it." },
+    { gap: 1.5, who: 'Marcus', text: 'That makes sense, we did the same thing last year with ours.' },
+    { gap: 2, who: 'wearer', text: 'Good to hear.' },
+  ],
+  // D36: the wearer stops mid-sentence to find a word; five minutes pass with nobody speaking; the wearer goes on.
+  'thinking-pause': [
+    { at: 0, who: 'wearer', text: 'Morning, Dev.' },
+    { gap: 0.8, who: 'Dev', text: 'Morning! Why this vendor?' },
+    { gap: 0.6, who: 'wearer', text: 'Two reasons. The first is cost, and the second reason is' },
+    { gap: 300, who: 'wearer', text: 'speed, mostly.' },
+  ],
 }
 
 export const VARIANTS = ['wearer-louder', 'other-louder'] as const

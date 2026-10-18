@@ -86,6 +86,10 @@ const PAGE_BOX = { x: 0, y: 0, w: CANVAS.width, h: CANVAS.height }
 const HEADER_BOX = { x: 0, y: 0, w: CANVAS.width, h: 40 }
 const NAMES_BOX = { x: 0, y: 40, w: CANVAS.width, h: 208 }
 const HINT_BOX = { x: 0, y: 248, w: CANVAS.width, h: 40 }
+/** With detection off, the thread line heads the page and the rest moves down a line (D120). */
+const THREAD_BOX = { x: 0, y: 0, w: CANVAS.width, h: 40 }
+const HEADER_UNDER_THREAD_BOX = { x: 0, y: 40, w: CANVAS.width, h: 40 }
+const NAMES_UNDER_THREAD_BOX = { x: 0, y: 80, w: CANVAS.width, h: 168 }
 
 /** The names page's header: page 1 of 2, the promises page being the second (D43). */
 export const NAMES_HEADER = 'this conversation 1/2'
@@ -105,6 +109,15 @@ export function containersFor(view: LensView): TextContainerProperty[] {
       return [text(2, 'line', view.text, LINE_BOX)]
     case 'names':
       // Text containers, not the SDK's list container: a list has no brightness, and every mark Catch draws is dim (D14).
+      if (view.thread !== undefined) {
+        // D120: the thread line first, above the names; it takes the touches.
+        return [
+          text(6, 'thread', view.thread, THREAD_BOX),
+          text(4, 'header', NAMES_HEADER, HEADER_UNDER_THREAD_BOX, false),
+          ...(view.names.length > 0 ? [text(3, 'names', view.names.join('\n'), NAMES_UNDER_THREAD_BOX, false)] : []),
+          text(5, 'hint', PROMISES_HINT, HINT_BOX, false),
+        ]
+      }
       if (view.names.length === 0) return [text(3, 'empty', NOTHING_HELD, PAGE_BOX)]
       return [
         text(4, 'header', NAMES_HEADER, HEADER_BOX, false),

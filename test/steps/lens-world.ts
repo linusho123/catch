@@ -258,8 +258,8 @@ export function rememberLines(w: LensWorld): void {
   w.linesBefore = linesShown(w.h!, w.dotSince!, w.h!.clock.now()).map((l) => l.text)
 }
 
-/** The containers a held page draws: the names page's header, names and hint, or the one nothing-held page (D31, D43). */
-export const PAGE_PARTS = ['header', 'names', 'hint', 'empty']
+/** The containers a held page draws: the names page's header, names and hint, or the one nothing-held page (D31, D43); with detection off, the thread line above them (D120). */
+export const PAGE_PARTS = ['thread', 'header', 'names', 'hint', 'empty']
 export const isPage = (s: Screen) => visible(s).length > 0 && visible(s).every((c) => PAGE_PARTS.includes(c.containerName))
 
 /**

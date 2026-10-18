@@ -1,4 +1,4 @@
-import { startServer } from './app.ts'
+import { startServer, threadDetectionFromEnv } from './app.ts'
 import { splitFromEnv } from './split/split.ts'
 import { deepgram } from './stt/deepgram.ts'
 
@@ -9,6 +9,7 @@ import { deepgram } from './stt/deepgram.ts'
 // catch/.env (`node --env-file-if-exists=.env`, see README.md) or the shell.
 // CATCH_SPLIT and CATCH_LOUDNESS_THRESHOLD_DBFS choose and tune the split;
 // CATCH_WEARER_NAME (optional) is the wearer's name, never caught.
+// CATCH_THREAD_DETECTION (on | off, default on) is the operator's D120 switch.
 const port = Number(process.env.PORT ?? 8080)
 const host = process.env.HOST
 const dbPath = process.env.CATCH_DB ?? 'data/catch.db'
@@ -21,8 +22,11 @@ if (!deepgramKey) {
 
 const split = splitFromEnv()
 const wearerName = process.env.CATCH_WEARER_NAME?.trim() || undefined
-const server = await startServer({ port, host, dbPath, audioToken, split, wearerName, stt: deepgram(deepgramKey) })
-console.log(`catch server listening on :${port} (/audio, /health), split ${split.name}, store at ${dbPath}`)
+const threadDetection = threadDetectionFromEnv(process.env.CATCH_THREAD_DETECTION)
+const server = await startServer({ port, host, dbPath, audioToken, split, wearerName, threadDetection, stt: deepgram(deepgramKey) })
+console.log(
+  `catch server listening on :${port} (/audio, /health), split ${split.name}, thread detection ${threadDetection ? 'on' : 'off'}, store at ${dbPath}`,
+)
 // A lost speech-to-text stream is retried every second; say why, once per outage.
 let deaf = false
 server.events.on('sttError', ({ error }) => {

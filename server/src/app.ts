@@ -54,6 +54,13 @@ export interface ServerOptions {
   split?: WearerSplit
   /** The wearer's name (CATCH_WEARER_NAME, optional): never caught, whatever the split decides, beside D29's exclusion. */
   wearerName?: string
+  /**
+   * Automatic dropped-thread detection (D120): on by default; the operator
+   * switches it off (CATCH_THREAD_DETECTION=off) after the hour-one test or
+   * the shipping step's tuning, never the build. Off, no thread line comes on
+   * its own and a tap at the dot gives the thread back on the held page.
+   */
+  threadDetection?: boolean
   /** The model client the detectors and the jogger writer call (P1a on). */
   model?: ModelClient
   /** Where phone notifications go (P2a on). */
@@ -95,6 +102,8 @@ export interface RunningServer {
    * (P9 makes them survive one). The test harness calls it between scenarios.
    */
   forgetWearers(): void
+  /** The operator's D120 switch, set while the server runs: every session, open or new, reads it from the next word or tap. */
+  setThreadDetection(on: boolean): void
   close(): Promise<void>
 }
 
@@ -117,6 +126,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   const clock = opts.clock ?? systemClock
   const split = opts.split ?? createSplit()
   const events = new EventEmitter<ServerEvents>()
+  let threadDetection = opts.threadDetection ?? true
   let sessions = 0
   /** One session per wearer, keyed by the digest of the shared token their lens carries (D79). */
   const wearers = new Map<string, Session>()
@@ -146,7 +156,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(msg))
     }
     const wearer = digest(params(req).get('token') ?? '').toString('hex')
-    const lens = wearers.get(wearer) ?? new Session({ clock, split, wearerName: opts.wearerName })
+    const lens = wearers.get(wearer) ?? new Session({ clock, split, wearerName: opts.wearerName, threadDetection: () => threadDetection })
     wearers.set(wearer, lens)
 
     // One speech-to-text stream at a time; a lost one is reopened on the clock.
@@ -245,6 +255,9 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       for (const session of wearers.values()) session.close()
       wearers.clear()
     },
+    setThreadDetection(on) {
+      threadDetection = on
+    },
     async close() {
       for (const client of wss.clients) client.terminate()
       await new Promise<void>((resolve) => wss.close(() => resolve()))
@@ -252,4 +265,16 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       store.close()
     },
   }
+}
+
+/**
+ * CATCH_THREAD_DETECTION: `on` (the default, also when unset or empty) or
+ * `off` (D120). Anything else is refused, so a typo never silently leaves the
+ * operator's choice undone.
+ */
+export function threadDetectionFromEnv(value: string | undefined): boolean {
+  const v = (value ?? '').trim().toLowerCase()
+  if (v === '' || v === 'on') return true
+  if (v === 'off') return false
+  throw new Error(`CATCH_THREAD_DETECTION must be on or off, got ${JSON.stringify(value)}`)
 }

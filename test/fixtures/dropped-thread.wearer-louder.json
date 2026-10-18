@@ -1,0 +1,424 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "dropped-thread",
+  "variant": "wearer-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "Morning, everyone."
+    },
+    {
+      "gap": 1,
+      "who": "Priya",
+      "text": "Hi, I'm Priya."
+    },
+    {
+      "gap": 1,
+      "who": "Dev",
+      "text": "So why did you pick this vendor?"
+    },
+    {
+      "gap": 0.6,
+      "who": "wearer",
+      "text": "There are two reasons for this. The first is cost, and the second reason is"
+    },
+    {
+      "gap": 0.5,
+      "who": "Dev",
+      "text": "Sorry, can I ask a quick question about the cost part first? How much was it?"
+    },
+    {
+      "gap": 15,
+      "who": "wearer",
+      "text": "The second reason is cost."
+    }
+  ],
+  "words": [
+    {
+      "text": "Morning,",
+      "start": 0,
+      "end": 0.495,
+      "role": "wearer",
+      "loudness": -13,
+      "speaker": 0
+    },
+    {
+      "text": "everyone.",
+      "start": 0.555,
+      "end": 1.095,
+      "role": "wearer",
+      "loudness": -10.8,
+      "speaker": 0
+    },
+    {
+      "text": "Hi,",
+      "start": 2.095,
+      "end": 2.365,
+      "role": "other",
+      "loudness": -27.2,
+      "speaker": 1
+    },
+    {
+      "text": "I'm",
+      "start": 2.425,
+      "end": 2.695,
+      "role": "other",
+      "loudness": -27.2,
+      "speaker": 1
+    },
+    {
+      "text": "Priya.",
+      "start": 2.755,
+      "end": 3.16,
+      "role": "other",
+      "loudness": -28.9,
+      "speaker": 1
+    },
+    {
+      "text": "So",
+      "start": 4.16,
+      "end": 4.43,
+      "role": "other",
+      "loudness": -28.9,
+      "speaker": 2
+    },
+    {
+      "text": "why",
+      "start": 4.49,
+      "end": 4.805,
+      "role": "other",
+      "loudness": -28.7,
+      "speaker": 2
+    },
+    {
+      "text": "did",
+      "start": 4.865,
+      "end": 5.18,
+      "role": "other",
+      "loudness": -26.6,
+      "speaker": 2
+    },
+    {
+      "text": "you",
+      "start": 5.24,
+      "end": 5.555,
+      "role": "other",
+      "loudness": -29.1,
+      "speaker": 2
+    },
+    {
+      "text": "pick",
+      "start": 5.615,
+      "end": 5.975,
+      "role": "other",
+      "loudness": -28.5,
+      "speaker": 2
+    },
+    {
+      "text": "this",
+      "start": 6.035,
+      "end": 6.395,
+      "role": "other",
+      "loudness": -28.4,
+      "speaker": 2
+    },
+    {
+      "text": "vendor?",
+      "start": 6.455,
+      "end": 6.905,
+      "role": "other",
+      "loudness": -27.8,
+      "speaker": 2
+    },
+    {
+      "text": "There",
+      "start": 7.505,
+      "end": 7.91,
+      "role": "wearer",
+      "loudness": -12,
+      "speaker": 0
+    },
+    {
+      "text": "are",
+      "start": 7.97,
+      "end": 8.285,
+      "role": "wearer",
+      "loudness": -13.4,
+      "speaker": 0
+    },
+    {
+      "text": "two",
+      "start": 8.345,
+      "end": 8.66,
+      "role": "wearer",
+      "loudness": -13.2,
+      "speaker": 0
+    },
+    {
+      "text": "reasons",
+      "start": 8.72,
+      "end": 9.215,
+      "role": "wearer",
+      "loudness": -10.7,
+      "speaker": 0
+    },
+    {
+      "text": "for",
+      "start": 9.275,
+      "end": 9.59,
+      "role": "wearer",
+      "loudness": -12,
+      "speaker": 0
+    },
+    {
+      "text": "this.",
+      "start": 9.65,
+      "end": 10.01,
+      "role": "wearer",
+      "loudness": -12.8,
+      "speaker": 0
+    },
+    {
+      "text": "The",
+      "start": 10.07,
+      "end": 10.385,
+      "role": "wearer",
+      "loudness": -10.8,
+      "speaker": 0
+    },
+    {
+      "text": "first",
+      "start": 10.445,
+      "end": 10.85,
+      "role": "wearer",
+      "loudness": -10.7,
+      "speaker": 0
+    },
+    {
+      "text": "is",
+      "start": 10.91,
+      "end": 11.18,
+      "role": "wearer",
+      "loudness": -13.2,
+      "speaker": 0
+    },
+    {
+      "text": "cost,",
+      "start": 11.24,
+      "end": 11.6,
+      "role": "wearer",
+      "loudness": -10.7,
+      "speaker": 0
+    },
+    {
+      "text": "and",
+      "start": 11.66,
+      "end": 11.975,
+      "role": "wearer",
+      "loudness": -11.7,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 12.035,
+      "end": 12.35,
+      "role": "wearer",
+      "loudness": -10.8,
+      "speaker": 0
+    },
+    {
+      "text": "second",
+      "start": 12.41,
+      "end": 12.86,
+      "role": "wearer",
+      "loudness": -12.5,
+      "speaker": 0
+    },
+    {
+      "text": "reason",
+      "start": 12.92,
+      "end": 13.37,
+      "role": "wearer",
+      "loudness": -12,
+      "speaker": 0
+    },
+    {
+      "text": "is",
+      "start": 13.43,
+      "end": 13.7,
+      "role": "wearer",
+      "loudness": -11.6,
+      "speaker": 0
+    },
+    {
+      "text": "Sorry,",
+      "start": 14.2,
+      "end": 14.605,
+      "role": "other",
+      "loudness": -27.9,
+      "speaker": 2
+    },
+    {
+      "text": "can",
+      "start": 14.665,
+      "end": 14.98,
+      "role": "other",
+      "loudness": -26.9,
+      "speaker": 2
+    },
+    {
+      "text": "I",
+      "start": 15.04,
+      "end": 15.265,
+      "role": "other",
+      "loudness": -28.3,
+      "speaker": 2
+    },
+    {
+      "text": "ask",
+      "start": 15.325,
+      "end": 15.64,
+      "role": "other",
+      "loudness": -29.3,
+      "speaker": 2
+    },
+    {
+      "text": "a",
+      "start": 15.7,
+      "end": 15.925,
+      "role": "other",
+      "loudness": -28.8,
+      "speaker": 2
+    },
+    {
+      "text": "quick",
+      "start": 15.985,
+      "end": 16.39,
+      "role": "other",
+      "loudness": -26.9,
+      "speaker": 2
+    },
+    {
+      "text": "question",
+      "start": 16.45,
+      "end": 16.99,
+      "role": "other",
+      "loudness": -29,
+      "speaker": 2
+    },
+    {
+      "text": "about",
+      "start": 17.05,
+      "end": 17.455,
+      "role": "other",
+      "loudness": -27.3,
+      "speaker": 2
+    },
+    {
+      "text": "the",
+      "start": 17.515,
+      "end": 17.83,
+      "role": "other",
+      "loudness": -27.9,
+      "speaker": 2
+    },
+    {
+      "text": "cost",
+      "start": 17.89,
+      "end": 18.25,
+      "role": "other",
+      "loudness": -29.4,
+      "speaker": 2
+    },
+    {
+      "text": "part",
+      "start": 18.31,
+      "end": 18.67,
+      "role": "other",
+      "loudness": -28.8,
+      "speaker": 2
+    },
+    {
+      "text": "first?",
+      "start": 18.73,
+      "end": 19.135,
+      "role": "other",
+      "loudness": -28.6,
+      "speaker": 2
+    },
+    {
+      "text": "How",
+      "start": 19.195,
+      "end": 19.51,
+      "role": "other",
+      "loudness": -29.1,
+      "speaker": 2
+    },
+    {
+      "text": "much",
+      "start": 19.57,
+      "end": 19.93,
+      "role": "other",
+      "loudness": -27.1,
+      "speaker": 2
+    },
+    {
+      "text": "was",
+      "start": 19.99,
+      "end": 20.305,
+      "role": "other",
+      "loudness": -26.7,
+      "speaker": 2
+    },
+    {
+      "text": "it?",
+      "start": 20.365,
+      "end": 20.635,
+      "role": "other",
+      "loudness": -28.8,
+      "speaker": 2
+    },
+    {
+      "text": "The",
+      "start": 35.635,
+      "end": 35.95,
+      "role": "wearer",
+      "loudness": -12,
+      "speaker": 0
+    },
+    {
+      "text": "second",
+      "start": 36.01,
+      "end": 36.46,
+      "role": "wearer",
+      "loudness": -10.9,
+      "speaker": 0
+    },
+    {
+      "text": "reason",
+      "start": 36.52,
+      "end": 36.97,
+      "role": "wearer",
+      "loudness": -13,
+      "speaker": 0
+    },
+    {
+      "text": "is",
+      "start": 37.03,
+      "end": 37.3,
+      "role": "wearer",
+      "loudness": -11.2,
+      "speaker": 0
+    },
+    {
+      "text": "cost.",
+      "start": 37.36,
+      "end": 37.72,
+      "role": "wearer",
+      "loudness": -11.8,
+      "speaker": 0
+    }
+  ]
+}

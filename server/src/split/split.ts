@@ -45,9 +45,22 @@ function overlapping(word: SplitWord, frames: readonly FrameSignal[]): FrameSign
   return frames.filter((f) => f.start < word.end && f.end > word.start)
 }
 
-function meanLoudness(frames: readonly FrameSignal[]): number {
-  if (frames.length === 0) return -Infinity
-  return frames.reduce((sum, f) => sum + f.loudness, 0) / frames.length
+/**
+ * The word's loudness: its frames' mean, each weighted by how much of the
+ * word it covers. Frames are stamped as they arrive, so their grid drifts
+ * against the words'; unweighted, a sliver of the silence after the wearer's
+ * last word could outvote the word's own audio and hand it to someone else,
+ * which is exactly the word the dropped thread ends on (P3).
+ */
+function meanLoudness(word: SplitWord, frames: readonly FrameSignal[]): number {
+  let sum = 0
+  let total = 0
+  for (const f of frames) {
+    const weight = Math.min(f.end, word.end) - Math.max(f.start, word.start)
+    sum += f.loudness * weight
+    total += weight
+  }
+  return total > 0 ? sum / total : -Infinity
 }
 
 /** Near-field energy: the mic sits at the wearer's mouth, so the wearer is the loud one. */
@@ -56,7 +69,7 @@ export function loudnessSplit(opts: SplitOptions = {}): WearerSplit {
   return {
     name: 'loudness',
     classify: (words, frames) =>
-      words.map((w) => (meanLoudness(overlapping(w, frames)) >= threshold ? 'wearer' : 'other')),
+      words.map((w) => (meanLoudness(w, overlapping(w, frames)) >= threshold ? 'wearer' : 'other')),
   }
 }
 
@@ -80,7 +93,7 @@ export function speakerRoleSplit(opts: SplitOptions = {}): WearerSplit {
           else other++
         }
         if (wearer !== other) return wearer > other ? 'wearer' : 'other'
-        return meanLoudness(span) >= threshold ? 'wearer' : 'other'
+        return meanLoudness(w, span) >= threshold ? 'wearer' : 'other'
       }),
   }
 }

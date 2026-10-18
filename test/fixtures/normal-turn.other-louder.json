@@ -1,0 +1,315 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "normal-turn",
+  "variant": "other-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "Morning, Marcus."
+    },
+    {
+      "gap": 0.8,
+      "who": "Marcus",
+      "text": "Morning! Why did you go with this one?"
+    },
+    {
+      "gap": 0.6,
+      "who": "wearer",
+      "text": "It was the cheapest, and that's why we chose it."
+    },
+    {
+      "gap": 1.5,
+      "who": "Marcus",
+      "text": "That makes sense, we did the same thing last year with ours."
+    },
+    {
+      "gap": 2,
+      "who": "wearer",
+      "text": "Good to hear."
+    }
+  ],
+  "words": [
+    {
+      "text": "Morning,",
+      "start": 0,
+      "end": 0.495,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "Marcus.",
+      "start": 0.555,
+      "end": 1.005,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "Morning!",
+      "start": 1.805,
+      "end": 2.3,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "Why",
+      "start": 2.36,
+      "end": 2.675,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "did",
+      "start": 2.735,
+      "end": 3.05,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 1
+    },
+    {
+      "text": "you",
+      "start": 3.11,
+      "end": 3.425,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 1
+    },
+    {
+      "text": "go",
+      "start": 3.485,
+      "end": 3.755,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "with",
+      "start": 3.815,
+      "end": 4.175,
+      "role": "other",
+      "loudness": -14,
+      "speaker": 1
+    },
+    {
+      "text": "this",
+      "start": 4.235,
+      "end": 4.595,
+      "role": "other",
+      "loudness": -15,
+      "speaker": 1
+    },
+    {
+      "text": "one?",
+      "start": 4.655,
+      "end": 4.97,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 1
+    },
+    {
+      "text": "It",
+      "start": 5.57,
+      "end": 5.84,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "was",
+      "start": 5.9,
+      "end": 6.215,
+      "role": "wearer",
+      "loudness": -25.1,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 6.275,
+      "end": 6.59,
+      "role": "wearer",
+      "loudness": -26.6,
+      "speaker": 0
+    },
+    {
+      "text": "cheapest,",
+      "start": 6.65,
+      "end": 7.19,
+      "role": "wearer",
+      "loudness": -24.7,
+      "speaker": 0
+    },
+    {
+      "text": "and",
+      "start": 7.25,
+      "end": 7.565,
+      "role": "wearer",
+      "loudness": -26.3,
+      "speaker": 0
+    },
+    {
+      "text": "that's",
+      "start": 7.625,
+      "end": 8.03,
+      "role": "wearer",
+      "loudness": -25.9,
+      "speaker": 0
+    },
+    {
+      "text": "why",
+      "start": 8.09,
+      "end": 8.405,
+      "role": "wearer",
+      "loudness": -27,
+      "speaker": 0
+    },
+    {
+      "text": "we",
+      "start": 8.465,
+      "end": 8.735,
+      "role": "wearer",
+      "loudness": -24.6,
+      "speaker": 0
+    },
+    {
+      "text": "chose",
+      "start": 8.795,
+      "end": 9.2,
+      "role": "wearer",
+      "loudness": -24.9,
+      "speaker": 0
+    },
+    {
+      "text": "it.",
+      "start": 9.26,
+      "end": 9.53,
+      "role": "wearer",
+      "loudness": -26.8,
+      "speaker": 0
+    },
+    {
+      "text": "That",
+      "start": 11.03,
+      "end": 11.39,
+      "role": "other",
+      "loudness": -14.2,
+      "speaker": 1
+    },
+    {
+      "text": "makes",
+      "start": 11.45,
+      "end": 11.855,
+      "role": "other",
+      "loudness": -13.6,
+      "speaker": 1
+    },
+    {
+      "text": "sense,",
+      "start": 11.915,
+      "end": 12.32,
+      "role": "other",
+      "loudness": -14.5,
+      "speaker": 1
+    },
+    {
+      "text": "we",
+      "start": 12.38,
+      "end": 12.65,
+      "role": "other",
+      "loudness": -13.5,
+      "speaker": 1
+    },
+    {
+      "text": "did",
+      "start": 12.71,
+      "end": 13.025,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 13.085,
+      "end": 13.4,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 1
+    },
+    {
+      "text": "same",
+      "start": 13.46,
+      "end": 13.82,
+      "role": "other",
+      "loudness": -14.5,
+      "speaker": 1
+    },
+    {
+      "text": "thing",
+      "start": 13.88,
+      "end": 14.285,
+      "role": "other",
+      "loudness": -13.6,
+      "speaker": 1
+    },
+    {
+      "text": "last",
+      "start": 14.345,
+      "end": 14.705,
+      "role": "other",
+      "loudness": -12.6,
+      "speaker": 1
+    },
+    {
+      "text": "year",
+      "start": 14.765,
+      "end": 15.125,
+      "role": "other",
+      "loudness": -14,
+      "speaker": 1
+    },
+    {
+      "text": "with",
+      "start": 15.185,
+      "end": 15.545,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 1
+    },
+    {
+      "text": "ours.",
+      "start": 15.605,
+      "end": 15.965,
+      "role": "other",
+      "loudness": -13.9,
+      "speaker": 1
+    },
+    {
+      "text": "Good",
+      "start": 17.965,
+      "end": 18.325,
+      "role": "wearer",
+      "loudness": -26.7,
+      "speaker": 0
+    },
+    {
+      "text": "to",
+      "start": 18.385,
+      "end": 18.655,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "hear.",
+      "start": 18.715,
+      "end": 19.075,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    }
+  ]
+}

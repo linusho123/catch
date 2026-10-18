@@ -1,0 +1,182 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "thinking-pause",
+  "variant": "other-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "Morning, Dev."
+    },
+    {
+      "gap": 0.8,
+      "who": "Dev",
+      "text": "Morning! Why this vendor?"
+    },
+    {
+      "gap": 0.6,
+      "who": "wearer",
+      "text": "Two reasons. The first is cost, and the second reason is"
+    },
+    {
+      "gap": 300,
+      "who": "wearer",
+      "text": "speed, mostly."
+    }
+  ],
+  "words": [
+    {
+      "text": "Morning,",
+      "start": 0,
+      "end": 0.495,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "Dev.",
+      "start": 0.555,
+      "end": 0.87,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "Morning!",
+      "start": 1.67,
+      "end": 2.165,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "Why",
+      "start": 2.225,
+      "end": 2.54,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "this",
+      "start": 2.6,
+      "end": 2.96,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 1
+    },
+    {
+      "text": "vendor?",
+      "start": 3.02,
+      "end": 3.47,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 1
+    },
+    {
+      "text": "Two",
+      "start": 4.07,
+      "end": 4.385,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "reasons.",
+      "start": 4.445,
+      "end": 4.94,
+      "role": "wearer",
+      "loudness": -25.1,
+      "speaker": 0
+    },
+    {
+      "text": "The",
+      "start": 5,
+      "end": 5.315,
+      "role": "wearer",
+      "loudness": -26.6,
+      "speaker": 0
+    },
+    {
+      "text": "first",
+      "start": 5.375,
+      "end": 5.78,
+      "role": "wearer",
+      "loudness": -24.7,
+      "speaker": 0
+    },
+    {
+      "text": "is",
+      "start": 5.84,
+      "end": 6.11,
+      "role": "wearer",
+      "loudness": -26.3,
+      "speaker": 0
+    },
+    {
+      "text": "cost,",
+      "start": 6.17,
+      "end": 6.53,
+      "role": "wearer",
+      "loudness": -25.9,
+      "speaker": 0
+    },
+    {
+      "text": "and",
+      "start": 6.59,
+      "end": 6.905,
+      "role": "wearer",
+      "loudness": -27,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 6.965,
+      "end": 7.28,
+      "role": "wearer",
+      "loudness": -24.6,
+      "speaker": 0
+    },
+    {
+      "text": "second",
+      "start": 7.34,
+      "end": 7.79,
+      "role": "wearer",
+      "loudness": -24.9,
+      "speaker": 0
+    },
+    {
+      "text": "reason",
+      "start": 7.85,
+      "end": 8.3,
+      "role": "wearer",
+      "loudness": -26.8,
+      "speaker": 0
+    },
+    {
+      "text": "is",
+      "start": 8.36,
+      "end": 8.63,
+      "role": "wearer",
+      "loudness": -26.2,
+      "speaker": 0
+    },
+    {
+      "text": "speed,",
+      "start": 308.63,
+      "end": 309.035,
+      "role": "wearer",
+      "loudness": -26.2,
+      "speaker": 0
+    },
+    {
+      "text": "mostly.",
+      "start": 309.095,
+      "end": 309.545,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    }
+  ]
+}

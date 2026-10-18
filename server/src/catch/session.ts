@@ -5,6 +5,7 @@ import { pcmLoudnessDbfs, type FrameSignal, type Side, type SplitWord, type Wear
 import type { SttWord } from '../stt/types.ts'
 import { HeldNames } from './held-names.ts'
 import { findIntroductions, findSelfIntroductions } from './introductions.ts'
+import { Thread } from './thread.ts'
 
 // One /audio session: what the server makes of one pair of glasses. It lines
 // the provider's words up with the lens's frames, asks the split (D125) whose
@@ -23,6 +24,13 @@ import { findIntroductions, findSelfIntroductions } from './introductions.ts'
 // ten minutes in which the wearer does not speak, whatever anyone else says,
 // or at once on a long-press, and its names clear. A tap at the dot shows the
 // names page for five seconds (D31, D43); the promises page comes in P2a.
+//
+// The dropped thread (thread.ts): when the wearer stops mid-sentence and
+// someone else takes the floor, the wearer's last words show as a line that
+// stays, with no timer, until the wearer speaks again or taps (D34, D35).
+// With automatic detection switched off (D120, the operator's setting), no
+// thread line ever comes on its own, and a tap at the dot gives the thread
+// back as the held page's first line, above the names.
 
 /** D17: a catch line holds for a second and a half. A ruling, not a tuning value. */
 export const LINE_MS = 1500
@@ -50,6 +58,12 @@ export interface SessionOptions {
   show?: (view: LensView) => void
   /** The wearer's name (CATCH_WEARER_NAME): never caught, whatever the split decides, beside D29's own-name exclusion. */
   wearerName?: string
+  /**
+   * Whether the dropped thread is detected automatically (D120; on by
+   * default). Read at every word and tap, so the operator's setting holds for
+   * a session already open.
+   */
+  threadDetection?: () => boolean
 }
 
 /** One lens's hold on the session: what its socket may still do. */
@@ -110,10 +124,15 @@ export class Session {
   /** The configured wearer name, case-folded, if any. */
   private readonly wearerName: string | undefined
   readonly names = new HeldNames()
+  /** The wearer's most recent continuous run, and whether someone has taken the floor from it (D35, D48). */
+  private readonly thread = new Thread()
+  private readonly threadDetection: () => boolean
 
   // What the lens shows.
   private hearing = false
   private view: LensView = { kind: 'deaf' }
+  /** The view showing is the dropped-thread line: it stays until the wearer speaks or taps (D34, D35). */
+  private threadShowing = false
   /** The lens starts with no dot (it cannot hear until told), so the first view worth sending is the dot. */
   private sent = DEAF
   /** Takes a line or a page off the lens when its time is up. */
@@ -124,6 +143,7 @@ export class Session {
     this.clock = opts.clock
     this.split = opts.split
     this.wearerName = opts.wearerName?.trim().toLowerCase() || undefined
+    this.threadDetection = opts.threadDetection ?? (() => true)
     if (opts.show) this.attach(opts.show)
   }
 
@@ -196,6 +216,9 @@ export class Session {
   setHearing(hearing: boolean): void {
     if (this.hearing === hearing) return
     this.hearing = hearing
+    // What was said while Catch could not hear may have finished the wearer's
+    // sentence, or been someone else's turn: the run is not known to be cut off.
+    if (!hearing) this.thread.clear()
     this.clearView()
     this.view = hearing ? { kind: 'dot' } : { kind: 'deaf' }
     this.render()
@@ -209,7 +232,9 @@ export class Session {
     if (!this.hearing) return
     this.clearView()
     if (this.view.kind === 'dot') {
-      this.view = { kind: 'names', names: this.names.list() }
+      // D120: with detection off, the page gives the thread back as its first line.
+      const thread = this.threadDetection() ? undefined : this.thread.line()
+      this.view = { kind: 'names', names: this.names.list(), ...(thread ? { thread } : {}) }
       this.viewTimer = this.clock.setTimeout(() => this.backToDot(), PAGE_MS)
     } else {
       this.view = { kind: 'dot' }
@@ -270,10 +295,10 @@ export class Session {
     entry.side = sides.at(-1)!
     // How long ago the word ended, by the audio heard since: the provider's
     // answer comes after the speech, and the quiet is the wearer's (D92).
-    this.hear(word.text, entry.side, word.end, Math.max(0, (this.coveredUntil - word.end) * 1000))
+    this.hear(word.text, entry.side, word.start, word.end, Math.max(0, (this.coveredUntil - word.end) * 1000))
   }
 
-  private hear(text: string, side: Side, end: number, agoMs: number): void {
+  private hear(text: string, side: Side, start: number, end: number, agoMs: number): void {
     // D129: the first conversation after Catch starts begins on anyone's
     // speech; every later one begins on the wearer's. Never on a word said
     // before the last long-press, however late the provider delivers it (D52).
@@ -287,12 +312,18 @@ export class Session {
       this.otherRun = []
       this.otherCaught.clear()
       this.wearerRun.push(text)
+      this.thread.wearer(text)
+      // D35: the wearer speaks again, and the thread line goes.
+      if (this.threadShowing) this.backToDot()
       // D29: only the wearer giving their own name ("I'm X", "my name is X"), never "meet X" or "X, nice to meet you" (M2).
       for (const { name } of findSelfIntroductions(this.wearerRun)) this.ownNames.add(name.toLowerCase())
       return
     }
     this.wearerRun = []
     if (!this.inConversation) return
+    // D35: someone else has taken the floor from a wearer who stopped mid-sentence.
+    const line = this.thread.other(start, end)
+    if (line !== undefined && this.threadDetection()) this.showThread(line)
     this.otherRun.push(text)
     for (const { name, index } of findIntroductions(this.otherRun)) {
       if (this.otherCaught.has(index)) continue
@@ -321,6 +352,7 @@ export class Session {
     this.otherRun = []
     this.otherCaught.clear()
     this.wearerRun = []
+    this.thread.clear()
   }
 
   private showLine(text: string): void {
@@ -331,8 +363,17 @@ export class Session {
     this.viewTimer = this.clock.setTimeout(() => this.backToDot(), LINE_MS)
   }
 
+  /** The dropped-thread line: no timer; it stays until the wearer speaks again or taps (D34, D35). */
+  private showThread(text: string): void {
+    if (!this.hearing || this.closed) return
+    this.clearView()
+    this.view = { kind: 'line', text }
+    this.threadShowing = true
+    this.render()
+  }
+
   private backToDot(): void {
-    this.viewTimer = undefined
+    this.clearView()
     this.view = this.hearing ? { kind: 'dot' } : { kind: 'deaf' }
     this.render()
   }
@@ -340,6 +381,7 @@ export class Session {
   private clearView(): void {
     if (this.viewTimer) this.clock.clearTimeout(this.viewTimer)
     this.viewTimer = undefined
+    this.threadShowing = false
   }
 
   private render(): void {

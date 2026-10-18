@@ -12,10 +12,14 @@ export type LensView =
   | { kind: 'dot' }
   /** Catch cannot hear: no mark at all (D37). */
   | { kind: 'deaf' }
-  /** One catch: a dim line in the lower third for a second and a half (D17). */
+  /** One catch: a dim line in the lower third, for a second and a half (D17) or, the dropped thread, until cleared (D35). */
   | { kind: 'line'; text: string }
-  /** The names page (D43): the held names in the order heard; none held is D31's empty page. */
-  | { kind: 'names'; names: string[] }
+  /**
+   * The names page (D43): the held names in the order heard; none held is
+   * D31's empty page. With automatic thread detection off, `thread` is the
+   * wearer's last words, the page's first line, above the names (D120).
+   */
+  | { kind: 'names'; names: string[]; thread?: string }
 
 /** Server to lens. */
 export type ServerMessage =

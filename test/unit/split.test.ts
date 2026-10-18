@@ -47,6 +47,23 @@ describe('the speaker-role split', () => {
   })
 })
 
+describe('a word at the edge of silence (P3: the last word before the wearer stops)', () => {
+  // Frames are stamped when they arrive, so their grid drifts a few
+  // milliseconds against the words': the frame after a word's end can reach
+  // a hair into it. A sliver of silence must not outweigh the word's own audio.
+  const word = { text: 'is', start: 13.43, end: 13.7, speaker: null }
+  const frames: FrameSignal[] = [
+    { start: 13.38, end: 13.48, role: 'self', loudness: -12 },
+    { start: 13.49, end: 13.59, role: 'self', loudness: -12 },
+    { start: 13.59, end: 13.69, role: 'self', loudness: -12 },
+    { start: 13.69, end: 13.79, role: 'unknown', loudness: -70 },
+  ]
+  it.each([['loudness'], ['speaker-role']] as const)('%s weighs each frame by how much of the word it covers', (name) => {
+    expect(createSplit(name).classify([word], frames)).toEqual(['wearer'])
+    expect(createSplit(name).classify([word], frames.map((f) => ({ ...f, role: 'unknown' as const })))).toEqual(['wearer'])
+  })
+})
+
 describe('the loudness split', () => {
   for (const name of wearerLouder) {
     it(`tells every word's side on ${name}`, () => {

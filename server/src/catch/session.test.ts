@@ -12,7 +12,7 @@ import { FRAME_WAIT_MS, LINE_MS, PAGE_MS, QUIET_MS, Session } from './session.ts
 const WEARER = -12
 const OTHER = -28
 
-function setup(opts: { wearerName?: string } = {}) {
+function setup(opts: { wearerName?: string; threadDetection?: () => boolean } = {}) {
   const clock = new VirtualClock(1)
   const views: { at: number; view: LensView }[] = []
   const session = new Session({ clock, split: loudnessSplit(), show: (view) => views.push({ at: clock.now(), view }), ...opts })
@@ -397,6 +397,88 @@ describe('a session', () => {
       session.setHearing(true)
       say("Hi, I'm Priya.", 4, OTHER)
       expect(session.names.list()).toEqual(['Priya'])
+    })
+  })
+
+  describe('the dropped thread (D35, D48, D33, D36, D34, D120)', () => {
+    const CUT = 'There are two reasons for this. The first is cost, and the second reason is'
+    const DEV = 'Sorry, can I ask a quick question about that part first?'
+    const lines = (views: { view: LensView }[]) => views.map((v) => v.view).filter((v) => v.kind === 'line')
+
+    it('shows the last words once someone else has talked two seconds into the wearer\'s pause, and keeps them until the wearer speaks', () => {
+      const { session, views, say, clock } = setup()
+      session.setHearing(true)
+      say(CUT, 0, WEARER)
+      say(DEV, 5, OTHER)
+      expect(lines(views)).toEqual([{ kind: 'line', text: '…and the second reason is' }])
+      clock.advance(10 * 60 * 1000 - 1)
+      expect(views.at(-1)!.view).toEqual({ kind: 'line', text: '…and the second reason is' })
+      say('The second reason is cost.', 9, WEARER)
+      expect(views.at(-1)!.view).toEqual({ kind: 'dot' })
+    })
+
+    it('shows nothing when the wearer finished the sentence (D33), or for a one-second interjection, or for silence (D36)', () => {
+      const { session, views, say, clock } = setup()
+      session.setHearing(true)
+      say("And that's why we chose it.", 0, WEARER)
+      say('That makes sense, we did the same thing.', 3, OTHER)
+      say('So the plan for next week is', 6, WEARER)
+      say('Mm-hm.', 8.5, OTHER)
+      say('to ship on Friday, and the second reason is', 10, WEARER)
+      clock.advance(60_000)
+      expect(lines(views)).toEqual([])
+    })
+
+    it('never reaches back across someone else\'s turn (D48, D50)', () => {
+      const { session, views, say } = setup()
+      session.setHearing(true)
+      say("And that's why we chose it.", 0, WEARER)
+      say('Makes sense.', 2.5, OTHER)
+      say('Well, the', 3.5, WEARER)
+      say(DEV, 4.5, OTHER)
+      expect(lines(views)).toEqual([{ kind: 'line', text: '…Well, the' }])
+    })
+
+    it('fires once per run: a line tapped away stays away while the same person talks on (D34)', () => {
+      const { session, views, say } = setup()
+      session.setHearing(true)
+      say(CUT, 0, WEARER)
+      say('Sorry, can I ask', 5, OTHER)
+      say('a quick question', 6.2, OTHER)
+      session.tap()
+      expect(views.at(-1)!.view).toEqual({ kind: 'dot' })
+      say('about that part first?', 7.1, OTHER)
+      expect(views.at(-1)!.view).toEqual({ kind: 'dot' })
+      expect(lines(views)).toHaveLength(1)
+    })
+
+    it('forgets the run when Catch stops hearing: the words lost in an outage may have finished the sentence', () => {
+      const { session, views, say } = setup()
+      session.setHearing(true)
+      say('Lucky. The freeway', 0, WEARER)
+      session.setHearing(false)
+      session.setHearing(true)
+      say(DEV, 70, OTHER)
+      expect(lines(views)).toEqual([])
+    })
+
+    it('with detection off, never shows the line, and a tap at the dot gives the thread back above the names (D120)', () => {
+      let on = true
+      const { session, views, say, clock } = setup({ threadDetection: () => on })
+      session.setHearing(true)
+      say("I'm Priya.", 0, OTHER)
+      clock.advance(LINE_MS)
+      on = false
+      say(CUT, 2, WEARER)
+      say(DEV, 7, OTHER)
+      expect(lines(views)).toEqual([{ kind: 'line', text: 'Priya' }])
+      session.tap()
+      expect(views.at(-1)!.view).toEqual({ kind: 'names', names: ['Priya'], thread: '…and the second reason is' })
+      // Switched back on, the page is D43's again.
+      on = true
+      session.tap()
+      session.tap()
+      expect(views.at(-1)!.view).toEqual({ kind: 'names', names: ['Priya'] })
     })
   })
 })
