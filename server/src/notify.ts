@@ -199,6 +199,20 @@ export class Outbox {
   }
 
   /**
+   * The notifications waiting in memory for the phone of `to` that open
+   * `conversation` go (D134: it was deleted on the phone page; the store's
+   * copies go in the delete's own transaction, notify-store.ts). One already
+   * on its way to the phone cannot be called back, but whatever the phone
+   * answers it is never tried again.
+   */
+  dropConversation(to: string, conversation: number): void {
+    const q = this.queues.get(to)
+    if (!q) return
+    const id = String(conversation)
+    q.items = q.items.filter((item) => item.notification.data?.conversation !== id)
+  }
+
+  /**
    * No notification is sent, and no retry armed, once closed (risk-4 c).
    * What waits stays in the store for the next process (P9).
    */

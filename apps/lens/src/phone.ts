@@ -31,9 +31,19 @@ import {
 // opens the screen its data names: the jogger for a kept one, the
 // conversation's screen for the promises (`openNotification`).
 //
+// A conversation's screen ends with `Delete conversation` (D134). A first tap
+// only asks: the control becomes a confirm, `Delete` and `Cancel`; Cancel puts
+// the screen back as it was and asks the server nothing. Delete (the second,
+// explicit tap) asks the server to delete it, everything with it, and draws
+// the history the server answers, which no longer lists it, with the open
+// count as it now stands; the history is then the screen. A delete that does
+// not reach the server, or that it refuses, leaves the conversation's screen
+// with one quiet line saying it was not deleted, never an error screen; a
+// second tap on Delete while the first is on its way asks nothing.
+//
 // Everything comes from the server's phone API (shared/phone-protocol.ts),
-// with the shared token; a tick is its one write. Nothing here touches the
-// lens or /audio. Each screen is drawn by
+// with the shared token; a tick and a delete are its two writes. Nothing
+// here touches the lens or /audio. Each screen is drawn by
 // one write of its markup into the page's root, so the test harness reads
 // exactly what the WebView was given (test/harness/phone.ts).
 
@@ -67,6 +77,11 @@ export interface Phone {
   refresh(): Promise<void>
   /** Ticks a promise on the conversation screen showing off (D39); settles once the server has answered (or failed to). */
   tick(promise: number): Promise<void>
+  /**
+   * Deletes the conversation showing (D134), only once its confirm is showing
+   * (the second tap); settles once the server has answered (or failed to).
+   */
+  remove(id: number): Promise<void>
 }
 
 /** The http(s) origin a ws(s) server origin shares a host with. */
@@ -143,8 +158,23 @@ function section(kind: 'you' | 'owed', title: string, promises: PhonePromise[]):
 /** What a tick that did not reach the server says: calm, and only that it was not saved. */
 export const TICK_NOT_SAVED = 'Not saved yet. Tick it again in a moment.'
 
-/** One conversation's screen (D98): every open promise in full, whatever the notification cut. */
-export function conversationMarkup(c: ConversationResponse, now: number, note?: string): string {
+/** What a delete that did not reach the server, or that it refused, says (D134). */
+export const DELETE_NOT_DONE = 'Not deleted. Try again in a moment.'
+
+/** The foot of a conversation's screen (D134): the delete control, or, after its first tap, the confirm. */
+function deleteControl(id: number, confirming: boolean): string {
+  if (!confirming) return `<button type="button" class="delete" data-delete="${id}">Delete conversation</button>`
+  return (
+    '<div class="delete-confirm">' +
+    '<p>Delete this conversation? Its names, promises and jogger go too.</p>' +
+    `<button type="button" class="delete-yes" data-delete-confirm="${id}">Delete</button>` +
+    '<button type="button" class="delete-no" data-delete-cancel>Cancel</button>' +
+    '</div>'
+  )
+}
+
+/** One conversation's screen (D98): every open promise in full, whatever the notification cut; at its foot, its delete (D134). */
+export function conversationMarkup(c: ConversationResponse, now: number, note?: string, confirmingDelete = false): string {
   const day = dayLabel(c.startedAt, now)
   return (
     '<main class="phone conversation">' +
@@ -155,6 +185,7 @@ export function conversationMarkup(c: ConversationResponse, now: number, note?: 
     section('owed', 'OWED TO YOU', c.owed) +
     (note ? `<p class="note">${esc(note)}</p>` : '') +
     (c.jogger ? `<button type="button" class="jogger-link" data-jogger="${c.id}">Kept conversation ›</button>` : '') +
+    deleteControl(c.id, confirmingDelete) +
     '</main>'
   )
 }
@@ -202,6 +233,9 @@ export function startPhone(opts: PhoneOptions): Phone {
   // Ticks on their way to the server, and ticks it has confirmed: neither is drawn again (D39).
   const ticking = new Set<number>()
   const ticked = new Set<number>()
+  // The conversation whose delete confirm is showing (D134), and the delete on its way to the server.
+  let confirming: number | undefined
+  let deleting: number | undefined
 
   /** A conversation as the screen draws it: a tick on its way or confirmed is done (D39). */
   const settled = (c: ConversationResponse): ConversationResponse => {
@@ -210,7 +244,7 @@ export function startPhone(opts: PhoneOptions): Phone {
   }
   const drawConversation = (c: ConversationResponse, note?: string) => {
     shown = c
-    root.innerHTML = conversationMarkup(settled(c), now(), note)
+    root.innerHTML = conversationMarkup(settled(c), now(), note, confirming === c.id)
   }
 
   /** Fetches a screen and draws it, unless another has been asked for meanwhile; a conversation is remembered as the one showing. */
@@ -272,10 +306,64 @@ export function startPhone(opts: PhoneOptions): Phone {
     drawConversation(done ? answer! : shown, done ? undefined : TICK_NOT_SAVED)
   }
 
+  /** The delete control's first tap (D134): the confirm, on the conversation showing; nothing is asked of the server. */
+  function askDelete(id: number): void {
+    if (shown?.id !== id || deleting !== undefined) return
+    confirming = id
+    drawConversation(shown)
+  }
+
+  /** Cancel (D134): the screen as it was, and nothing asked. */
+  function cancelDelete(): void {
+    if (confirming === undefined) return
+    confirming = undefined
+    if (shown) drawConversation(shown)
+  }
+
+  /**
+   * The confirm's Delete (D134): the server deletes the conversation and
+   * answers the history, which is drawn and becomes the screen. One that does
+   * not reach the server, or that it refuses, leaves the conversation's
+   * screen with a quiet line. Only while the confirm is showing; a second tap
+   * meanwhile asks nothing.
+   */
+  async function remove(id: number): Promise<void> {
+    if (confirming !== id || shown?.id !== id || deleting !== undefined) return
+    deleting = id
+    let answer: HistoryResponse | undefined
+    try {
+      const res = await fetch(`${origin}${PHONE_CONVERSATION_PATH}${id}`, { method: 'DELETE', headers: auth })
+      if (res.ok) answer = (await res.json()) as HistoryResponse
+    } catch {
+      answer = undefined
+    }
+    deleting = undefined
+    if (confirming === id) confirming = undefined
+    const done = answer !== undefined && Array.isArray(answer.conversations) && !answer.conversations.some((c) => c.id === id)
+    if (done) {
+      // Still on its screen, or gone back to the history meanwhile: the history the server answered is drawn, and is the screen.
+      if (shown?.id === id || screen === history) {
+        asked++
+        shown = undefined
+        screen = history
+        root.innerHTML = historyMarkup(answer!, now())
+      }
+      return
+    }
+    if (shown?.id === id) drawConversation(shown, DELETE_NOT_DONE)
+  }
+
+  /** Another screen asked for: it becomes the screen a refresh asks for again, and a confirm showing is let go (D134). */
+  const go = (next: () => Promise<void>) => {
+    confirming = undefined
+    screen = next
+    return next()
+  }
+
   const phone: Phone = {
-    home: () => (screen = history)(),
-    open: (id) => (screen = () => conversation(id))(),
-    jogger: (id) => (screen = () => jogger(id))(),
+    home: () => go(history),
+    open: (id) => go(() => conversation(id)),
+    jogger: (id) => go(() => jogger(id)),
     openNotification: (data) => {
       const id = Number(data?.conversation)
       if (!Number.isInteger(id)) return phone.home()
@@ -283,6 +371,7 @@ export function startPhone(opts: PhoneOptions): Phone {
     },
     refresh: () => screen(),
     tick,
+    remove,
   }
 
   root.addEventListener('click', ({ target }) => {
@@ -290,7 +379,12 @@ export function startPhone(opts: PhoneOptions): Phone {
     const box = t.closest?.('[data-tick]')?.getAttribute('data-tick')
     const conversation = t.closest?.('[data-conversation]')?.getAttribute('data-conversation')
     const kept = t.closest?.('[data-jogger]')?.getAttribute('data-jogger')
-    if (box) void phone.tick(Number(box))
+    const ask = t.closest?.('[data-delete]')?.getAttribute('data-delete')
+    const confirm = t.closest?.('[data-delete-confirm]')?.getAttribute('data-delete-confirm')
+    if (ask) askDelete(Number(ask))
+    else if (confirm) void phone.remove(Number(confirm))
+    else if (t.closest?.('[data-delete-cancel]')) cancelDelete()
+    else if (box) void phone.tick(Number(box))
     else if (conversation) void phone.open(Number(conversation))
     else if (kept) void phone.jogger(Number(kept))
     else if (t.closest?.('[data-home]')) void phone.home()

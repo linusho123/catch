@@ -10,9 +10,18 @@ import type { Store } from '../store.ts'
 //
 // The server writes a conversation once, as it ends (app.ts, from the
 // session's end), and a kept one's jogger once it is written (D99, D116). The
-// phone API (api.ts) reads, and writes one thing: a promise ticked off on the
+// phone API (api.ts) reads, and writes two things: a promise ticked off on the
 // phone page (D39, P7), `done` set once and never unset, in the same file, so
-// a tick outlives a reload and a restart.
+// a tick outlives a reload and a restart; and a conversation deleted from its
+// screen there (D134), which takes its row, its names, its promises of both
+// kinds with their ticks and its jogger, in one transaction with whatever
+// else the server deletes with it (the outbox's waiting notifications).
+//
+// A number, once given to a conversation or a promise, is never given again
+// (D134): SQLite would hand a deleted newest row's number to the next one, so
+// a retried delete, a late tick or an old notification naming the deleted
+// one would reach a newer one. Each table's high-water mark is kept in the
+// store's meta table, the number alone, nothing of what it numbered.
 
 /** A conversation as it ends, with what it leaves for the phone. P2a fills `you`, P4 `kept`, P5 `owed`. */
 export interface ConversationRecord {
@@ -28,6 +37,13 @@ export interface ConversationRecord {
 }
 
 type Side = 'you' | 'owed'
+
+/** What a delete did (D134): `refused` is another wearer's conversation, never touched; `gone` one already deleted, or never there. */
+export type DeleteOutcome = 'deleted' | 'gone' | 'refused'
+
+/** The tables whose numbers are never given twice, and the meta key that holds each one's high-water mark. */
+const NUMBERED = { conversations: 'conversations_high_water', promises: 'promises_high_water' } as const
+type Numbered = keyof typeof NUMBERED
 
 interface ConversationRow {
   id: number
@@ -85,14 +101,66 @@ export class History {
     const db = this.store.db
     db.exec('BEGIN')
     try {
-      const { lastInsertRowid } = db
-        .prepare('INSERT INTO conversations (wearer, started_at, ended_at, names, kept) VALUES (?, ?, ?, ?, ?)')
-        .run(wearer, Math.round(c.startedAt), Math.round(c.endedAt), JSON.stringify(c.names), c.kept ? 1 : 0)
-      const id = Number(lastInsertRowid)
-      const insert = db.prepare('INSERT INTO promises (conversation_id, side, position, text) VALUES (?, ?, ?, ?)')
-      for (const side of ['you', 'owed'] as const) c[side].forEach((text, position) => insert.run(id, side, position, text))
+      const id = this.nextNumber('conversations')
+      db.prepare('INSERT INTO conversations (id, wearer, started_at, ended_at, names, kept) VALUES (?, ?, ?, ?, ?, ?)').run(
+        id,
+        wearer,
+        Math.round(c.startedAt),
+        Math.round(c.endedAt),
+        JSON.stringify(c.names),
+        c.kept ? 1 : 0,
+      )
+      const insert = db.prepare('INSERT INTO promises (id, conversation_id, side, position, text) VALUES (?, ?, ?, ?, ?)')
+      for (const side of ['you', 'owed'] as const) c[side].forEach((text, position) => insert.run(this.nextNumber('promises'), id, side, position, text))
       db.exec('COMMIT')
       return id
+    } catch (err) {
+      db.exec('ROLLBACK')
+      throw err
+    }
+  }
+
+  /** The highest number `table` has ever given, kept as its high-water mark (and raised to any row a store written before the mark holds). */
+  private highWater(table: Numbered): number {
+    const db = this.store.db
+    const kept = db.prepare('SELECT value FROM meta WHERE key = ?').get(NUMBERED[table]) as { value: string } | undefined
+    const max = (db.prepare(`SELECT COALESCE(MAX(id), 0) AS n FROM ${table}`).get() as { n: number }).n
+    const mark = Math.max(Number(kept?.value ?? 0) || 0, max)
+    db.prepare('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)').run(NUMBERED[table], String(mark))
+    return mark
+  }
+
+  /** The next number for a row of `table`, never one given before; the mark moves to it. Inside the caller's transaction. */
+  private nextNumber(table: Numbered): number {
+    const id = this.highWater(table) + 1
+    this.store.db.prepare('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)').run(NUMBERED[table], String(id))
+    return id
+  }
+
+  /**
+   * Deletes one of the wearer's conversations (D134): its row, with its names
+   * and times, its promises of both kinds (ticked or not) and its jogger, and
+   * whatever `also` deletes with it, in one transaction: a failure anywhere
+   * leaves it whole. Another wearer's is refused and never touched; one
+   * already deleted (or never there) is quietly gone. The caller scrubs the
+   * file once it is deleted (Store.scrub).
+   */
+  delete(wearer: string, id: number, also?: () => void): DeleteOutcome {
+    const db = this.store.db
+    const owner = db.prepare('SELECT wearer FROM conversations WHERE id = ?').get(id) as { wearer: string } | undefined
+    if (!owner) return 'gone'
+    if (owner.wearer !== wearer) return 'refused'
+    db.exec('BEGIN')
+    try {
+      // The marks first: the numbers deleted here are never given again.
+      this.highWater('conversations')
+      this.highWater('promises')
+      db.prepare('DELETE FROM promises WHERE conversation_id = ?').run(id)
+      db.prepare('DELETE FROM joggers WHERE conversation_id = ?').run(id)
+      db.prepare('DELETE FROM conversations WHERE id = ? AND wearer = ?').run(id, wearer)
+      also?.()
+      db.exec('COMMIT')
+      return 'deleted'
     } catch (err) {
       db.exec('ROLLBACK')
       throw err

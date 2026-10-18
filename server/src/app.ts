@@ -49,8 +49,14 @@ import type { SpeechToText, SttStream, SttWord } from './stt/types.ts'
 // copy is the Fly secret CATCH_AUDIO_TOKEN. Neither is ever committed.
 //
 // The phone page (D130) reads the history and each conversation's screen from
-// the phone API under /phone/ (phone/api.ts), with the same token, and ticks
-// promises off there (P7, D133), the one write it makes.
+// the phone API under /phone/ (phone/api.ts), with the same token, ticks
+// promises off there (P7, D133), and deletes a conversation there (D134):
+// its history row, names, promises, ticks and jogger, and every notification
+// still waiting in the outbox for it, in one transaction, then the file is
+// scrubbed as an ended conversation's transcript is (secure_delete, the
+// write-ahead log truncated); a jogger still being written for it is
+// cancelled, so nothing of it is stored or sent after. Deleting touches no
+// session and no lens.
 // Each conversation that ends is offered to the history (phone/history.ts),
 // which keeps it only if it produced a promise or a keep (D76, D100), with
 // the wearer's promises as commands under YOU; one with promises also sends
@@ -193,7 +199,7 @@ interface Feed {
 
 const CORS = {
   'access-control-allow-origin': '*',
-  'access-control-allow-methods': 'GET, PUT, OPTIONS',
+  'access-control-allow-methods': 'GET, PUT, DELETE, OPTIONS',
   'access-control-allow-headers': 'content-type, authorization',
 }
 
@@ -211,16 +217,37 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   const split = opts.split ?? createSplit()
   const events = new EventEmitter<ServerEvents>()
   let threadDetection = opts.threadDetection ?? true
-  const outbox = opts.notifier ? new Outbox(opts.notifier, clock, new StoredOutbox(store)) : undefined
+  // The outbox's table is opened with or without a notifier, so a delete (D134) always reaches what a previous process left waiting.
+  const waiting = new StoredOutbox(store)
+  const outbox = opts.notifier ? new Outbox(opts.notifier, clock, waiting) : undefined
   // CATCH_TIME_ZONE, checked once as the server starts (risk-2).
   const timeZone = checkedTimeZone(opts.timeZone)
   const promises = opts.model ? new PromiseDetector(opts.model) : undefined
   let sessions = 0
-  /** Joggers being written, each cancelled when the wearers are forgotten or the server closes. */
-  const writing = new Set<AbortController>()
+  /** Joggers being written, by conversation, each cancelled when the wearers are forgotten, the server closes, or its conversation is deleted (D134). */
+  const writing = new Map<AbortController, number>()
   const stopJoggers = () => {
-    for (const abort of writing) abort.abort()
+    for (const abort of writing.keys()) abort.abort()
     writing.clear()
+  }
+  /**
+   * One of the wearer's conversations deleted on the phone page (D134):
+   * everything the store holds of it, its waiting notifications included, in
+   * one transaction; then its waiting notifications leave the outbox's
+   * memory, a jogger still being written for it is cancelled, and the file is
+   * scrubbed. Another wearer's is refused and nothing changes.
+   */
+  const deleteConversation = (wearer: string, id: number) => {
+    const outcome = history.delete(wearer, id, () => waiting.removeConversation(wearer, id))
+    if (outcome !== 'deleted') return outcome
+    outbox?.dropConversation(wearer, id)
+    for (const [abort, conversation] of writing) {
+      if (conversation !== id) continue
+      abort.abort()
+      writing.delete(abort)
+    }
+    store.scrub()
+    return outcome
   }
   /** One session per wearer, keyed by the digest of the shared token their lens carries (D79). */
   const wearers = new Map<string, Session>()
@@ -264,7 +291,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
           return
         }
         const abort = new AbortController()
-        writing.add(abort)
+        writing.set(abort, id)
         const onTidy = (outcome: TidyOutcome) => {
           if (abort.signal.aborted) return
           events.emit('joggerTidy', { at: clock.now(), conversation: id, outcome })
@@ -299,7 +326,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       res.end(JSON.stringify({ ok: true, store: 'sqlite', schema: store.schemaVersion() }))
       return
     }
-    if (phoneRoute(req, res, { history, expected: expectedTokens, headers: CORS })) return
+    if (phoneRoute(req, res, { history, expected: expectedTokens, headers: CORS, remove: deleteConversation })) return
     res.writeHead(404, CORS).end()
   })
 

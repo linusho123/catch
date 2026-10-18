@@ -30,6 +30,15 @@ export class StoredOutbox implements OutboxStore {
     this.store.db.prepare('DELETE FROM outbox WHERE id = ?').run(id)
   }
 
+  /**
+   * Every notification still waiting for the phone of `to` that opens
+   * `conversation` (its promises, or its kept jogger) goes: the conversation
+   * was deleted on the phone page (D134). The caller scrubs the file after.
+   */
+  removeConversation(to: string, conversation: number): void {
+    this.store.db.prepare("DELETE FROM outbox WHERE wearer = ? AND json_extract(notification, '$.data.conversation') = ?").run(to, String(conversation))
+  }
+
   all(): { id: number; to: string; notification: PhoneNotification }[] {
     const rows = this.store.db.prepare('SELECT id, wearer, notification FROM outbox ORDER BY id').all() as { id: number; wearer: string; notification: string }[]
     return rows.map((r) => ({ id: r.id, to: r.wearer, notification: JSON.parse(r.notification) as PhoneNotification }))

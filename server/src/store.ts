@@ -12,6 +12,12 @@ export interface Store {
   readonly path: string
   readonly db: DatabaseSync
   schemaVersion(): number
+  /**
+   * What a delete has just overwritten (secure_delete) leaves the file too:
+   * the write-ahead log that still holds the rows' older pages is copied back
+   * and emptied (D76, D134).
+   */
+  scrub(): void
   close(): void
 }
 
@@ -29,6 +35,9 @@ export function openStore(path: string): Store {
     schemaVersion() {
       const row = db.prepare('SELECT value FROM meta WHERE key = ?').get('schema_version') as { value: string } | undefined
       return row ? Number(row.value) : 0
+    },
+    scrub() {
+      db.exec('PRAGMA wal_checkpoint(TRUNCATE)')
     },
     close() {
       db.close()

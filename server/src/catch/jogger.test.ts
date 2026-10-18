@@ -445,4 +445,17 @@ describe('the tidy pass', () => {
     expect(silent.asked).toHaveLength(0)
     expect(heardNothing.bullets).toEqual(['4 minutes not heard'])
   })
+
+  // D134: a kept conversation deleted on the phone page while its first pass
+  // is out (or the wearers forgotten, or the server closing) is cancelled: a
+  // first pass that answers anyway is not followed by a tidy pass, so the
+  // words are sent nowhere again.
+  it('asks no tidy pass once it is cancelled during the first, and settles as cancelled', async () => {
+    const abort = new AbortController()
+    const { model, asked } = twoPasses(answer(TIDIED), DRAFT_ANSWER, () => abort.abort())
+    const outcomes: TidyOutcome[] = []
+    await expect(writeKeptJogger(model, INPUT, { clock: new VirtualClock(1e-6), conversationMs: 25 * 60_000, signal: abort.signal, onTidy: (o) => outcomes.push(o) })).rejects.toThrow()
+    expect(asked, 'the first pass only').toHaveLength(1)
+    expect(outcomes).toEqual([])
+  })
 })

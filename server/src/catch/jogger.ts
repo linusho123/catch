@@ -365,7 +365,7 @@ export type TidyOutcome =
 
 export interface KeptJoggerOptions {
   clock: Clock
-  /** Cancels both passes: the server closing, or the wearers forgotten. */
+  /** Cancels both passes: the server closing, the wearers forgotten, or the conversation deleted (D134). */
   signal?: AbortSignal
   /** How long the conversation ran (ms): under an hour both passes share thirty seconds, from an hour three minutes (joggerBudgetMs); counted from the call. */
   conversationMs: number
@@ -383,6 +383,8 @@ export async function writeKeptJogger(model: ModelClient, input: JoggerInput, op
   const report = (outcome: TidyOutcome) => opts.onTidy?.(outcome)
   const deadline = clock.now() + joggerBudgetMs(opts.conversationMs)
   const draft = await writeJogger(model, input, signal ? { signal } : undefined)
+  // Cancelled while the first pass was out (a first pass that answers anyway): no tidy pass is sent the words (D134).
+  signal?.throwIfAborted()
   const first: Jogger = { bullets: draft.bullets }
   const lines = joggerLines(input.transcript)
   if (lines.length === 0 || draft.bullets.length === draft.fixed.length) {

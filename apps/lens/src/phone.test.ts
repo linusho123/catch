@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { ConversationResponse, HistoryResponse } from '../../../shared/phone-protocol.ts'
 import { systemClock } from '../../../shared/clock.ts'
 import { isHistory, PhoneScreenRecord, rowsOn, sectionsOn } from '../../../test/harness/phone.ts'
-import { clockTime, conversationMarkup, dayLabel, historyMarkup, httpOrigin, startPhone, TICK_NOT_SAVED } from './phone.ts'
+import { clockTime, conversationMarkup, dayLabel, DELETE_NOT_DONE, historyMarkup, httpOrigin, startPhone, TICK_NOT_SAVED } from './phone.ts'
 
 // The phone page's two screens (D100, D98), read back the way the wearer reads
 // them (test/harness/phone.ts); the API they come from is tested end to end in
@@ -377,5 +377,158 @@ describe('the page', () => {
       expect(rowsOn(root.innerHTML).find((r) => r.at === at(14, 10))!.open, "the row's open count dropped once the tick was confirmed").toBe('1 open')
       expect(root.innerHTML).toContain('<p class="open-total">4 open</p>')
     })
+  })
+})
+
+// D134: a conversation deleted from its own screen, with a confirm (a second,
+// explicit tap); cancelling leaves everything. The page asks the server with
+// the shared token and then draws the history it answers, which no longer
+// lists the conversation. Read from the screens the page wrote into its root
+// and from the requests it made; the server's side, its store and its file,
+// is tested in test/integration/phone-delete.test.ts.
+describe('deleting a conversation (D134)', () => {
+  const AFTER: HistoryResponse = { open: HISTORY.open - 2, conversations: HISTORY.conversations.filter((c) => c.id !== 3) }
+  const json = (body: unknown) => () => new Response(JSON.stringify(body), { status: 200 })
+  type Asked = { path: string; method: string; auth: string | null }
+
+  function server(remove: () => Response | Promise<Response> = json(AFTER)) {
+    const asked: Asked[] = []
+    const fetch = (async (url: string, init?: RequestInit) => {
+      const path = new URL(url).pathname
+      const method = init?.method ?? 'GET'
+      asked.push({ path, method, auth: new Headers(init?.headers).get('authorization') })
+      if (path === '/phone/history' && method === 'GET') return json(HISTORY)()
+      if (path === '/phone/conversations/3' && method === 'GET') return json(CONVERSATION)()
+      if (path === '/phone/conversations/3' && method === 'DELETE') return remove()
+      return new Response('', { status: 404 })
+    }) as typeof globalThis.fetch
+    return { asked, fetch }
+  }
+  const settle = async () => {
+    for (let i = 0; i < 4; i++) await new Promise((r) => setTimeout(r, 0))
+  }
+  const deletes = (asked: Asked[]) => asked.filter((a) => a.method === 'DELETE')
+
+  async function onConversation(remove?: () => Response | Promise<Response>) {
+    const { asked, fetch } = server(remove)
+    const root = new PhoneScreenRecord(systemClock)
+    const phone = startPhone({ root, server: 'ws://localhost:8080', token: 't0k', fetch, now: () => NOW })
+    await phone.home()
+    await phone.open(3)
+    return { asked, root, phone }
+  }
+
+  it('puts a delete control on the conversation screen, and a first tap only asks to confirm, with Delete and Cancel', async () => {
+    const { asked, root } = await onConversation()
+    expect(root.innerHTML).toContain('data-delete="3"')
+    const before = asked.length
+    root.tap('data-delete', '3')
+    expect(asked.length, 'a first tap asks the server nothing').toBe(before)
+    expect(root.innerHTML).toContain('data-delete-confirm="3"')
+    expect(root.innerHTML).toContain('data-delete-cancel')
+    expect(root.innerHTML, 'the control is now the confirm').not.toContain('data-delete="3"')
+    expect(sectionsOn(root.innerHTML)[0]!.promises, 'the screen is still the conversation').toHaveLength(5)
+  })
+
+  it('cancelling leaves everything: the same screen, and no request', async () => {
+    const { asked, root } = await onConversation()
+    const shown = root.innerHTML
+    const before = asked.length
+    root.tap('data-delete', '3')
+    root.tap('data-delete-cancel')
+    await settle()
+    expect(root.innerHTML).toBe(shown)
+    expect(asked.length).toBe(before)
+  })
+
+  it('on the confirm, deletes it with the shared token and returns to the history the server answers, without it and with the open count dropped', async () => {
+    const { asked, root, phone } = await onConversation()
+    root.tap('data-delete', '3')
+    root.tap('data-delete-confirm', '3')
+    await settle()
+    expect(deletes(asked)).toEqual([{ path: '/phone/conversations/3', method: 'DELETE', auth: 'Bearer t0k' }])
+    expect(isHistory(root.innerHTML)).toBe(true)
+    expect(rowsOn(root.innerHTML).map((r) => r.conversation)).toEqual(['2', '1', '0'])
+    expect(root.innerHTML).toContain('<p class="open-total">3 open</p>')
+    // The history is now the screen: coming back to the page draws it again, never the deleted conversation.
+    await phone.refresh()
+    expect(asked.at(-1)).toMatchObject({ path: '/phone/history', method: 'GET' })
+  })
+
+  it('asks the server once for a double tap on the confirm, and never without the first tap', async () => {
+    let release!: () => void
+    const held = new Promise<void>((r) => (release = r))
+    const { asked, root, phone } = await onConversation(async () => {
+      await held
+      return json(AFTER)()
+    })
+    await phone.remove(3)
+    expect(deletes(asked), 'no confirm was asked for').toEqual([])
+    root.tap('data-delete', '3')
+    root.tap('data-delete-confirm', '3')
+    root.tap('data-delete-confirm', '3')
+    release()
+    await settle()
+    expect(deletes(asked)).toHaveLength(1)
+    expect(isHistory(root.innerHTML)).toBe(true)
+  })
+
+  it('stays on the conversation with a quiet line, never an error screen, when the delete does not reach the server or is refused', async () => {
+    const answers: (() => Response | Promise<Response>)[] = [
+      async () => {
+        throw new TypeError('fetch failed')
+      },
+      () => new Response('{"error":"no such conversation"}', { status: 404 }),
+      () => new Response('', { status: 401 }),
+      () => new Response('', { status: 500 }),
+      () => new Response('not json', { status: 200 }),
+    ]
+    for (const answer of answers) {
+      const { root } = await onConversation(answer)
+      root.tap('data-delete', '3')
+      root.tap('data-delete-confirm', '3')
+      await settle()
+      expect(isHistory(root.innerHTML)).toBe(false)
+      expect(sectionsOn(root.innerHTML)[0]!.promises).toHaveLength(5)
+      expect(root.innerHTML).toContain(`<p class="note">${DELETE_NOT_DONE}</p>`)
+      expect(root.innerHTML).not.toContain('class="error"')
+      expect(root.innerHTML, 'the control is back, to try again').toContain('data-delete="3"')
+    }
+  })
+
+  it('reaches only the phone API: no socket is opened, so /audio and the lens are never touched (P5)', async () => {
+    const opened: string[] = []
+    const saved = globalThis.WebSocket
+    ;(globalThis as Record<string, unknown>).WebSocket = class {
+      constructor(url: string) {
+        opened.push(url)
+      }
+    }
+    try {
+      const { asked, root } = await onConversation()
+      root.tap('data-delete', '3')
+      root.tap('data-delete-confirm', '3')
+      await settle()
+      expect(opened).toEqual([])
+      expect(asked.every((a) => a.path.startsWith('/phone/'))).toBe(true)
+    } finally {
+      ;(globalThis as Record<string, unknown>).WebSocket = saved
+    }
+  })
+
+  it('draws the history from its answer when the wearer has gone back to it meanwhile, and touches no other screen', async () => {
+    let release!: () => void
+    const held = new Promise<void>((r) => (release = r))
+    const { root, phone } = await onConversation(async () => {
+      await held
+      return json(AFTER)()
+    })
+    root.tap('data-delete', '3')
+    root.tap('data-delete-confirm', '3')
+    await phone.home()
+    expect(rowsOn(root.innerHTML).map((r) => r.conversation), 'the history answered before the delete landed').toEqual(['3', '2', '1', '0'])
+    release()
+    await settle()
+    expect(rowsOn(root.innerHTML).map((r) => r.conversation)).toEqual(['2', '1', '0'])
   })
 })

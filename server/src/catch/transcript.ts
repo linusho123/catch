@@ -74,6 +74,6 @@ export class Transcript {
 
   /** The deleted words are overwritten in the file (secure_delete, store.ts), and the write-ahead log that held them is emptied too. */
   private scrub(): void {
-    this.store.db.exec('PRAGMA wal_checkpoint(TRUNCATE)')
+    this.store.scrub()
   }
 }

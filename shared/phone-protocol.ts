@@ -1,6 +1,7 @@
 // What the server's phone API answers the plugin's phone page (D130): the
 // history (D100) and one conversation's screen (D98), read with GETs over the
-// store, and one write, a promise ticked off (D39, D133, P7), all behind the
+// store, and two writes, a promise ticked off (D39, D133, P7) and a
+// conversation deleted (D134), all behind the
 // same shared token as /audio, sent as `Authorization: Bearer <token>`. No runtime imports, so the browser bundle
 // and Node load it as is. Times are milliseconds on the server's clock, like
 // Date.now(); the page groups and formats them in the phone's own time zone.
@@ -10,6 +11,13 @@
 // the wearer (`owed`) in P5, and `done` by a tick on the phone page (P7, D133).
 
 export const PHONE_HISTORY_PATH = '/phone/history'
+/**
+ * GET /phone/conversations/<id>: the conversation's screen.
+ * DELETE /phone/conversations/<id>: deletes it, everything with it (D134),
+ * and answers the history as it now stands (a HistoryResponse). Idempotent:
+ * one already deleted answers the same and changes nothing. Another wearer's
+ * is answered 404 and never touched.
+ */
 export const PHONE_CONVERSATION_PATH = '/phone/conversations/'
 /** GET /phone/conversations/<id>/jogger: a kept conversation's jogger (D99). */
 export const PHONE_JOGGER_SUFFIX = '/jogger'

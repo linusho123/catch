@@ -1,17 +1,20 @@
 import { createHash, timingSafeEqual } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { PHONE_CONVERSATION_PATH, PHONE_DONE_SUFFIX, PHONE_HISTORY_PATH, PHONE_JOGGER_SUFFIX, PHONE_PROMISE_PATH } from '../../../shared/phone-protocol.ts'
-import type { History } from './history.ts'
+import type { DeleteOutcome, History } from './history.ts'
 
 // The phone API (D130): the plugin's phone page reads the history (D100), one
 // conversation's screen (D98) and a kept conversation's jogger (D99) from here,
-// with GETs, and ticks a promise off (D39, D133, P7) with the one write,
+// with GETs, and makes two writes: it ticks a promise off (D39, D133, P7) with
 // `PUT /phone/promises/<id>/done`, idempotent: a second tick of the same
-// promise answers the same and changes nothing. It takes the same shared token
+// promise answers the same and changes nothing; and it deletes a conversation
+// (D134) with `DELETE /phone/conversations/<id>`, which answers the history as
+// it now stands, idempotent too: a conversation already deleted is a quiet
+// success. It takes the same shared token
 // as /audio (CATCH_AUDIO_TOKEN), as `Authorization: Bearer <token>` (a fetch
 // can set headers, unlike a browser WebSocket), and reads and writes only the
 // conversations of the wearer that token stands for (D79): another wearer's
-// promise is answered 404, as one that does not exist, and is never touched.
+// promise or conversation is answered 404 and is never touched.
 
 /** The wearer a shared token stands for: the key the server files sessions and conversations under. */
 export function wearerOf(token: string): string {
@@ -31,7 +34,13 @@ function bearer(req: IncomingMessage): string | undefined {
 export function phoneRoute(
   req: IncomingMessage,
   res: ServerResponse,
-  opts: { history: History; expected: readonly Buffer[]; headers: Record<string, string> },
+  opts: {
+    history: History
+    expected: readonly Buffer[]
+    headers: Record<string, string>
+    /** Deletes one of the wearer's conversations, everything with it (D134, app.ts). */
+    remove: (wearer: string, id: number) => DeleteOutcome
+  },
 ): boolean {
   const path = new URL(req.url ?? '/', 'http://localhost').pathname
   const tick = path.startsWith(PHONE_PROMISE_PATH)
@@ -40,9 +49,12 @@ export function phoneRoute(
     res.writeHead(status, { ...opts.headers, 'content-type': 'application/json', 'cache-control': 'no-store' })
     res.end(JSON.stringify(body))
   }
-  const allowed = tick ? 'PUT' : 'GET'
-  if (req.method !== allowed) {
-    res.writeHead(405, { ...opts.headers, allow: allowed }).end()
+  const rest = path.slice(PHONE_CONVERSATION_PATH.length)
+  const jogger = !tick && path.startsWith(PHONE_CONVERSATION_PATH) && rest.endsWith(PHONE_JOGGER_SUFFIX)
+  // A conversation's screen is also where it is deleted (D134); the history and the jogger are read only.
+  const allowed = tick ? ['PUT'] : path.startsWith(PHONE_CONVERSATION_PATH) && !jogger ? ['GET', 'DELETE'] : ['GET']
+  if (!allowed.includes(req.method ?? '')) {
+    res.writeHead(405, { ...opts.headers, allow: allowed.join(', ') }).end()
     return true
   }
   const token = bearer(req)
@@ -52,8 +64,8 @@ export function phoneRoute(
   }
   const wearer = wearerOf(token)
   if (tick) {
-    const rest = path.slice(PHONE_PROMISE_PATH.length)
-    const id = rest.endsWith(PHONE_DONE_SUFFIX) ? rest.slice(0, -PHONE_DONE_SUFFIX.length) : ''
+    const promise = path.slice(PHONE_PROMISE_PATH.length)
+    const id = promise.endsWith(PHONE_DONE_SUFFIX) ? promise.slice(0, -PHONE_DONE_SUFFIX.length) : ''
     const screen = /^\d+$/.test(id) ? opts.history.tick(wearer, Number(id)) : undefined
     if (screen) json(200, screen)
     else json(404, { error: 'no such promise' })
@@ -63,11 +75,14 @@ export function phoneRoute(
     json(200, opts.history.list(wearer))
     return true
   }
-  const rest = path.slice(PHONE_CONVERSATION_PATH.length)
-  const jogger = rest.endsWith(PHONE_JOGGER_SUFFIX)
   const id = jogger ? rest.slice(0, -PHONE_JOGGER_SUFFIX.length) : rest
   if (!/^\d+$/.test(id)) {
     json(404, { error: 'no such conversation' })
+    return true
+  }
+  if (req.method === 'DELETE') {
+    if (opts.remove(wearer, Number(id)) === 'refused') json(404, { error: 'no such conversation' })
+    else json(200, opts.history.list(wearer))
     return true
   }
   const found = jogger ? opts.history.jogger(wearer, Number(id)) : opts.history.conversation(wearer, Number(id))

@@ -97,3 +97,87 @@ describe('the phone history', () => {
     expect(new History(store).list('w').conversations).toHaveLength(1)
   })
 })
+
+// D134: a conversation deleted from its screen on the phone page goes
+// everywhere: its row, its names, its promises of both kinds, their ticks and
+// its jogger, inside one transaction with whatever else the server deletes
+// with it (the outbox's waiting notifications, app.ts). Read from the store's
+// tables directly; the file's bytes are read in test/integration/phone-delete.test.ts.
+describe('deleting a conversation (D134)', () => {
+  const count = (store: ReturnType<typeof setup>['store'], sql: string, ...args: (string | number)[]) =>
+    (store.db.prepare(sql).get(...args) as { n: number }).n
+
+  it('removes its row, its promises (ticked or not, both kinds) and its jogger, and nothing of any other conversation', () => {
+    const { store, history } = setup()
+    const dev = history.record('w', conversation({ names: ['Dev'], you: ['Send Dev the deck tonight', 'Introduce Dev to Sam'], owed: ['Dev sends the agenda'], kept: true }))!
+    history.recordJogger(dev, ['Dev works on **diffusion models**.'])
+    history.tick('w', history.conversation('w', dev)!.you[0]!.id)
+    const ana = history.record('w', conversation({ startedAt: at(14, 10), names: ['Ana'], you: ['Call Ana'], kept: true }))!
+    history.recordJogger(ana, ['Ana runs the lab.'])
+    expect(history.delete('w', dev)).toBe('deleted')
+    expect(count(store, 'SELECT COUNT(*) AS n FROM conversations WHERE id = ?', dev)).toBe(0)
+    expect(count(store, 'SELECT COUNT(*) AS n FROM promises WHERE conversation_id = ?', dev)).toBe(0)
+    expect(count(store, 'SELECT COUNT(*) AS n FROM joggers WHERE conversation_id = ?', dev)).toBe(0)
+    expect(history.conversation('w', dev)).toBeUndefined()
+    expect(history.jogger('w', dev)).toBeUndefined()
+    expect(history.list('w')).toEqual({ open: 1, conversations: [{ id: ana, startedAt: at(14, 10), names: ['Ana'], open: 1, kept: true }] })
+    expect(history.jogger('w', ana)!.bullets).toEqual(['Ana runs the lab.'])
+  })
+
+  it("refuses another wearer's conversation and changes nothing (D79)", () => {
+    const { store, history } = setup()
+    const theirs = history.record('them', conversation({ you: ['Theirs'], kept: true }))!
+    history.recordJogger(theirs, ['Their bullet.'])
+    let also = 0
+    expect(history.delete('me', theirs, () => void also++)).toBe('refused')
+    expect(also, 'nothing else is deleted with it').toBe(0)
+    expect(history.conversation('them', theirs)!.you.map((p) => p.text)).toEqual(['Theirs'])
+    expect(history.jogger('them', theirs)!.bullets).toEqual(['Their bullet.'])
+    expect(count(store, 'SELECT COUNT(*) AS n FROM promises')).toBe(1)
+  })
+
+  it('is idempotent: a conversation already deleted, or one that never was, is quietly gone', () => {
+    const { history } = setup()
+    const id = history.record('w', conversation({ you: ['Once'] }))!
+    expect(history.delete('w', id)).toBe('deleted')
+    let also = 0
+    expect(history.delete('w', id, () => void also++)).toBe('gone')
+    expect(history.delete('w', 999)).toBe('gone')
+    expect(also).toBe(0)
+  })
+
+  it('deletes everything handed to it in the same transaction: a failure there leaves the conversation whole', () => {
+    const { history } = setup()
+    const id = history.record('w', conversation({ you: ['Stays'] }))!
+    expect(() =>
+      history.delete('w', id, () => {
+        throw new Error('the outbox could not be read')
+      }),
+    ).toThrow('the outbox could not be read')
+    expect(history.conversation('w', id)!.you.map((p) => p.text)).toEqual(['Stays'])
+  })
+
+  // A repeated delete (a retried request) must never take a newer conversation
+  // that took the deleted one's number, and a tick or a notification naming a
+  // deleted promise or conversation must never reach a newer one.
+  it('never gives a deleted conversation\'s number, or its promises\' numbers, to a later one, across a reopen', () => {
+    const { store, history } = setup()
+    history.record('w', conversation({ you: ['First'] }))
+    const newest = history.record('w', conversation({ you: ['Second', 'Third'] }))!
+    const promiseIds = history.conversation('w', newest)!.you.map((p) => p.id)
+    expect(history.delete('w', newest)).toBe('deleted')
+    const later = new History(store).record('w', conversation({ you: ['Fourth'] }))!
+    expect(later).toBeGreaterThan(newest)
+    expect(history.conversation('w', later)!.you[0]!.id).toBeGreaterThan(Math.max(...promiseIds))
+    expect(history.delete('w', newest), 'the retried delete').toBe('gone')
+    expect(history.conversation('w', later)!.you.map((p) => p.text)).toEqual(['Fourth'])
+  })
+
+  it('never reuses a number from a store written before deletes existed (no high-water mark yet)', () => {
+    const { store, history } = setup()
+    const id = history.record('w', conversation({ you: ['Old'] }))!
+    store.db.exec("DELETE FROM meta WHERE key LIKE '%seq%'")
+    expect(history.delete('w', id)).toBe('deleted')
+    expect(history.record('w', conversation({ you: ['New'] }))!).toBeGreaterThan(id)
+  })
+})
