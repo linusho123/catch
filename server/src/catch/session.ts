@@ -326,7 +326,9 @@ export class Session {
       this.otherRun = []
       this.otherCaught.clear()
       this.wearerRun.push(text)
-      this.thread.wearer(text)
+      // D48, D52: a word said before the last long-press, however late the
+      // provider delivers it, is no part of the next conversation's run (head-1).
+      if (end > this.pressedAt) this.thread.wearer(text)
       // D35: the wearer speaks again, and the thread line goes.
       if (this.threadShowing) this.backToDot()
       // D29: only the wearer giving their own name ("I'm X", "my name is X"), never "meet X" or "X, nice to meet you" (M2).

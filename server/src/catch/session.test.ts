@@ -439,6 +439,23 @@ describe('a session', () => {
       expect(lines(views)).toEqual([{ kind: 'line', text: '…Well, the' }])
     })
 
+    it('never reaches back across the long-press, nor across a turn said between conversations (head-1, D48, D52)', () => {
+      const { session, views, say, frame, word } = setup()
+      session.setHearing(true)
+      say("Hi, I'm Linus.", 0, WEARER)
+      say('Hello there.', 2, OTHER)
+      // The wearer says "and the second" at 5.0-5.9 s; the long-press comes at 6.5 s, before the provider's final for it.
+      for (let t = 51; t <= 59; t++) frame(t / 10, WEARER)
+      for (let t = 60; t <= 65; t++) frame(t / 10, -70)
+      session.longPress()
+      session.words([word('and', 5.0, 5.3), word('the', 5.3, 5.6), word('second', 5.6, 5.9)])
+      // Someone else talks between conversations; then the wearer begins the next one and is cut off.
+      say('So what do you think', 8, OTHER)
+      say('Well, the', 11, WEARER)
+      say(DEV, 12, OTHER)
+      expect(lines(views)).toEqual([{ kind: 'line', text: '…Well, the' }])
+    })
+
     it('fires once per run: a line tapped away stays away while the same person talks on (D34)', () => {
       const { session, views, say } = setup()
       session.setHearing(true)

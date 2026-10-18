@@ -31,7 +31,7 @@ import {
 // (lens-world.ts); the thread's words are compared with the fixture's
 // transcript (its words and roles), never with the server's notion of the
 // run. The default split, loudness (D126), on the wearer-louder fixtures
-// (D127); test/integration/thread-split.test.ts runs the same fixtures under
+// (D127); test/unit/thread-split.test.ts runs the same fixtures under
 // every split on both variants.
 
 const V = 'wearer-louder'
@@ -41,6 +41,8 @@ const FLOOR_FROM_MS = 2000
 const FLOOR_BY_MS = 3000
 /** The longest pause inside a stretch of speech these fixtures call continuous (their words sit 0.06 s apart). */
 const CONTINUOUS_GAP_S = 0.3
+/** Fixture seconds played, not skipped, after a jump across silence, so what the server pushed in the jump is delivered (a tenth of a second of wall time at 20x). */
+const SETTLE_S = 2
 
 /** The fixtures the outline's rows are found in: the row's words pick the one that says them. */
 const OUTLINE_FIXTURES = ['dropped-thread', 'thread-continuous', 'thread-across-turn']
@@ -279,8 +281,12 @@ const droppedThread: Definer<ThreadWorld> = (reg) => {
     const resume = fx.words.find((wd) => wd.start > w.runEnd!)!
     expect(resume.role, 'nobody else speaks in the silence').toBe('wearer')
     expect(resume.start - w.runEnd!, 'a long silence').toBeGreaterThanOrEqual(60)
-    // Across the whole silence, up to the moment the wearer goes on.
-    await fastForward(w, resume.start)
+    // Across the whole silence, up to the moment the wearer goes on. The jump
+    // fires the server's timers at once; the silence's last seconds are played
+    // on the clock, so anything those timers pushed has reached the bridge
+    // before the record is read (head-2).
+    await fastForward(w, resume.start - SETTLE_S)
+    await playTo(w, resume.start)
     expectOnlyDotSince(w, w.dotSince!, 'through the silence')
   })
 
