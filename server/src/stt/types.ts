@@ -23,7 +23,15 @@ export interface SpeechToText {
   /**
    * Opens one stream. `onOpen` fires once the provider is ready to hear (the
    * server shows the dot only then, D37); `onError` means the stream is lost,
-   * and the server opens a new one.
+   * and the server opens a new one. `onUtteranceEnd` fires when the provider
+   * has heard a gap with no words after the word ending at `lastWordEnd`
+   * (seconds on the stream's clock), sent after that utterance's final words:
+   * a natural pause, which ends the sentence being gathered (PT).
    */
-  open(onWords: (words: SttWord[]) => void, onError: (err: unknown) => void, onOpen?: () => void): SttStream
+  open(
+    onWords: (words: SttWord[]) => void,
+    onError: (err: unknown) => void,
+    onOpen?: () => void,
+    onUtteranceEnd?: (lastWordEnd: number) => void,
+  ): SttStream
 }

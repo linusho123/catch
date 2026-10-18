@@ -3,7 +3,7 @@ import type { LensView } from '../../../shared/lens-protocol.ts'
 import type { AudioFrame } from '../../../shared/wire.ts'
 import { pcmLoudnessDbfs, type FrameSignal, type Side, type SplitWord, type WearerSplit } from '../split/split.ts'
 import type { SttWord } from '../stt/types.ts'
-import { HeldNames, type HeldNamesState } from './held-names.ts'
+import { HeldNames, type HeldNamesState, type TentativeName } from './held-names.ts'
 import { findIntroductionsHow, findSelfIntroductions, type Introduced } from './introductions.ts'
 import { CONTEXT_SENTENCES, isCandidate, owedLine, PromisePassError, type PromiseDetector, type Said } from './promises.ts'
 import { Thread } from './thread.ts'
@@ -97,6 +97,22 @@ import type { TranscriptWord } from './transcript.ts'
 // built, at the moment the quiet ran out, and its transcript is deleted then
 // like any other (D76), so no abandoned conversation's words outlive it. A
 // conversation that ends hands the store a state with no conversation in it.
+//
+// The provider's pace (PT): Deepgram sends interim hypotheses while someone
+// speaks and final words only at a pause or after seconds of continuous
+// speech. Everything is judged on the finals, with two exceptions. Names are
+// caught from the interims too, so a name said mid-turn shows within D17's two
+// seconds even when its final lags: the interim words are split on the frames
+// like any word, read as the final words would be (D29, CATCH_WEARER_NAME,
+// D87, D88, D132 all apply), and the name is held tentatively (held-names.ts).
+// The final words confirm it, with no second line and no `(2)`; if they do
+// not give it once they reach past the introduction (or the utterance ends,
+// or Catch stops hearing), the name is withdrawn: off the held names, off a
+// names page showing, and its line taken down if it is still up. And the
+// provider's UtteranceEnd, a second with no words, ends the sentence being
+// gathered, so a promise is judged at a natural pause and not only at the
+// provider's punctuation. Promises, the thread and the transcript stay on the
+// finals.
 
 /** D17: a catch line holds for a second and a half. A ruling, not a tuning value. */
 export const LINE_MS = 1500
@@ -130,6 +146,37 @@ export const ALREADY_KEPT = 'already kept'
 
 /** The most recent words the split sees at once (the provider-label split reads them together). */
 const SPLIT_WINDOW_WORDS = 200
+
+/**
+ * How far apart (seconds) an interim's name word and a final's may start and
+ * still be the one word: the provider's timings move a little between its
+ * interim and final results; a second person of the same name is never that close.
+ */
+const SAME_WORD_S = 1
+
+/** A name caught from an interim result, until the final words confirm or withdraw it (PT). */
+interface Tentative {
+  ref: TentativeName
+  /** The name, case-folded. */
+  key: string
+  /** Where its name word starts on the session's timeline. */
+  start: number
+  /**
+   * The middle of the introduction's last word (the name, or the "you" of "X,
+   * nice to meet you"): once a batch of final words reaches past it without
+   * giving the name, the name is withdrawn. The middle, so that the
+   * provider's timings moving a little between its interim and final results
+   * neither withdraws a name its next batch gives nor keeps one its batch has passed.
+   */
+  decideAt: number
+}
+
+/**
+ * In the order the provider sent them: a final word waiting for its frames;
+ * the end of a batch of final words (`finalsThrough`, its last word's end);
+ * or the provider's UtteranceEnd after the word ending at `utteranceEnd`.
+ */
+type Pending = SttWord | { finalsThrough: number } | { utteranceEnd: number }
 
 export interface SessionOptions {
   clock: Clock
@@ -312,10 +359,18 @@ export class Session {
   private frames: FrameSignal[] = []
   private coveredUntil = 0
 
-  // Final words waiting for their frames, and the words already judged.
-  private pending: SttWord[] = []
+  // Final words waiting for their frames (and the utterance ends among them), and the words already judged.
+  private pending: Pending[] = []
   private pendingTimer: TimerHandle | undefined
   private judged: { word: SplitWord; side: Side }[] = []
+  /** The provider's latest interim hypothesis: the words since its last final, which it may still revise (PT). */
+  private interim: SttWord[] = []
+  /** The interim words last read for names, so the same hypothesis is not read twice. */
+  private interimRead: string | undefined
+  /** Names caught from interims, waiting for the final words (PT). */
+  private tentatives: Tentative[] = []
+  /** Every name caught in the open conversation, from the finals or an interim, by where its name word starts: an interim never catches one twice. */
+  private caughtAt: { key: string; start: number }[] = []
 
   // The conversation.
   private inConversation = false
@@ -330,6 +385,8 @@ export class Session {
    */
   private pressedAt = -Infinity
   private otherRun: string[] = []
+  /** Where each word of otherRun starts on the session's timeline. */
+  private otherRunStarts: number[] = []
   private otherCaught = new Set<number>()
   private wearerRun: string[] = []
   /** When the conversation ends unless the wearer speaks (D92). */
@@ -358,6 +415,8 @@ export class Session {
   /** Where the wearer's sentence so far ends on the session's timeline: where a promise in it was said. */
   private wearerSentenceEnd = 0
   private otherSentence: string[] = []
+  /** Where someone else's sentence so far ends on the session's timeline. */
+  private otherSentenceEnd = 0
   private said: Said[] = []
   /** The open conversation's keep: not asked, the prompt waiting for an answer, or kept (D40, D41, D54, D111). */
   private keep: 'none' | 'asking' | 'kept' = 'none'
@@ -382,6 +441,8 @@ export class Session {
   private threadShowing = false
   /** The view showing is the keep prompt: it stays until a tap or a swipe down (D40, D41). */
   private promptShowing = false
+  /** The line showing is this name caught from an interim, not yet confirmed: withdrawn, it is taken down (PT). */
+  private tentativeShowing: Tentative | undefined
   /** The lens starts with no dot (it cannot hear until told), so the first view worth sending is the dot. */
   private sent = DEAF
   /** Takes a line or a page off the lens when its time is up. */
@@ -557,9 +618,33 @@ export class Session {
     return end - seconds
   }
 
-  /** Words from the provider, timed on the session's timeline (app.ts places each stream's); only final ones are judged. */
+  /**
+   * Words from the provider, timed on the session's timeline (app.ts places
+   * each stream's). Final ones are judged; interim ones are the provider's
+   * hypothesis of the words since its last final, each batch replacing the
+   * one before, and are read only for names (PT).
+   */
   words(words: readonly SttWord[]): void {
-    for (const w of words) if (w.isFinal) this.pending.push(w)
+    const finals = words.filter((w) => w.isFinal)
+    for (const w of finals) this.pending.push(w)
+    if (finals.length > 0) this.pending.push({ finalsThrough: Math.max(...finals.map((w) => w.end)) })
+    if (finals.length < words.length) {
+      this.interim = words.filter((w) => !w.isFinal)
+    } else if (finals.length > 0) {
+      // The finals replace the part of the hypothesis they cover.
+      const through = Math.max(...finals.map((w) => w.end))
+      this.interim = this.interim.filter((w) => w.start >= through - 1e-6)
+    }
+    this.drain(false)
+  }
+
+  /**
+   * The provider's UtteranceEnd: no words for a second after the word ending
+   * at `lastWordEnd` (on the session's timeline). It comes after that
+   * utterance's final words, and is taken in order with them (PT).
+   */
+  utteranceEnd(lastWordEnd: number): void {
+    this.pending.push({ utteranceEnd: lastWordEnd })
     this.drain(false)
   }
 
@@ -570,6 +655,12 @@ export class Session {
     // What was said while Catch could not hear may have finished the wearer's
     // sentence, or been someone else's turn: the run is not known to be cut off.
     if (!hearing) this.thread.clear()
+    // The stream that heard an interim is gone, and its final words with it: a name caught from one is not confirmed (PT).
+    if (!hearing) {
+      this.interim = []
+      this.interimRead = undefined
+      for (const t of this.tentatives.slice()) this.withdraw(t)
+    }
     // D53: a span the open conversation did not hear, from here to when Catch hears again (or the end).
     if (!hearing && this.inConversation) this.deafSince = { at: this.coveredUntil, clock: this.clock.now() }
     if (hearing) this.closeGap()
@@ -596,10 +687,7 @@ export class Session {
     if (this.view.kind === 'dot') {
       // D120: with detection off, the page gives the thread back as its first line.
       const thread = this.threadDetection() ? undefined : this.thread.line()
-      const names = this.names.list()
-      // With no names but promises held (either way), the names page leads on to them; D31's empty page is for nothing held.
-      const promisesHeld = names.length === 0 && (held(this.promises).length > 0 || heldOwed(this.promises).length > 0)
-      this.view = { kind: 'names', names, ...(thread ? { thread } : {}), ...(promisesHeld ? { promisesHeld: true as const } : {}) }
+      this.view = this.namesPage(thread)
       this.viewTimer = this.clock.setTimeout(() => this.backToDot(), PAGE_MS)
     } else {
       // A line or a page goes; an unanswered prompt comes back in its place (D42).
@@ -690,6 +778,17 @@ export class Session {
     this.pendingTimer = undefined
     while (this.pending.length > 0) {
       const next = this.pending[0]!
+      if ('utteranceEnd' in next) {
+        this.pending.shift()
+        this.endUtterance(next.utteranceEnd)
+        continue
+      }
+      if ('finalsThrough' in next) {
+        this.pending.shift()
+        // The batch's words are judged: one it reached past without giving the name was misheard (PT).
+        for (const t of this.tentatives.filter((x) => x.decideAt <= next.finalsThrough)) this.withdraw(t)
+        continue
+      }
       if (!timedOut && next.end > this.coveredUntil) {
         this.pendingTimer = this.clock.setTimeout(() => this.drain(true), FRAME_WAIT_MS)
         return
@@ -697,6 +796,7 @@ export class Session {
       this.pending.shift()
       this.judge(next)
     }
+    this.readInterim()
   }
 
   private judge(word: SttWord): void {
@@ -711,7 +811,117 @@ export class Session {
     // How long ago the word ended, by the audio heard since: the provider's
     // answer comes after the speech, and the quiet is the wearer's (D92).
     this.hear(word.text, entry.side, word.start, word.end, Math.max(0, (this.coveredUntil - word.end) * 1000))
+    // The runs the interim is read against have moved on: read it again (PT).
+    this.interimRead = undefined
     this.save()
+  }
+
+  /**
+   * The interim hypothesis, read for names as the final words would be read
+   * (PT): once every final word before it has been judged, the hypothesis
+   * words whose frames are in are split on those frames, the wearer's own
+   * "I'm X" in it counts as the wearer's name (D29), and an introduction in
+   * someone else's run (the final words of it so far, then the interim ones)
+   * is caught tentatively, if a conversation is open or the words would open one.
+   */
+  private readInterim(): void {
+    if (this.pending.length > 0 || this.closed || !this.hearing) return
+    const heard = this.interim.filter((w) => w.end <= this.coveredUntil + 1e-6)
+    if (heard.length === 0) return
+    const key = JSON.stringify(heard.map((w) => [w.text, w.start, w.end]))
+    if (key === this.interimRead) return
+    this.interimRead = key
+    const asSplit = heard.map((w) => ({ text: w.text, start: w.start, end: w.end, speaker: w.speaker }))
+    const sides = this.split.classify([...this.judged.map((j) => j.word), ...asSplit], this.frames).slice(-heard.length)
+    let open = this.inConversation
+    let wearer = [...this.wearerRun]
+    const ownNow = new Set<string>()
+    // Someone else's run as the final path holds it, then the interim words: the final ones have no end here, and are decided already.
+    let run: { text: string; start: number; end?: number }[] = this.otherRun.map((text, i) => ({ text, start: this.otherRunStarts[i]! }))
+    let decided = run.length
+    heard.forEach((w, i) => {
+      if (sides[i] === 'wearer') {
+        // D129, D52: the wearer's speech after the last long-press begins a conversation.
+        if (w.end > this.pressedAt) open = true
+        this.catchTentative(run, decided, ownNow)
+        run = []
+        decided = 0
+        wearer.push(w.text)
+        for (const { name } of findSelfIntroductions(wearer)) ownNow.add(name.toLowerCase())
+        return
+      }
+      wearer = []
+      // D129: the first conversation after Catch starts begins on anyone's speech.
+      if (!this.begun && w.end > this.pressedAt) open = true
+      // As in the final path: someone else's words outside a conversation make no run.
+      if (open) run.push({ text: w.text, start: w.start, end: w.end })
+    })
+    this.catchTentative(run, decided, ownNow)
+  }
+
+  /** The introductions in one run of someone else's words that end in its interim part, held tentatively and shown (PT). */
+  private catchTentative(run: { text: string; start: number; end?: number }[], decided: number, ownNow: ReadonlySet<string>): void {
+    if (run.length <= decided) return
+    for (const { name, index, how, last } of findIntroductionsHow(run.map((w) => w.text))) {
+      // Complete in the final words: the final path has caught it or passed it over.
+      if (last < decided) continue
+      const key = name.toLowerCase()
+      // D29 and CATCH_WEARER_NAME, the wearer's own name given in this very hypothesis among them.
+      if (this.ownNames.has(key) || ownNow.has(key) || key === this.wearerName) continue
+      const start = run[index]!.start
+      if (this.caughtAt.some((c) => c.key === key && Math.abs(c.start - start) <= SAME_WORD_S)) continue
+      this.caughtAt.push({ key, start })
+      const { heard, ref } = this.names.hearTentative(name, this.clock.now(), how)
+      const tentative: Tentative = { ref, key, start, decideAt: (run[last]!.start + run[last]!.end!) / 2 }
+      this.tentatives.push(tentative)
+      this.showLine(heard.line)
+      if (this.view.kind === 'line' && this.view.text === heard.line) this.tentativeShowing = tentative
+    }
+  }
+
+  /** The final words gave a name caught from an interim: held for good, its line not shown again (PT). */
+  private confirm(t: Tentative, how: Introduced): void {
+    this.tentatives.splice(this.tentatives.indexOf(t), 1)
+    if (this.tentativeShowing === t) this.tentativeShowing = undefined
+    const heard = this.names.confirm(t.ref)
+    if (heard) this.nameCaught(heard.line, how)
+    this.refreshNamesPage()
+  }
+
+  /** A name caught from an interim that the final words did not give: off the held names, off the page, its line taken down (PT). */
+  private withdraw(t: Tentative): void {
+    this.tentatives.splice(this.tentatives.indexOf(t), 1)
+    this.names.withdraw(t.ref)
+    if (this.tentativeShowing === t) this.backToDot()
+    else this.refreshNamesPage()
+  }
+
+  /**
+   * The provider heard a second with no words after `at` (PT): the sentence
+   * being gathered has ended, the wearer's or someone else's, and any name
+   * caught from an interim in that utterance that its final words did not give is withdrawn.
+   */
+  private endUtterance(at: number): void {
+    // Its words end by `at`; anything later is speech after the gap.
+    const slop = 0.5
+    if (this.wearerSentence.length > 0 && this.wearerSentenceEnd <= at + slop) this.finishWearer()
+    if (this.otherSentence.length > 0 && this.otherSentenceEnd <= at + slop) this.finishOther()
+    for (const t of this.tentatives.filter((x) => x.start <= at + slop)) this.withdraw(t)
+  }
+
+  /** The names page: the held names in the order heard (D18), with the thread on top when detection is off (D120). */
+  private namesPage(thread?: string): LensView {
+    const names = this.names.list()
+    // With no names but promises held (either way), the names page leads on to them; D31's empty page is for nothing held.
+    const promisesHeld = names.length === 0 && (held(this.promises).length > 0 || heldOwed(this.promises).length > 0)
+    return { kind: 'names', names, ...(thread ? { thread } : {}), ...(promisesHeld ? { promisesHeld: true as const } : {}) }
+  }
+
+  /** A names page showing lists the held names as they stand now (a name withdrawn is gone from it). */
+  private refreshNamesPage(): void {
+    if (this.view.kind !== 'names') return
+    this.view = this.namesPage(this.view.thread)
+    this.render()
   }
 
   private hear(text: string, side: Side, start: number, end: number, agoMs: number): void {
@@ -729,6 +939,7 @@ export class Session {
     if (side === 'wearer') {
       if (this.inConversation) this.restartQuiet(agoMs)
       this.otherRun = []
+      this.otherRunStarts = []
       this.otherCaught.clear()
       this.wearerRun.push(text)
       // D48, D52: a word said before the last long-press, however late the
@@ -746,10 +957,20 @@ export class Session {
     const line = this.thread.other(start, end)
     if (line !== undefined && this.threadDetection()) this.showThread(line)
     this.otherRun.push(text)
+    this.otherRunStarts.push(start)
     for (const { name, index, how } of findIntroductionsHow(this.otherRun)) {
       if (this.otherCaught.has(index)) continue
       this.otherCaught.add(index)
-      if (this.ownNames.has(name.toLowerCase()) || name.toLowerCase() === this.wearerName) continue
+      const key = name.toLowerCase()
+      if (this.ownNames.has(key) || key === this.wearerName) continue
+      const at = this.otherRunStarts[index]!
+      // Caught already from an interim (PT): the final words confirm it, and its line is not shown again.
+      const tentative = this.tentatives.find((t) => t.key === key && Math.abs(t.start - at) <= SAME_WORD_S)
+      if (tentative) {
+        this.confirm(tentative, how)
+        continue
+      }
+      this.caughtAt.push({ key, start: at })
       const heard = this.names.hear(name, this.clock.now(), how)
       this.showLine(heard.line)
       this.nameCaught(heard.line, how)
@@ -767,6 +988,7 @@ export class Session {
     else this.finishWearer()
     mine.push(text)
     if (side === 'wearer') this.wearerSentenceEnd = end
+    else this.otherSentenceEnd = end
     if (!/[.!?]$/.test(text)) return
     if (side === 'wearer') this.finishWearer()
     else this.finishOther()
@@ -807,7 +1029,8 @@ export class Session {
     const promises = this.promises
     const slot = promises.slots.push(undefined) - 1
     promises.times[slot] = at
-    const names = this.names.list()
+    // Promises stay on the final words: only the names they have given (PT).
+    const names = this.names.confirmedList()
     this.pass(
       promises,
       (signal) => this.detector!.detect(text, before, names, signal),
@@ -969,7 +1192,7 @@ export class Session {
       ? {
           startedAt: this.startedAt,
           endedAt: at,
-          names: this.names.list(),
+          names: this.names.confirmedList(),
           kept,
           transcript: kept ? (this.transcript?.words?.() ?? []) : [],
           gaps: this.gaps,
@@ -986,7 +1209,11 @@ export class Session {
     // An unanswered prompt asked about the conversation that has ended: it goes (D40).
     if (this.promptShowing) this.backToDot()
     this.names.clear()
+    this.tentatives = []
+    this.caughtAt = []
+    this.interimRead = undefined
     this.otherRun = []
+    this.otherRunStarts = []
     this.otherCaught.clear()
     this.wearerRun = []
     this.thread.clear()
@@ -1074,6 +1301,7 @@ export class Session {
     this.viewTimer = undefined
     this.threadShowing = false
     this.promptShowing = false
+    this.tentativeShowing = undefined
   }
 
   private render(): void {

@@ -463,6 +463,21 @@ export const SCRIPTS: Record<string, ScriptLine[]> = {
     { gap: 0.8, who: 'Marcus', text: 'My name is Marcus.' },
     { gap: 0.8, who: 'wearer', text: 'Nice to meet you both.' },
   ],
+  // PT, the latency test (test/integration/latency.test.ts): Priya gives her
+  // name in the middle of one long continuous turn (no pause a provider could
+  // finalize at, for nine seconds); then the wearer promises with no closing
+  // punctuation, pauses, and goes on, so only the pause ends the sentence.
+  'long-turn': [
+    { at: 0, who: 'wearer', text: 'Hey, good to see you again.' },
+    {
+      gap: 0.8,
+      who: 'Priya',
+      text: "So we drove down this morning and the traffic was terrible the whole way here but anyway yeah I'm Priya and I run the robotics lab upstairs with a few of the grad students",
+    },
+    { gap: 0.8, who: 'wearer', text: "Sure I'll send you the deck tonight" },
+    { gap: 1.5, who: 'wearer', text: 'Anyway, how long are you in town?' },
+    { gap: 0.8, who: 'Priya', text: 'Until Sunday.' },
+  ],
   // D76: a conversation nobody is named in, with one promise of the wearer's; then the wearer says nothing.
   'one-promise': [
     { at: 0, who: 'wearer', text: 'Morning, how was the trip?' },

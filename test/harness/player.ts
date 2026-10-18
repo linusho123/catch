@@ -8,6 +8,7 @@ import type { SpeechToText, SttStream, SttWord } from '../../server/src/stt/type
 import { FIXTURE_DIR, FRAME_SECONDS, framesFor, loadFixture, type Fixture } from '../fixtures/fixture.ts'
 import type { VirtualClock } from './clock.ts'
 import type { host as evenHost } from './even-host.ts'
+import { providerTimeline, type ProviderModel } from './provider-model.ts'
 
 // The fixture player. It plays a pre-transcribed fixture on the fixture
 // clock along the two paths the real thing takes:
@@ -78,14 +79,15 @@ export class FixtureStt implements SpeechToText {
     | {
         onWords: (words: SttWord[]) => void
         onError: (err: unknown) => void
+        onUtteranceEnd: ((lastWordEnd: number) => void) | undefined
         open: boolean
         pcm: Uint8Array[]
         /** When the first audio this stream heard was captured (its frame's capture stamp); words are timed from that frame's start. */
         firstCaptureMs: number | undefined
         /** When the latest audio this stream heard was captured: the end of the audio it has heard. */
         lastCaptureMs: number | undefined
-        /** Words said whose audio this stream has not yet heard, with their run's epoch: given, in order, once it has. */
-        held: { word: SttWord; epoch: number }[]
+        /** Messages whose audio this stream has not yet heard, with their run's epoch: given, in order, once it has. */
+        held: Held[]
       }
     | undefined
   /** The frame the server is handling now (its 'frame' event comes just before it feeds that frame's PCM to the stream). */
@@ -125,7 +127,12 @@ export class FixtureStt implements SpeechToText {
     return !this.down
   }
 
-  open(onWords: (words: SttWord[]) => void, onError: (err: unknown) => void = () => {}, onOpen?: () => void): SttStream {
+  open(
+    onWords: (words: SttWord[]) => void,
+    onError: (err: unknown) => void = () => {},
+    onOpen?: () => void,
+    onUtteranceEnd?: (lastWordEnd: number) => void,
+  ): SttStream {
     this.attempts.push(this.clock?.now() ?? Number.NaN)
     if (this.down) {
       // Like a socket that cannot connect: the failure comes back after open() returns.
@@ -135,11 +142,12 @@ export class FixtureStt implements SpeechToText {
     const stream = {
       onWords,
       onError,
+      onUtteranceEnd,
       open: true,
       pcm: [] as Uint8Array[],
       firstCaptureMs: undefined as number | undefined,
       lastCaptureMs: undefined as number | undefined,
-      held: [] as { word: SttWord; epoch: number }[],
+      held: [] as Held[],
     }
     this.stream = stream
     this.lost = false
@@ -218,33 +226,58 @@ export class FixtureStt implements SpeechToText {
     // loaded machine takes to carry the frame over the socket, and never has to
     // judge one on the frames that happen to have arrived (P2a: the
     // dropped-thread flake, a run's last word judged on missing frames).
-    for (const word of words) stream.held.push({ word, epoch })
+    for (const word of words) stream.held.push({ words: [word], until: word.end, epoch })
+    this.release(stream)
+  }
+
+  /**
+   * One message of a provider modelled on the real one (provider-model.ts):
+   * an interim hypothesis or a final batch, given in one onWords call as the
+   * provider sends it, or an UtteranceEnd; held, like a word, until the audio
+   * it speaks of has reached the server.
+   */
+  deliverMessage(message: { words: SttWord[] } | { utteranceEnd: number }, epoch: number): void {
+    if (this.down || this.lost) return
+    const stream = this.stream
+    if (!stream?.open) throw new Error('no /audio session is open on the server: start the lens before playing a fixture')
+    if (!this.attached) throw new Error('a modelled provider needs the server\'s frames: attach() it first')
+    if ('words' in message) stream.held.push({ words: message.words, until: Math.max(0, ...message.words.map((w) => w.end)), epoch })
+    else stream.held.push({ utteranceEnd: message.utteranceEnd, until: message.utteranceEnd, epoch })
     this.release(stream)
   }
 
   /** Gives the held words whose audio the stream has heard, in order, stopping at the first it has not. */
   private release(stream: NonNullable<FixtureStt['stream']>): void {
     while (stream.open && stream.held.length > 0 && stream.lastCaptureMs !== undefined) {
-      const { word, epoch } = stream.held[0]!
+      const held = stream.held[0]!
       // The end of the audio heard, in the run's fixture seconds: the end of the last frame fed (captured at its end).
-      const heardTo = (stream.lastCaptureMs - epoch) / 1000
-      if (word.end > heardTo + 1e-6) return
+      const heardTo = (stream.lastCaptureMs - held.epoch) / 1000
+      if (held.until > heardTo + 1e-6) return
       stream.held.shift()
-      this.give(stream, [word], epoch)
+      if ('words' in held) this.give(stream, held.words, held.epoch)
+      else stream.onUtteranceEnd?.(this.onStream(stream, held.epoch)(held.utteranceEnd))
     }
   }
 
   private give(stream: NonNullable<FixtureStt['stream']>, words: SttWord[], epoch: number): void {
+    const onStream = this.onStream(stream, epoch)
+    stream.onWords(words.map((w) => ({ ...w, start: onStream(w.start), end: onStream(w.end) })))
+  }
+
+  /** Fixture seconds onto the stream's own clock, from its first audio. */
+  private onStream(stream: NonNullable<FixtureStt['stream']>, epoch: number): (t: number) => number {
     // The first audio is one of the run's 100 ms frames, so it starts on the
     // fixture's frame grid: the player has the lens stamp each frame with its
     // end on the fixture clock (its capture time), so the stamp is on the grid.
     const frameMs = FRAME_SECONDS * 1000
     const firstEnd = Math.floor((stream.firstCaptureMs! - epoch) / frameMs + 1e-6) * frameMs
     const zero = (firstEnd - frameMs) / 1000
-    const onStream = (t: number) => Math.round((t - zero) * 1e6) / 1e6
-    stream.onWords(words.map((w) => ({ ...w, start: onStream(w.start), end: onStream(w.end) })))
+    return (t: number) => Math.round((t - zero) * 1e6) / 1e6
   }
 }
+
+/** A message held until its audio is heard: words (one final word by default; a modelled provider's batch), or an UtteranceEnd. */
+type Held = ({ words: SttWord[] } | { utteranceEnd: number }) & { until: number; epoch: number }
 
 interface Item {
   t: number
@@ -260,6 +293,12 @@ export interface PlayerDeps {
   realStt?: boolean
   /** Where the fixture's JSON (and, under CATCH_REAL_STT=1, its WAV) is read from; test/fixtures by default. */
   fixtureDir?: string
+  /**
+   * Answer like a real streaming provider (provider-model.ts): interims while
+   * someone speaks, finals at pauses or after long speech, UtteranceEnds.
+   * Unset, every word comes final as soon as its audio is in.
+   */
+  provider?: ProviderModel
 }
 
 /**
@@ -310,11 +349,23 @@ export class FixtureRun {
     }))
     const words: Item[] = real
       ? []
-      : this.fixture.words.map(({ text, start, end, speaker }) => ({
-          t: end,
-          kind: 1,
-          play: () => deps.stt.deliver([{ text, start, end, speaker, confidence: 1, isFinal: true }], this.epoch),
-        }))
+      : deps.provider
+        ? providerTimeline(this.fixture.words, deps.provider).map((e) => ({
+            t: e.t,
+            kind: 1,
+            play: () =>
+              deps.stt.deliverMessage(
+                e.kind === 'utteranceEnd'
+                  ? { utteranceEnd: e.lastWordEnd }
+                  : { words: e.words.map(({ text, start, end, speaker }) => ({ text, start, end, speaker, confidence: 1, isFinal: e.kind === 'final' })) },
+                this.epoch,
+              ),
+          }))
+        : this.fixture.words.map(({ text, start, end, speaker }) => ({
+            t: end,
+            kind: 1,
+            play: () => deps.stt.deliver([{ text, start, end, speaker, confidence: 1, isFinal: true }], this.epoch),
+          }))
     this.items = [...frames, ...words].sort((a, b) => a.t - b.t || a.kind - b.kind)
   }
 
@@ -366,7 +417,9 @@ export class FixtureRun {
   /**
    * Jumps the clock to fixture second `t` across silence; refuses to skip any
    * part of a word (M6): a word that overlaps the gap at all would lose the
-   * frames that carry its audio.
+   * frames that carry its audio. A modelled provider's messages in the gap
+   * (a final at a pause, an UtteranceEnd) are not skipped: each is sent at
+   * its own time on the way, as the provider would send it into the silence.
    */
   skipTo(t: number): void {
     const now = this.seconds(this.deps.clock.now())
@@ -377,7 +430,12 @@ export class FixtureRun {
     if (said && this.frameEnd(said.end) > now + 1e-9 && this.frameEnd(said.end) <= t) {
       throw new Error(`skipTo(${t}) would skip the end of "${said.text}"'s audio (its frame to ${this.frameEnd(said.end)}s); play to run.frameEnd(${said.end}) first`)
     }
-    while (this.cursor < this.items.length && this.items[this.cursor]!.t <= t) this.cursor++
+    while (this.cursor < this.items.length && this.items[this.cursor]!.t <= t) {
+      const item = this.items[this.cursor++]!
+      if (item.kind === 0) continue
+      this.deps.clock.advance(Math.max(0, this.at(item.t) - this.deps.clock.now()))
+      item.play()
+    }
     this.deps.clock.advance(Math.max(0, this.at(t) - this.deps.clock.now()))
   }
 }

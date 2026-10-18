@@ -347,6 +347,10 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         () => {
           if (live()) lens.setHearing(true)
         },
+        // PT: the provider heard a second with no words; its time is the stream's, moved like its words.
+        (lastWordEnd) => {
+          if (live()) lens.utteranceEnd(lastWordEnd + (mine.zero ?? 0))
+        },
       )
       mine.stt = opened
       if (live()) stream = mine

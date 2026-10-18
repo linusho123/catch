@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { deepgram, deepgramUrl, parseDeepgramMessage } from './deepgram.ts'
+import { deepgram, deepgramUrl, parseDeepgramEvent, parseDeepgramMessage } from './deepgram.ts'
 
 describe('the Deepgram adapter', () => {
   it('asks for 16 kHz mono linear PCM with word timings and diarization, opted out of retention', () => {
@@ -8,6 +8,9 @@ describe('the Deepgram adapter', () => {
     expect(Object.fromEntries(url.searchParams)).toMatchObject({
       // M5: the model DESIGN.md's chosen line names; without it Deepgram uses its default.
       model: 'nova-3',
+      // PT (DESIGN.md, chosen): finals at a 300 ms pause, and an UtteranceEnd after a second with no words.
+      endpointing: '300',
+      utterance_end_ms: '1000',
       language: 'en',
       encoding: 'linear16',
       sample_rate: '16000',
@@ -46,6 +49,14 @@ describe('the Deepgram adapter', () => {
     const interim = JSON.stringify({ type: 'Results', is_final: false, channel: { alternatives: [{ words: [{ word: 'hi', start: 0, end: 0.2, confidence: 0.5 }] }] } })
     expect(parseDeepgramMessage(interim)[0]?.isFinal).toBe(false)
     expect(parseDeepgramMessage(JSON.stringify({ type: 'Metadata', request_id: 'x' }))).toEqual([])
+  })
+
+  it('reads an UtteranceEnd as the end of an utterance at its last word, and words from no other message', () => {
+    expect(parseDeepgramEvent(JSON.stringify({ type: 'UtteranceEnd', channel: [0, 1], last_word_end: 2.395 }))).toEqual({ kind: 'utteranceEnd', lastWordEnd: 2.395 })
+    expect(parseDeepgramMessage(JSON.stringify({ type: 'UtteranceEnd', channel: [0, 1], last_word_end: 2.395 }))).toEqual([])
+    // One with no usable time says nothing.
+    expect(parseDeepgramEvent(JSON.stringify({ type: 'UtteranceEnd', channel: [0, 1] }))).toBeUndefined()
+    expect(parseDeepgramEvent(JSON.stringify({ type: 'SpeechStarted', timestamp: 1 }))).toBeUndefined()
   })
 
   it('refuses to start without a key', () => {

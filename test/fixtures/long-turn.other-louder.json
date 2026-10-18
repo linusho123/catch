@@ -1,0 +1,483 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "long-turn",
+  "variant": "other-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "Hey, good to see you again."
+    },
+    {
+      "gap": 0.8,
+      "who": "Priya",
+      "text": "So we drove down this morning and the traffic was terrible the whole way here but anyway yeah I'm Priya and I run the robotics lab upstairs with a few of the grad students"
+    },
+    {
+      "gap": 0.8,
+      "who": "wearer",
+      "text": "Sure I'll send you the deck tonight"
+    },
+    {
+      "gap": 1.5,
+      "who": "wearer",
+      "text": "Anyway, how long are you in town?"
+    },
+    {
+      "gap": 0.8,
+      "who": "Priya",
+      "text": "Until Sunday."
+    }
+  ],
+  "words": [
+    {
+      "text": "Hey,",
+      "start": 0,
+      "end": 0.315,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "good",
+      "start": 0.375,
+      "end": 0.735,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "to",
+      "start": 0.795,
+      "end": 1.065,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "see",
+      "start": 1.125,
+      "end": 1.44,
+      "role": "wearer",
+      "loudness": -27.4,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 1.5,
+      "end": 1.815,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "again.",
+      "start": 1.875,
+      "end": 2.28,
+      "role": "wearer",
+      "loudness": -24.5,
+      "speaker": 0
+    },
+    {
+      "text": "So",
+      "start": 3.08,
+      "end": 3.35,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "we",
+      "start": 3.41,
+      "end": 3.68,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "drove",
+      "start": 3.74,
+      "end": 4.145,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 1
+    },
+    {
+      "text": "down",
+      "start": 4.205,
+      "end": 4.565,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 1
+    },
+    {
+      "text": "this",
+      "start": 4.625,
+      "end": 4.985,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "morning",
+      "start": 5.045,
+      "end": 5.54,
+      "role": "other",
+      "loudness": -14,
+      "speaker": 1
+    },
+    {
+      "text": "and",
+      "start": 5.6,
+      "end": 5.915,
+      "role": "other",
+      "loudness": -15,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 5.975,
+      "end": 6.29,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 1
+    },
+    {
+      "text": "traffic",
+      "start": 6.35,
+      "end": 6.845,
+      "role": "other",
+      "loudness": -14.1,
+      "speaker": 1
+    },
+    {
+      "text": "was",
+      "start": 6.905,
+      "end": 7.22,
+      "role": "other",
+      "loudness": -14.4,
+      "speaker": 1
+    },
+    {
+      "text": "terrible",
+      "start": 7.28,
+      "end": 7.82,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 7.88,
+      "end": 8.195,
+      "role": "other",
+      "loudness": -14.6,
+      "speaker": 1
+    },
+    {
+      "text": "whole",
+      "start": 8.255,
+      "end": 8.66,
+      "role": "other",
+      "loudness": -12.5,
+      "speaker": 1
+    },
+    {
+      "text": "way",
+      "start": 8.72,
+      "end": 9.035,
+      "role": "other",
+      "loudness": -13.8,
+      "speaker": 1
+    },
+    {
+      "text": "here",
+      "start": 9.095,
+      "end": 9.455,
+      "role": "other",
+      "loudness": -13.8,
+      "speaker": 1
+    },
+    {
+      "text": "but",
+      "start": 9.515,
+      "end": 9.83,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 1
+    },
+    {
+      "text": "anyway",
+      "start": 9.89,
+      "end": 10.34,
+      "role": "other",
+      "loudness": -13.9,
+      "speaker": 1
+    },
+    {
+      "text": "yeah",
+      "start": 10.4,
+      "end": 10.76,
+      "role": "other",
+      "loudness": -13.2,
+      "speaker": 1
+    },
+    {
+      "text": "I'm",
+      "start": 10.82,
+      "end": 11.09,
+      "role": "other",
+      "loudness": -13.8,
+      "speaker": 1
+    },
+    {
+      "text": "Priya",
+      "start": 11.15,
+      "end": 11.555,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "and",
+      "start": 11.615,
+      "end": 11.93,
+      "role": "other",
+      "loudness": -12.7,
+      "speaker": 1
+    },
+    {
+      "text": "I",
+      "start": 11.99,
+      "end": 12.215,
+      "role": "other",
+      "loudness": -13.9,
+      "speaker": 1
+    },
+    {
+      "text": "run",
+      "start": 12.275,
+      "end": 12.59,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 12.65,
+      "end": 12.965,
+      "role": "other",
+      "loudness": -12.6,
+      "speaker": 1
+    },
+    {
+      "text": "robotics",
+      "start": 13.025,
+      "end": 13.565,
+      "role": "other",
+      "loudness": -13.1,
+      "speaker": 1
+    },
+    {
+      "text": "lab",
+      "start": 13.625,
+      "end": 13.94,
+      "role": "other",
+      "loudness": -15.2,
+      "speaker": 1
+    },
+    {
+      "text": "upstairs",
+      "start": 14,
+      "end": 14.54,
+      "role": "other",
+      "loudness": -15.4,
+      "speaker": 1
+    },
+    {
+      "text": "with",
+      "start": 14.6,
+      "end": 14.96,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "a",
+      "start": 15.02,
+      "end": 15.245,
+      "role": "other",
+      "loudness": -13,
+      "speaker": 1
+    },
+    {
+      "text": "few",
+      "start": 15.305,
+      "end": 15.62,
+      "role": "other",
+      "loudness": -14.5,
+      "speaker": 1
+    },
+    {
+      "text": "of",
+      "start": 15.68,
+      "end": 15.95,
+      "role": "other",
+      "loudness": -15,
+      "speaker": 1
+    },
+    {
+      "text": "the",
+      "start": 16.01,
+      "end": 16.325,
+      "role": "other",
+      "loudness": -14.4,
+      "speaker": 1
+    },
+    {
+      "text": "grad",
+      "start": 16.385,
+      "end": 16.745,
+      "role": "other",
+      "loudness": -14.8,
+      "speaker": 1
+    },
+    {
+      "text": "students",
+      "start": 16.805,
+      "end": 17.345,
+      "role": "other",
+      "loudness": -14.4,
+      "speaker": 1
+    },
+    {
+      "text": "Sure",
+      "start": 18.145,
+      "end": 18.505,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "I'll",
+      "start": 18.565,
+      "end": 18.88,
+      "role": "wearer",
+      "loudness": -25.1,
+      "speaker": 0
+    },
+    {
+      "text": "send",
+      "start": 18.94,
+      "end": 19.3,
+      "role": "wearer",
+      "loudness": -26.6,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 19.36,
+      "end": 19.675,
+      "role": "wearer",
+      "loudness": -24.7,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 19.735,
+      "end": 20.05,
+      "role": "wearer",
+      "loudness": -26.3,
+      "speaker": 0
+    },
+    {
+      "text": "deck",
+      "start": 20.11,
+      "end": 20.47,
+      "role": "wearer",
+      "loudness": -25.9,
+      "speaker": 0
+    },
+    {
+      "text": "tonight",
+      "start": 20.53,
+      "end": 21.025,
+      "role": "wearer",
+      "loudness": -27,
+      "speaker": 0
+    },
+    {
+      "text": "Anyway,",
+      "start": 22.525,
+      "end": 22.975,
+      "role": "wearer",
+      "loudness": -26.2,
+      "speaker": 0
+    },
+    {
+      "text": "how",
+      "start": 23.035,
+      "end": 23.35,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "long",
+      "start": 23.41,
+      "end": 23.77,
+      "role": "wearer",
+      "loudness": -26.5,
+      "speaker": 0
+    },
+    {
+      "text": "are",
+      "start": 23.83,
+      "end": 24.145,
+      "role": "wearer",
+      "loudness": -25.5,
+      "speaker": 0
+    },
+    {
+      "text": "you",
+      "start": 24.205,
+      "end": 24.52,
+      "role": "wearer",
+      "loudness": -26.7,
+      "speaker": 0
+    },
+    {
+      "text": "in",
+      "start": 24.58,
+      "end": 24.85,
+      "role": "wearer",
+      "loudness": -25.7,
+      "speaker": 0
+    },
+    {
+      "text": "town?",
+      "start": 24.91,
+      "end": 25.27,
+      "role": "wearer",
+      "loudness": -26.5,
+      "speaker": 0
+    },
+    {
+      "text": "Until",
+      "start": 26.07,
+      "end": 26.475,
+      "role": "other",
+      "loudness": -14.7,
+      "speaker": 1
+    },
+    {
+      "text": "Sunday.",
+      "start": 26.535,
+      "end": 26.985,
+      "role": "other",
+      "loudness": -13.8,
+      "speaker": 1
+    }
+  ]
+}

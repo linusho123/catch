@@ -99,6 +99,42 @@ describe('the held names (D87, D88, D57)', () => {
     }
   })
 
+  // PT: a name caught from an interim result.
+  it('holds a tentative name on the page but not in what a restart keeps, until it is confirmed as it was heard', () => {
+    const held = new HeldNames()
+    held.hear('Dev', 0)
+    const { heard, ref } = held.hearTentative('Priya', 1000, 'self')
+    expect(heard).toEqual({ line: 'Priya', added: true })
+    expect(held.list()).toEqual(['Dev', 'Priya'])
+    expect(held.confirmedList()).toEqual(['Dev'])
+    expect(held.snapshot().entries.map((e) => e.label)).toEqual(['Dev'])
+    expect(held.snapshot().seen.map(([key]) => key)).toEqual(['dev'])
+    expect(held.confirm(ref)).toEqual({ line: 'Priya', added: true })
+    expect(held.confirmedList()).toEqual(['Dev', 'Priya'])
+    // Confirmed, it counts for D87 from when it was first heard.
+    expect(held.hear('Priya', 1000 + REPEATED_NAME_WINDOW_MS)).toEqual({ line: 'Priya (2)', added: true })
+  })
+
+  it('withdraws a tentative name as if it had never been heard, reckoning every later name again without it', () => {
+    const held = new HeldNames()
+    const { ref } = held.hearTentative('Priya', 0)
+    expect(held.hear('Priya', 5000)).toEqual({ line: 'Priya (2)', added: true })
+    held.withdraw(ref)
+    expect(held.list()).toEqual(['Priya'])
+    expect(held.snapshot().seen).toEqual([['priya', { firstAt: 5000, count: 1, awaitingSelf: false }]])
+    // Withdrawn once, it cannot come back by a late confirmation.
+    expect(held.confirm(ref)).toBeUndefined()
+    expect(held.list()).toEqual(['Priya'])
+  })
+
+  it('carries a tentative "meet X" into D132: her own introduction after it is the same person (D132)', () => {
+    const held = new HeldNames()
+    const meet = held.hearTentative('Priya', 0, 'meet')
+    expect(held.hearTentative('Priya', 4000, 'self').heard).toEqual({ line: 'Priya', added: false })
+    held.confirm(meet.ref)
+    expect(held.list()).toEqual(['Priya'])
+  })
+
   it('takes the window as two minutes, from the ruling', () => {
     expect(REPEATED_NAME_WINDOW_MS).toBe(120_000)
   })

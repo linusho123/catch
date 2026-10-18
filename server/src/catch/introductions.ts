@@ -57,9 +57,13 @@ export function findIntroductions(words: readonly string[]): DetectedName[] {
   return detect(words).map(({ name, index }) => ({ name, index }))
 }
 
-/** The same, with how each name was given (D132). */
-export function findIntroductionsHow(words: readonly string[]): (DetectedName & { how: Introduced })[] {
-  return detect(words).map(({ name, index, how }) => ({ name, index, how }))
+/**
+ * The same, with how each name was given (D132) and the index of the
+ * introduction's last word (`last`: the name itself, or the "you" of "X, nice
+ * to meet you"), where the introduction is complete (PT).
+ */
+export function findIntroductionsHow(words: readonly string[]): (DetectedName & { how: Introduced; last: number })[] {
+  return detect(words)
 }
 
 /**
@@ -74,11 +78,11 @@ export function findSelfIntroductions(words: readonly string[]): DetectedName[] 
     .map(({ name, index }) => ({ name, index }))
 }
 
-function detect(words: readonly string[]): (DetectedName & { how: Introduced })[] {
-  const found: (DetectedName & { how: Introduced })[] = []
-  const add = (index: number, how: Introduced | boolean) => {
+function detect(words: readonly string[]): (DetectedName & { how: Introduced; last: number })[] {
+  const found: (DetectedName & { how: Introduced; last: number })[] = []
+  const add = (index: number, how: Introduced | boolean, last = index) => {
     const name = nameAt(words, index)
-    if (name !== null && !found.some((f) => f.index === index)) found.push({ name, index, how: how === true ? 'self' : how === false ? 'other' : how })
+    if (name !== null && !found.some((f) => f.index === index)) found.push({ name, index, how: how === true ? 'self' : how === false ? 'other' : how, last })
   }
   for (let i = 0; i < words.length; i++) {
     const w = lower(words[i])
@@ -103,7 +107,7 @@ function detect(words: readonly string[]): (DetectedName & { how: Introduced })[
       lower(words[i + 3]) === 'meet' &&
       lower(words[i + 4]) === 'you'
     ) {
-      add(i, false)
+      add(i, false, i + 4)
     }
   }
   return found.sort((a, b) => a.index - b.index)

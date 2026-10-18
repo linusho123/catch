@@ -17,6 +17,11 @@ export function deepgramUrl(): string {
     channels: '1',
     interim_results: 'true',
     punctuate: 'true',
+    // PT: finals at a pause of 300 ms rather than in late batches during
+    // continuous speech, and an UtteranceEnd after a second with no words,
+    // which ends the sentence being gathered (DESIGN.md, chosen).
+    endpointing: '300',
+    utterance_end_ms: '1000',
     diarize: 'true',
     // Opt out of Deepgram's model-improvement retention (D76: nothing survives).
     mip_opt_out: 'true',
@@ -35,20 +40,34 @@ interface DeepgramWord {
 
 /** Words out of one Deepgram message; anything that is not a Results message yields none. */
 export function parseDeepgramMessage(raw: string): SttWord[] {
+  const event = parseDeepgramEvent(raw)
+  return event?.kind === 'words' ? event.words : []
+}
+
+/** What one Deepgram message says: words (a Results message), an utterance end, or nothing Catch reads. */
+export type DeepgramEvent = { kind: 'words'; words: SttWord[] } | { kind: 'utteranceEnd'; lastWordEnd: number }
+
+export function parseDeepgramEvent(raw: string): DeepgramEvent | undefined {
   const msg = JSON.parse(raw) as {
     type?: string
     is_final?: boolean
     channel?: { alternatives?: { words?: DeepgramWord[] }[] }
+    last_word_end?: number
   }
-  if (msg.type !== 'Results') return []
-  const words = msg.channel?.alternatives?.[0]?.words ?? []
+  // UtteranceEnd: no words for utterance_end_ms after the word ending at last_word_end (seconds on the stream's clock).
+  if (msg.type === 'UtteranceEnd') return typeof msg.last_word_end === 'number' && msg.last_word_end >= 0 ? { kind: 'utteranceEnd', lastWordEnd: msg.last_word_end } : undefined
+  if (msg.type !== 'Results') return undefined
+  return { kind: 'words', words: toWords(msg.channel?.alternatives?.[0]?.words ?? [], msg.is_final === true) }
+}
+
+function toWords(words: DeepgramWord[], isFinal: boolean): SttWord[] {
   return words.map((w) => ({
     text: w.punctuated_word ?? w.word,
     start: w.start,
     end: w.end,
     confidence: w.confidence,
     speaker: w.speaker ?? null,
-    isFinal: msg.is_final === true,
+    isFinal,
   }))
 }
 
@@ -68,7 +87,7 @@ export function deepgram(apiKey: string, opts: DeepgramOptions = {}): SpeechToTe
   const url = opts.url ?? deepgramUrl()
   return {
     name: 'deepgram',
-    open(onWords, onError, onOpen): SttStream {
+    open(onWords, onError, onOpen, onUtteranceEnd): SttStream {
       const socket = new WebSocket(url, { headers: { authorization: `Token ${apiKey}` } })
       const pending: Uint8Array[] = []
       let pendingBytes = 0
@@ -88,8 +107,9 @@ export function deepgram(apiKey: string, opts: DeepgramOptions = {}): SpeechToTe
       })
       socket.on('message', (data) => {
         try {
-          const words = parseDeepgramMessage(data.toString())
-          if (words.length > 0) onWords(words)
+          const event = parseDeepgramEvent(data.toString())
+          if (event?.kind === 'words' && event.words.length > 0) onWords(event.words)
+          if (event?.kind === 'utteranceEnd') onUtteranceEnd?.(event.lastWordEnd)
         } catch (err) {
           onError(err)
         }

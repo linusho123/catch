@@ -50,6 +50,34 @@ describe('the Deepgram adapter, against a loopback stand-in', () => {
     await open
   })
 
+  it('hands on interim and final words as Deepgram sends them, and an UtteranceEnd after them (PT)', async () => {
+    let peer: import('ws').WebSocket | undefined
+    const url = await standIn((ws) => {
+      peer = ws
+      const results = (isFinal: boolean, words: string[]) =>
+        JSON.stringify({ type: 'Results', is_final: isFinal, channel: { alternatives: [{ words: words.map((word, i) => ({ word, start: i * 0.3, end: i * 0.3 + 0.25, confidence: 0.9 })) }] } })
+      ws.send(results(false, ['hi']))
+      ws.send(results(true, ['hi', 'there']))
+      ws.send(JSON.stringify({ type: 'UtteranceEnd', channel: [0, 1], last_word_end: 0.55 }))
+    })
+    const heard: string[] = []
+    let done: () => void = () => {}
+    const ended = new Promise<void>((resolve) => (done = resolve))
+    const stream = deepgram('key', { url }).open(
+      (words) => heard.push(`${words[0]!.isFinal ? 'final' : 'interim'} ${words.map((w) => w.text).join(' ')}`),
+      () => {},
+      undefined,
+      (lastWordEnd) => {
+        heard.push(`utterance end ${lastWordEnd}`)
+        done()
+      },
+    )
+    cleanups.push(() => stream.close())
+    cleanups.push(() => peer?.terminate())
+    await ended
+    expect(heard).toEqual(['interim hi', 'final hi there', 'utterance end 0.55'])
+  })
+
   it('reports through onError when Deepgram closes the stream unexpectedly (M7)', async () => {
     const url = await standIn((ws) => setTimeout(() => ws.close(1011, 'idle timeout'), 10))
     const e = errors()
