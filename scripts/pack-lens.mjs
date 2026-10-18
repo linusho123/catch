@@ -1,6 +1,8 @@
 // `npm run lens:pack`: catch.ehpk for Even Beta (BUILD-PLAN.md, P1b). The
-// lens is built pointed at the one origin app.json whitelists
-// (wss://catch-g2.fly.dev), whatever a local .env says, so a build for the
+// lens is built pointed at the one ws(s) origin app.json whitelists
+// (wss://catch-g2.fly.dev; its https twin, for the phone page's /phone, is
+// whitelisted beside it on the same host: scripts/lens-origins.ts), whatever
+// a local .env says, so a build for the
 // Beta never ships pointed at a laptop; the shared token /audio demands is
 // built in from VITE_CATCH_TOKEN (the server's CATCH_AUDIO_TOKEN), taken from
 // the environment or the untracked apps/lens/.env.local, never committed.
@@ -10,17 +12,18 @@
 import { spawnSync } from 'node:child_process'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { lensServer } from './lens-origins.ts'
 import { checkLensToken } from './lens-token.ts'
 
 const root = resolve(import.meta.dirname, '..')
 const lens = join(root, 'apps/lens')
 const app = JSON.parse(readFileSync(join(lens, 'app.json'), 'utf8'))
 const origins = app.permissions?.find((p) => p.name === 'network')?.whitelist ?? []
-if (origins.length !== 1) {
-  console.error(`lens:pack: app.json must whitelist exactly one server origin, found ${JSON.stringify(origins)}`)
+const { server, error: originError } = lensServer(origins)
+if (originError) {
+  console.error(originError)
   process.exit(1)
 }
-const [server] = origins
 
 const { token, error } = checkLensToken(lens, process.env)
 if (error) {

@@ -39,9 +39,12 @@ const WIP: WipEntry[] = [
   },
   'kept-conversations',
   // P2b′ (D130) binds the phone page's "nothing to keep" scenario. The rest waits:
-  // the notifications for P2a; the history outline's iPhone row for conversations
-  // with promises (P2a) and a kept one (P4), whose phases lift it; the jogger row
-  // for P4; the tick-off outlines and every website row are cut (D126, D130).
+  // the notifications for P2a; the jogger row for P4; the tick-off outlines and
+  // every website row are cut (D126, D130). "The home lists conversations newest
+  // first on the <surface>": its iPhone row is lifted in P4 (after P2a's promises
+  // and P4's keep), with steps that match only the "iPhone app" surface; this
+  // scenario-scoped entry stays while its website row is unbound, because the
+  // website row is deferred by D126 (operator answer 3).
   {
     feature: 'phone-handoff',
     scenarios: [

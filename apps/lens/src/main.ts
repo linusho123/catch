@@ -6,7 +6,8 @@ import { httpOrigin, startPhone } from './phone.ts'
 // server, the phone page (phone.ts: the history and the conversation screens,
 // D130) and the phone-side status line. The lens itself is lens.ts.
 //
-// The server origin is the one whitelisted in app.json. VITE_CATCH_SERVER may
+// The server origin is the ws(s) one whitelisted in app.json; the phone page
+// reaches its https twin, whitelisted beside it. VITE_CATCH_SERVER may
 // point a local build elsewhere, but never ships in app.json.
 
 const SERVER = (import.meta.env.VITE_CATCH_SERVER as string | undefined) ?? 'wss://catch-g2.fly.dev'
@@ -21,9 +22,10 @@ const phoneRoot = document.querySelector<HTMLDivElement>('#phone')
 if (phoneRoot) {
   const phone = startPhone({ root: phoneRoot, server: httpOrigin(SERVER), token: TOKEN })
   void phone.home()
-  // Back on the page (a conversation may have ended meanwhile): the history again.
+  // Back on the page (a conversation may have ended meanwhile): the screen the
+  // wearer was on, drawn again from the server, never the history in its place.
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') void phone.home()
+    if (document.visibilityState === 'visible') void phone.refresh()
   })
 }
 

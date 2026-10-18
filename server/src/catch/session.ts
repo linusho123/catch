@@ -330,12 +330,14 @@ export class Session {
   private endConversation(): void {
     if (this.quietTimer) this.clock.clearTimeout(this.quietTimer)
     this.quietTimer = undefined
-    if (this.inConversation) this.onEnd?.({ startedAt: this.startedAt, endedAt: this.clock.now(), names: this.names.list() })
+    // Snapshot, reset, then the hook: the conversation is over whatever the hook does (fix round, M4).
+    const ended = this.inConversation ? { startedAt: this.startedAt, endedAt: this.clock.now(), names: this.names.list() } : undefined
     this.inConversation = false
     this.names.clear()
     this.otherRun = []
     this.otherCaught.clear()
     this.wearerRun = []
+    if (ended) this.onEnd?.(ended)
   }
 
   private showLine(text: string): void {

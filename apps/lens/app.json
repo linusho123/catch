@@ -8,7 +8,7 @@
   "entrypoint": "index.html",
   "permissions": [
     { "name": "g2-microphone", "desc": "Stream the glasses mic to the Catch server, which holds the names, promises and threads you would otherwise lose." },
-    { "name": "network", "desc": "Reach the Catch server.", "whitelist": ["wss://catch-g2.fly.dev"] }
+    { "name": "network", "desc": "Reach the Catch server.", "whitelist": ["wss://catch-g2.fly.dev", "https://catch-g2.fly.dev"] }
   ],
   "supported_languages": ["en"]
 }

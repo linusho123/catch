@@ -168,4 +168,44 @@ describe('the page', () => {
     expect(root.screens).toHaveLength(1)
     expect(isHistory(root.innerHTML)).toBe(false)
   })
+
+  // Fix round, M5: coming back to the page (after a lock, or another app)
+  // re-draws the screen the wearer was on, never the history in its place.
+  it('re-draws the screen it is showing on a refresh: a conversation stays a conversation, the history the history', async () => {
+    const { asked, fetch } = fakeServer({ '/phone/history': json(HISTORY), '/phone/conversations/3': json(CONVERSATION) })
+    const root = new PhoneScreenRecord(systemClock)
+    const phone = startPhone({ root, server: 'http://localhost:1', token: 't', fetch, now: () => NOW })
+    await phone.home()
+    await phone.open(3)
+    await phone.refresh()
+    expect(asked.map((a) => new URL(a.url).pathname)).toEqual(['/phone/history', '/phone/conversations/3', '/phone/conversations/3'])
+    expect(root.screens).toHaveLength(3)
+    expect(isHistory(root.innerHTML)).toBe(false)
+    expect(sectionsOn(root.innerHTML)[0]!.promises).toHaveLength(5)
+    await phone.home()
+    await phone.refresh()
+    expect(asked.at(-1)!.url).toBe('http://localhost:1/phone/history')
+    expect(isHistory(root.innerHTML)).toBe(true)
+  })
+
+  it('keeps a conversation still on its way when the page is refreshed meanwhile', async () => {
+    let release!: () => void
+    const late = new Promise<void>((r) => (release = r))
+    const { fetch } = fakeServer({
+      '/phone/history': json(HISTORY),
+      '/phone/conversations/3': async () => {
+        await late
+        return json(CONVERSATION)()
+      },
+    })
+    const root = new PhoneScreenRecord(systemClock)
+    const phone = startPhone({ root, server: 'http://localhost:1', token: 't', fetch, now: () => NOW })
+    await phone.home()
+    const opening = phone.open(3)
+    const refreshing = phone.refresh()
+    release()
+    await Promise.all([opening, refreshing])
+    expect(isHistory(root.innerHTML)).toBe(false)
+    expect(sectionsOn(root.innerHTML).map((s) => s.title)).toEqual(['YOU', 'OWED TO YOU'])
+  })
 })

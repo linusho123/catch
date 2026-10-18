@@ -27,14 +27,14 @@ export interface HistoryRow {
   startedAt: number
   /** The names caught, in the order heard; none is shown as "no name". */
   names: string[]
-  /** Promises on the conversation's screen not yet done, both sections. */
+  /** The wearer's own promises (YOU) not yet done; the owed ones never count (operator answer 2). */
   open: number
   kept: boolean
 }
 
 /** GET /phone/history: newest first. */
 export interface HistoryResponse {
-  /** Every open promise across the history, for the header (D100). */
+  /** Every open promise of the wearer's own across the history, for the header (D100). */
   open: number
   conversations: HistoryRow[]
 }

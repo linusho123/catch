@@ -48,10 +48,11 @@ describe('the phone API', () => {
     const body = (await res.json()) as HistoryResponse
     expect(body.conversations.map((c) => [c.names, c.open, c.kept])).toEqual([
       [['Priya'], 1, false],
-      [['Dev'], 3, false],
+      [['Dev'], 2, false],
       [['Ana'], 0, true],
     ])
-    expect(body.open).toBe(4)
+    // Only the wearer's own promises are open (operator answer 2): Dev's owed one is not counted.
+    expect(body.open).toBe(3)
   })
 
   it("answers one conversation's screen, and nothing of another wearer's", async () => {
@@ -81,7 +82,7 @@ describe('the phone page on the API', () => {
     const rows = rowsOn(record.innerHTML)
     expect(rows.map((r) => [r.day, r.names, r.time, r.open, r.kept])).toEqual([
       ['TODAY', 'Priya', '2:10 pm', '1 open', false],
-      ['TODAY', 'Dev', '9:05 am', '3 open', false],
+      ['TODAY', 'Dev', '9:05 am', '2 open', false],
       ['YESTERDAY', 'Ana', '4:00 pm', 'all done', true],
     ])
     await phone.open(Number(rows[1]!.conversation))

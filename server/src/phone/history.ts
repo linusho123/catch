@@ -92,12 +92,15 @@ export class History {
     }
   }
 
-  /** The wearer's history, newest first, with each conversation's open promises and the total. */
+  /**
+   * The wearer's history, newest first, with each conversation's open promises and the total.
+   * Open means the wearer's own (YOU) and not done; the owed ones are other people's to keep (operator answer 2).
+   */
   list(wearer: string): HistoryResponse {
     const rows = this.store.db
       .prepare(
         `SELECT c.id, c.started_at, c.names, c.kept,
-                (SELECT COUNT(*) FROM promises p WHERE p.conversation_id = c.id AND p.done = 0) AS open
+                (SELECT COUNT(*) FROM promises p WHERE p.conversation_id = c.id AND p.side = 'you' AND p.done = 0) AS open
            FROM conversations c
           WHERE c.wearer = ?
           ORDER BY c.started_at DESC, c.id DESC`,

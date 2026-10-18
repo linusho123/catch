@@ -11,7 +11,8 @@ import {
 // the phone while the glasses run the lens. Two screens and nothing else yet:
 // the history (D100), newest first and grouped by day, each row with the names
 // caught (or "no name"), the time, the open promises (or "all done") and a
-// kept mark, with every open promise counted in the header; and one
+// kept mark, with every open promise counted in the header (the wearer's own,
+// YOU, never the owed ones: operator answer 2); and one
 // conversation's screen (D98), its names and time on top, then YOU and OWED TO
 // YOU, each promise with a tick box. Tick-off on the phone is cut (D126,
 // D130), so the boxes are drawn and inert. The jogger link and screen come
@@ -44,6 +45,8 @@ export interface Phone {
   home(): Promise<void>
   /** Settles when the conversation's screen has been drawn (or its failure has). */
   open(id: number): Promise<void>
+  /** Re-draws the screen last asked for, from the server again: the page coming back into view (fix round, M5). */
+  refresh(): Promise<void>
 }
 
 /** The http(s) origin a ws(s) server origin shares a host with. */
@@ -158,9 +161,15 @@ export function startPhone(opts: PhoneOptions): Phone {
     if (mine === asked) root.innerHTML = html
   }
 
+  const history = () => show<HistoryResponse>(PHONE_HISTORY_PATH, (h) => historyMarkup(h, now()))
+  const conversation = (id: number) => show<ConversationResponse>(`${PHONE_CONVERSATION_PATH}${id}`, (c) => conversationMarkup(c, now()))
+  // The screen last asked for, which a refresh asks for again.
+  let screen: () => Promise<void> = history
+
   const phone: Phone = {
-    home: () => show<HistoryResponse>(PHONE_HISTORY_PATH, (h) => historyMarkup(h, now())),
-    open: (id) => show<ConversationResponse>(`${PHONE_CONVERSATION_PATH}${id}`, (c) => conversationMarkup(c, now())),
+    home: () => (screen = history)(),
+    open: (id) => (screen = () => conversation(id))(),
+    refresh: () => screen(),
   }
 
   root.addEventListener('click', ({ target }) => {

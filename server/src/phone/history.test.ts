@@ -39,11 +39,26 @@ describe('the phone history', () => {
     history.record('w', conversation({ startedAt: at(16, 0, 16), names: ['Ana'], kept: true }))
     const { open, conversations } = history.list('w')
     expect(conversations.map((c) => [c.startedAt, c.names, c.open, c.kept])).toEqual([
-      [at(14, 10), [], 2, false],
+      [at(14, 10), [], 1, false],
       [at(9, 5), ['Dev'], 2, false],
       [at(16, 0, 16), ['Ana'], 0, true],
     ])
-    expect(open).toBe(4)
+    expect(open).toBe(3)
+  })
+
+  // Operator answer 2 (D100): the open count, on each row and in the header,
+  // is the wearer's own promises (YOU) not yet done. OWED TO YOU promises are
+  // other people's to keep and never stand between a conversation and "all done".
+  it("counts only the wearer's own promises as open, never the ones owed to the wearer", () => {
+    const { history } = setup()
+    history.record('w', conversation({ startedAt: at(9, 5), you: ['Send Dev the deck tonight'], owed: ['Dev sends the agenda', 'Dev books the room'] }))
+    history.record('w', conversation({ startedAt: at(14, 10), names: ['Ana'], owed: ['Ana sends the slides'] }))
+    const { open, conversations } = history.list('w')
+    expect(conversations.map((c) => [c.names, c.open])).toEqual([
+      [['Ana'], 0],
+      [['Dev'], 1],
+    ])
+    expect(open).toBe(1)
   })
 
   it('counts a done promise as no longer open', () => {
