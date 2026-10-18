@@ -9,6 +9,8 @@ import { decodeFrame, type AudioFrame } from '../../shared/wire.ts'
 import { Session } from './catch/session.ts'
 import type { ModelClient } from './llm/client.ts'
 import type { Notifier } from './notify.ts'
+import { phoneRoute, wearerOf } from './phone/api.ts'
+import { History } from './phone/history.ts'
 import { createSplit, type WearerSplit } from './split/split.ts'
 import { openStore, type Store } from './store.ts'
 import type { SpeechToText, SttStream, SttWord } from './stt/types.ts'
@@ -39,6 +41,11 @@ import type { SpeechToText, SttStream, SttWord } from './stt/types.ts'
 // (operator ruling 2026-10-17): the lens sends it as `?token=` (a browser
 // WebSocket cannot set headers), built in from VITE_CATCH_TOKEN; the server's
 // copy is the Fly secret CATCH_AUDIO_TOKEN. Neither is ever committed.
+//
+// The phone page (D130) reads the history and each conversation's screen from
+// the read-only phone API under /phone/ (phone/api.ts), with the same token.
+// Each conversation that ends is offered to the history (phone/history.ts),
+// which keeps it only if it produced a promise or a keep (D76, D100).
 
 export interface ServerOptions {
   port: number
@@ -116,13 +123,14 @@ interface Feed {
 const CORS = {
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET, OPTIONS',
-  'access-control-allow-headers': 'content-type',
+  'access-control-allow-headers': 'content-type, authorization',
 }
 
 export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   if (!opts.audioToken) throw new Error('CATCH_AUDIO_TOKEN is not set; /audio never runs without its shared token')
   const expectedToken = digest(opts.audioToken)
   const store = openStore(opts.dbPath)
+  const history = new History(store)
   const clock = opts.clock ?? systemClock
   const split = opts.split ?? createSplit()
   const events = new EventEmitter<ServerEvents>()
@@ -141,6 +149,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       res.end(JSON.stringify({ ok: true, store: 'sqlite', schema: store.schemaVersion() }))
       return
     }
+    if (phoneRoute(req, res, { history, expected: expectedToken, headers: CORS })) return
     res.writeHead(404, CORS).end()
   })
 
@@ -155,8 +164,17 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     const send = (msg: ServerMessage) => {
       if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(msg))
     }
-    const wearer = digest(params(req).get('token') ?? '').toString('hex')
-    const lens = wearers.get(wearer) ?? new Session({ clock, split, wearerName: opts.wearerName, threadDetection: () => threadDetection })
+    const wearer = wearerOf(params(req).get('token') ?? '')
+    const lens =
+      wearers.get(wearer) ??
+      new Session({
+        clock,
+        split,
+        wearerName: opts.wearerName,
+        // P2a gives the history the conversation's promises, P4 its keep, P5 the owed ones.
+        threadDetection: () => threadDetection,
+        onEnd: (ended) => history.record(wearer, { ...ended, you: [], owed: [], kept: false }),
+      })
     wearers.set(wearer, lens)
 
     // One speech-to-text stream at a time; a lost one is reopened on the clock.

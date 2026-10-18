@@ -16,11 +16,32 @@
         -webkit-text-size-adjust: 100%;
         overscroll-behavior: none;
       }
-      #status { padding: 12px; }
+      #status { padding: 4px 16px; font-size: 11px; color: #6b6b6b; }
+      /* The phone page (D130, src/phone.ts): the history (D100) and a conversation's screen (D98). */
+      #phone { font-size: 16px; color: #e6e6e6; }
+      .phone { padding: 16px; max-width: 640px; margin: 0 auto; }
+      .phone header { margin-bottom: 16px; }
+      .phone h1 { font-size: 24px; margin: 0; font-weight: 600; }
+      .phone h2 { font-size: 12px; letter-spacing: 0.08em; color: #8a8a8a; margin: 20px 0 8px; font-weight: 600; }
+      .phone ul { list-style: none; margin: 0; padding: 0; }
+      .phone .open-total, .phone .when { margin: 4px 0 0; color: #a7a7a7; font-size: 14px; }
+      .phone .row { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 12px 0; border-bottom: 1px solid #333; cursor: pointer; }
+      .phone .row .names { font-weight: 600; overflow-wrap: anywhere; }
+      .phone .row time, .phone .row .open, .phone .row .kept { font-size: 14px; color: #a7a7a7; }
+      .phone .row .open { grid-column: 2; grid-row: 1; text-align: right; }
+      .phone .row .kept { grid-column: 2; grid-row: 2; text-align: right; }
+      .phone .promise { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid #333; }
+      .phone .promise input { width: 20px; height: 20px; margin: 1px 0 0; flex: none; }
+      .phone .promise .text { overflow-wrap: anywhere; }
+      .phone button { font: inherit; color: #e6e6e6; background: none; border: 1px solid #444; border-radius: 6px; padding: 6px 10px; }
+      .phone .back { border: none; padding: 0 0 8px; color: #a7a7a7; }
+      .phone .empty, .phone .error { color: #a7a7a7; }
     </style>
   </head>
   <body>
-    <!-- No phone UI (D126): one status line for debugging the connection, nothing else. -->
+    <!-- The phone page (D130): the history and each conversation's screen, from the server's phone API. -->
+    <div id="phone"></div>
+    <!-- One status line for debugging the glasses' connection. -->
     <div id="status">connecting…</div>
     <script type="module" src="/src/main.ts"></script>
   </body>

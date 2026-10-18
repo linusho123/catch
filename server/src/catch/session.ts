@@ -64,6 +64,16 @@ export interface SessionOptions {
    * a session already open.
    */
   threadDetection?: () => boolean
+  /** A conversation has ended (quiet or long-press): what it held, for the phone's history (D100). */
+  onEnd?: (ended: EndedConversation) => void
+}
+
+/** A conversation as it ends, on the session's clock (ms). P2a adds its promises, P4 its keep. */
+export interface EndedConversation {
+  startedAt: number
+  endedAt: number
+  /** The names caught, in the order heard. */
+  names: string[]
 }
 
 /** One lens's hold on the session: what its socket may still do. */
@@ -106,6 +116,8 @@ export class Session {
 
   // The conversation.
   private inConversation = false
+  private startedAt = 0
+  private readonly onEnd: ((ended: EndedConversation) => void) | undefined
   /** Whether any conversation has begun since Catch started: until one has, anyone's speech begins it (D129). */
   private begun = false
   /**
@@ -144,6 +156,7 @@ export class Session {
     this.split = opts.split
     this.wearerName = opts.wearerName?.trim().toLowerCase() || undefined
     this.threadDetection = opts.threadDetection ?? (() => true)
+    this.onEnd = opts.onEnd
     if (opts.show) this.attach(opts.show)
   }
 
@@ -305,6 +318,7 @@ export class Session {
     if (!this.inConversation && end > this.pressedAt && (side === 'wearer' || !this.begun)) {
       this.inConversation = true
       this.begun = true
+      this.startedAt = this.clock.now() - agoMs
       this.restartQuiet(agoMs)
     }
     if (side === 'wearer') {
@@ -347,12 +361,15 @@ export class Session {
   private endConversation(): void {
     if (this.quietTimer) this.clock.clearTimeout(this.quietTimer)
     this.quietTimer = undefined
+    // Snapshot, reset, then the hook: the conversation is over whatever the hook does (fix round, M4).
+    const ended = this.inConversation ? { startedAt: this.startedAt, endedAt: this.clock.now(), names: this.names.list() } : undefined
     this.inConversation = false
     this.names.clear()
     this.otherRun = []
     this.otherCaught.clear()
     this.wearerRun = []
     this.thread.clear()
+    if (ended) this.onEnd?.(ended)
   }
 
   private showLine(text: string): void {

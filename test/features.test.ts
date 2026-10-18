@@ -7,6 +7,7 @@ import { closeHarness } from './steps/lens-world.ts'
 import droppedThread from './steps/dropped-thread.steps.ts'
 import holding from './steps/holding.steps.ts'
 import names from './steps/names.steps.ts'
+import phoneHandoff from './steps/phone-handoff.steps.ts'
 import stayingDark from './steps/staying-dark.steps.ts'
 
 // gherkin-node-test over features/. One definer per feature file joins here as
@@ -37,7 +38,28 @@ const WIP: WipEntry[] = [
     ],
   },
   'kept-conversations',
-  'phone-handoff',
+  // P2b′ (D130) binds the phone page's "nothing to keep" scenario. The rest waits:
+  // the notifications for P2a; the jogger row for P4; the tick-off outlines and
+  // every website row are cut (D126, D130). "The home lists conversations newest
+  // first on the <surface>": its iPhone row is lifted in P4 (after P2a's promises
+  // and P4's keep), with steps that match only the "iPhone app" surface; this
+  // scenario-scoped entry stays while its website row is unbound, because the
+  // website row is deferred by D126 (operator answer 3).
+  {
+    feature: 'phone-handoff',
+    scenarios: [
+      'One notification carries both lines',
+      'A long list is cut off and opens in full',
+      'No promises means no notification',
+      'Notifications wait for an unreachable phone',
+      "Ticking off a promise removes it from the conversation's screen on the <surface>",
+      'An owed promise can be ticked off the same way on the <surface>',
+      'The home lists conversations newest first on the <surface>',
+      'The jogger reads the same on the <surface>',
+      "An unkept conversation's transcript is deleted everywhere",
+      "A shared pair delivers to the account holder's phone",
+    ],
+  },
   'promises',
   // P1a binds D14, D16 and D37; these wait for P3 (D32, the promise line), P6 (pause).
   {
@@ -56,6 +78,7 @@ const definers: Record<string, Definer<any>> = {
   'dropped-thread': droppedThread,
   holding,
   names,
+  'phone-handoff': phoneHandoff,
   'staying-dark': stayingDark,
 }
 
