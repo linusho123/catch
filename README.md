@@ -48,6 +48,24 @@ The contract is `features/` (feature files, fence, ledger, DESIGN.md, docket); t
 
 Lanes: `npm run test:fast` (oxlint, one typecheck, unit, the feature files in `FEATURES`, all when unset) inside a phase; `npm test` (feature lint, oxlint, one typecheck, every Vitest project, all of `features/`) at the gate. `npm run test:fast -- --realtime` runs the fixture clock at real time for timing probes; `test/integration/lane-timing.test.ts` (full lane) proves the fast lane passes in under a minute. `npm run manifest` writes and stages `run-manifest.ndjson`. `npm run validate` is the scope lint: it runs an external script, `~/Documents/RefLib/scope-tools/scope-validate.cjs`, which is not in this repository and lints only the feature files; it is not needed to build, run or test Catch.
 
+## Tuning on the glasses (no new package)
+
+Set any of these as Fly secrets (`fly secrets set NAME=value -a catch-g2`; the server restarts and the lens picks them up on its next connect):
+
+- `CATCH_LENS_BRIGHTNESS` — how bright every line is, 0 (dimmest) to 4 (brightest). Unset, the lens uses 1.
+- `CATCH_DOT_X`, `CATCH_DOT_Y` — where the dot sits on the 576 × 288 canvas (top-left of its box). Unset: 552, 0.
+- `CATCH_KEYTERMS` — a comma list of words Deepgram should listen for, such as the names you expect to hear (`Priya,Marcus,Dana`).
+
+The G2's font size is fixed by the firmware; brightness is the only lever on legibility.
+
+## See your conversations in a browser on the laptop
+
+The phone page is the plugin's own web page. To see the hosted server's conversations (the ones from the glasses) in a laptop browser:
+
+    VITE_CATCH_SERVER=wss://catch-g2.fly.dev npm run lens:dev
+
+then open http://localhost:5173. A browser tab has no Even bridge, so it shows only the phone page and never opens the microphone. A conversation is listed once it has ended (a long-press, or ten minutes of the wearer's silence) and only if it produced a promise or was kept (D76, D100).
+
 ## Run Catch on this machine (D128)
 
 Nothing needs Fly. Copy `.env.example` to `.env` in `catch/` (untracked) and fill in `DEEPGRAM_API_KEY` and `CATCH_AUDIO_TOKEN` (any long random string, `openssl rand -base64 32` for one; it is the shared token `/audio` demands; the lens sends it as a WebSocket subprotocol, `catch.` and its base64url, never in the URL, and the phone page as `Authorization: Bearer`). Then, in two terminals:

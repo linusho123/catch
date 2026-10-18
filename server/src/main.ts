@@ -1,7 +1,7 @@
-import { pauseFromEnv, startServer, threadDetectionFromEnv } from './app.ts'
+import { lensStyleFromEnv, pauseFromEnv, startServer, threadDetectionFromEnv } from './app.ts'
 import { liveModel } from './llm/client.ts'
 import { splitFromEnv } from './split/split.ts'
-import { deepgram } from './stt/deepgram.ts'
+import { deepgram, keytermsFromEnv } from './stt/deepgram.ts'
 
 // Entry point: `npm run server` (or `npm run local`, D128) on the build
 // machine, `node server/src/main.ts` in the Fly container (Node strips the
@@ -38,9 +38,12 @@ const pause = pauseFromEnv(process.env.CATCH_PAUSE)
 const geminiKey = process.env.GEMINI_API_KEY?.trim() ?? ''
 const model = geminiKey ? liveModel({ apiKey: geminiKey }) : undefined
 const timeZone = process.env.CATCH_TIME_ZONE?.trim() || undefined
-const server = await startServer({ port, host, dbPath, audioToken, split, wearerName, threadDetection, pause, model, timeZone, stt: deepgram(deepgramKey) })
+// Readability pass: the lens's brightness and dot (CATCH_LENS_BRIGHTNESS, CATCH_DOT_X, CATCH_DOT_Y), and words Deepgram should listen for (CATCH_KEYTERMS).
+const lensStyle = lensStyleFromEnv(process.env)
+const keyterms = keytermsFromEnv(process.env.CATCH_KEYTERMS)
+const server = await startServer({ port, host, dbPath, audioToken, split, wearerName, threadDetection, pause, model, timeZone, lensStyle, stt: deepgram(deepgramKey, { keyterms }) })
 console.log(
-  `catch server listening on :${port} (/audio, /health), split ${split.name}, thread detection ${threadDetection ? 'on' : 'off'}, pause ${pause ? 'on' : 'off'}, promises ${model ? 'on' : 'off (no GEMINI_API_KEY)'}, store at ${dbPath}`,
+  `catch server listening on :${port} (/audio, /health), split ${split.name}, thread detection ${threadDetection ? 'on' : 'off'}, pause ${pause ? 'on' : 'off'}, lens brightness ${lensStyle?.brightness ?? 'default'}, keyterms ${keyterms.length}, promises ${model ? 'on' : 'off (no GEMINI_API_KEY)'}, store at ${dbPath}`,
 )
 // A lost speech-to-text stream is retried every second; say why, once per outage.
 let deaf = false

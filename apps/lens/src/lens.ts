@@ -6,7 +6,7 @@ import {
   type EvenAppBridge,
 } from '@evenrealities/even_hub_sdk'
 import { audioProtocols } from '../../../shared/audio-token.ts'
-import type { LensMessage, LensView, ServerMessage } from '../../../shared/lens-protocol.ts'
+import type { LensMessage, LensStyle, LensView, ServerMessage } from '../../../shared/lens-protocol.ts'
 import { toWireFrame } from './frames.ts'
 
 // Catch's lens: the glasses mic streamed to the server as wire frames
@@ -38,6 +38,24 @@ export const CANVAS = { width: 576, height: 288 } as const
  */
 export const DIM = 1
 
+/**
+ * How the lens draws until the server says otherwise: every text at DIM, the
+ * dot in the top-right corner. The server may send a `style` (readability
+ * pass) so both can be tuned on the glasses without a new package.
+ */
+export const DEFAULT_STYLE: LensStyle = { brightness: DIM, dot: { x: CANVAS.width - 24, y: 0 } }
+
+const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, Math.round(n)))
+
+/** A style the lens can draw: brightness within the firmware's 0..4, the dot on the canvas. */
+export function lensStyle(sent: Partial<LensStyle> | undefined): LensStyle {
+  if (!sent) return DEFAULT_STYLE
+  const brightness = Number.isFinite(sent.brightness) ? clamp(sent.brightness!, 0, 4) : DEFAULT_STYLE.brightness
+  const x = Number.isFinite(sent.dot?.x) ? clamp(sent.dot!.x, 0, CANVAS.width - 8) : DEFAULT_STYLE.dot.x
+  const y = Number.isFinite(sent.dot?.y) ? clamp(sent.dot!.y, 0, CANVAS.height - 40) : DEFAULT_STYLE.dot.y
+  return { brightness, dot: { x, y } }
+}
+
 /** How long the lens waits before trying the server again after losing it. */
 export const RECONNECT_MS = 2000
 
@@ -66,7 +84,7 @@ function eventTypeOf(envelope?: { eventType?: OsEventTypeList }): OsEventTypeLis
   return envelope.eventType ?? OsEventTypeList.CLICK_EVENT
 }
 
-function text(containerID: number, containerName: string, content: string, box: { x: number; y: number; w: number; h: number }, capture = true) {
+function textAt(containerID: number, containerName: string, content: string, box: { x: number; y: number; w: number; h: number }, capture = true, brightness = DIM) {
   return new TextContainerProperty({
     xPosition: box.x,
     yPosition: box.y,
@@ -77,14 +95,14 @@ function text(containerID: number, containerName: string, content: string, box: 
     containerID,
     containerName,
     content,
-    textColor: DIM,
+    textColor: brightness,
     // One container on every page takes the touches, so tap, long-press and double-tap always arrive.
     isEventCapture: capture ? 1 : 0,
   })
 }
 
-/** Top right, where the dot lives; with no dot (D37) the same box stays, empty, to take the touches. */
-const DOT_BOX = { x: CANVAS.width - 40, y: 0, w: 40, h: 40 }
+/** Top right, where the dot lives (the style's place); with no dot (D37) the same box stays, empty, to take the touches. */
+const dotBox = (style: LensStyle) => ({ x: style.dot.x, y: style.dot.y, w: CANVAS.width - style.dot.x, h: 40 })
 /** The lower third (D17). */
 const LINE_BOX = { x: 0, y: 208, w: CANVAS.width, h: 64 }
 const PAGE_BOX = { x: 0, y: 0, w: CANVAS.width, h: CANVAS.height }
@@ -117,7 +135,10 @@ export const OWED_PREFIX = 'owed: '
 export const PAUSED_MARK = '–'
 
 /** The containers that draw one view. Exactly one thing at a time. */
-export function containersFor(view: LensView): TextContainerProperty[] {
+export function containersFor(view: LensView, style: LensStyle = DEFAULT_STYLE): TextContainerProperty[] {
+  const text = (id: number, name: string, content: string, box: { x: number; y: number; w: number; h: number }, capture = true) =>
+    textAt(id, name, content, box, capture, style.brightness)
+  const DOT_BOX = dotBox(style)
   switch (view.kind) {
     case 'dot':
       return [text(1, 'dot', '•', DOT_BOX)]
@@ -161,14 +182,18 @@ export async function startLens(opts: LensOptions): Promise<Lens> {
   const setStatus = opts.onStatus ?? (() => {})
 
   // Until the server says Catch can hear, there is no dot (D37).
-  let drawn = JSON.stringify({ kind: 'deaf' } satisfies LensView)
+  let drawn = JSON.stringify([{ kind: 'deaf' } satisfies LensView, DEFAULT_STYLE])
   const firstPage = containersFor({ kind: 'deaf' })
   await bridge.createStartUpPageContainer(new CreateStartUpPageContainer({ containerTotalNum: firstPage.length, textObject: firstPage }))
+  // The server may restyle the lens (readability pass): the next draw uses it, and the view on the lens is redrawn at once.
+  let style: LensStyle = DEFAULT_STYLE
+  let shownView: LensView = { kind: 'deaf' }
   function draw(view: LensView): void {
-    const key = JSON.stringify(view)
+    const key = JSON.stringify([view, style])
     if (key === drawn) return
     drawn = key
-    const page = containersFor(view)
+    shownView = view
+    const page = containersFor(view, style)
     void bridge.rebuildPageContainer(new RebuildPageContainer({ containerTotalNum: page.length, textObject: page }))
   }
 
@@ -210,6 +235,9 @@ export async function startLens(opts: LensOptions): Promise<Lens> {
         setStatus(`connected to ${server} · ${acked} bytes acknowledged`)
       } else if (message.type === 'show') {
         draw(message.view)
+      } else if (message.type === 'style') {
+        style = lensStyle(message.style)
+        draw(shownView)
       } else if (message.type === 'listening') {
         // P6: the server takes the socket, or the wearer paused or resumed; the microphone follows, and no frame is sent while paused.
         listening = message.on
