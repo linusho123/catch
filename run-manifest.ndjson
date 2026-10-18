@@ -39,7 +39,7 @@
 {"file":"features/phone-handoff.feature","title":"A conversation with nothing to keep never appears on the phone","status":"passed"}
 {"file":"features/phone-handoff.feature","title":"A long list is cut off and opens in full","status":"passed"}
 {"file":"features/phone-handoff.feature","title":"A shared pair delivers to the account holder's phone","status":"passed"}
-{"file":"features/phone-handoff.feature","title":"An owed promise can be ticked off the same way on the iPhone app [1]","status":"unbound"}
+{"file":"features/phone-handoff.feature","title":"An owed promise can be ticked off the same way on the iPhone app [1]","status":"passed"}
 {"file":"features/phone-handoff.feature","title":"An owed promise can be ticked off the same way on the website [2]","status":"unbound"}
 {"file":"features/phone-handoff.feature","title":"An unkept conversation's transcript is deleted everywhere","status":"passed"}
 {"file":"features/phone-handoff.feature","title":"No promises means no notification","status":"passed"}
@@ -49,7 +49,7 @@
 {"file":"features/phone-handoff.feature","title":"The home lists conversations newest first on the website [2]","status":"unbound"}
 {"file":"features/phone-handoff.feature","title":"The jogger reads the same on the iPhone app [1]","status":"passed"}
 {"file":"features/phone-handoff.feature","title":"The jogger reads the same on the website [2]","status":"unbound"}
-{"file":"features/phone-handoff.feature","title":"Ticking off a promise removes it from the conversation's screen on the iPhone app [1]","status":"unbound"}
+{"file":"features/phone-handoff.feature","title":"Ticking off a promise removes it from the conversation's screen on the iPhone app [1]","status":"passed"}
 {"file":"features/phone-handoff.feature","title":"Ticking off a promise removes it from the conversation's screen on the website [2]","status":"unbound"}
 {"file":"features/promises.feature","title":"A bare yes takes its object from what Dev just asked","status":"passed"}
 {"file":"features/promises.feature","title":"A catch line appears and fades [1]","status":"passed"}

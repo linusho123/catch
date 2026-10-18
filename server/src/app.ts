@@ -6,7 +6,7 @@ import { WebSocketServer } from 'ws'
 import { systemClock, type Clock, type TimerHandle } from '../../shared/clock.ts'
 import { parseLensMessage, type LensView, type ServerMessage } from '../../shared/lens-protocol.ts'
 import { decodeFrame, type AudioFrame } from '../../shared/wire.ts'
-import { writeJogger } from './catch/jogger.ts'
+import { writeKeptJogger, type TidyOutcome } from './catch/jogger.ts'
 import { command, PromiseDetector } from './catch/promises.ts'
 import { SavedSessions } from './catch/saved-sessions.ts'
 import { Session, type SessionState } from './catch/session.ts'
@@ -75,9 +75,12 @@ import type { SpeechToText, SttStream, SttWord } from './stt/types.ts'
 //
 // A kept conversation (P4): as it ends, its history row is written kept, its
 // promise notification (if any) is queued, and its jogger is written from the
-// transcript the session hands on (catch/jogger.ts, D24, D99). The store's
-// copy of the transcript is already gone by then (D76); the words live only
-// in that pass until the jogger is stored, and then go too. Once stored, the
+// transcript the session hands on (catch/jogger.ts, D24, D99), then tidied by
+// a second pass on the same transcript within the same thirty seconds (P7, a
+// `chosen` change; a tidy that fails, is late or breaks the draft's structure
+// leaves the first draft, logged without a word of the conversation). The
+// store's copy of the transcript is already gone by then (D76); the words
+// live only in those passes until the jogger is stored, and then go too. Once stored, the
 // kept notification is queued behind the promise one, and waits for the
 // phone the same way (D114). A pass that fails is reported (modelError) and
 // leaves the conversation kept with no jogger; a pass still out when the
@@ -130,6 +133,8 @@ export interface ServerEvents {
   modelLate: [{ at: number }]
   /** A conversation's end could not be handed on (its history record or notification); the conversation has ended all the same (risk-3). */
   endError: [{ at: number; error: unknown }]
+  /** A kept conversation's tidy pass (P7): tidied, or why its first draft was stored as it is. */
+  joggerTidy: [{ at: number; conversation: number; outcome: TidyOutcome }]
 }
 
 /** How soon a lost speech-to-text stream is tried again: the dot returns within this of the provider coming back (D37). */
@@ -260,7 +265,16 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         }
         const abort = new AbortController()
         writing.add(abort)
-        writeJogger(opts.model, { names: ended.names, transcript: words, promises: said, promiseTimes, gaps }, { signal: abort.signal })
+        const onTidy = (outcome: TidyOutcome) => {
+          if (abort.signal.aborted) return
+          events.emit('joggerTidy', { at: clock.now(), conversation: id, outcome })
+          if (outcome.tidied || outcome.why === 'nothing to tidy') return
+          const why = outcome.why === 'rejected' ? `its answer was rejected (${outcome.reason})` : outcome.why === 'failed' ? `it failed: ${loggable(outcome.error)}` : outcome.why === 'late' ? 'it had not answered within the thirty seconds (D116)' : 'the first pass had used the thirty seconds (D116)'
+          console.warn(`a kept conversation's jogger tidy pass was skipped, so its first draft is stored: ${why}`)
+          // A failed pass is a model error like any other: under test, a missing cassette fails loudly.
+          if (outcome.why === 'failed') events.emit('modelError', { at: clock.now(), error: outcome.error })
+        }
+        writeKeptJogger(opts.model, { names: ended.names, transcript: words, promises: said, promiseTimes, gaps }, { clock, signal: abort.signal, onTidy })
           .then((jogger) => {
             if (abort.signal.aborted) return
             history.recordJogger(id, jogger.bullets)
