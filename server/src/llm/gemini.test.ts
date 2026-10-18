@@ -36,4 +36,18 @@ describe('the Gemini adapter', () => {
     const failing = (async () => new Response('quota', { status: 429 })) as unknown as typeof fetch
     await expect(generateText(JOGGER_MODEL, 'p', { apiKey: 'k', fetch: failing })).rejects.toThrow(/429/)
   })
+
+  // Fix round, risk-2: a pass the session gives up on cancels its request, rather than leaving it to undici's own timeouts.
+  it('cancels the request itself when the signal aborts (risk-2)', async () => {
+    const abort = new AbortController()
+    let seen: AbortSignal | undefined
+    const hanging = ((_url: string, init: RequestInit) => {
+      seen = init.signal ?? undefined
+      return new Promise<Response>((_resolve, reject) => init.signal?.addEventListener('abort', () => reject(init.signal!.reason)))
+    }) as unknown as typeof fetch
+    const call = generateText(PROMISE_MODEL, 'p', { apiKey: 'k', fetch: hanging, signal: abort.signal })
+    expect(seen, 'the request carries the signal').toBe(abort.signal)
+    abort.abort()
+    await expect(call).rejects.toThrow()
+  })
 })

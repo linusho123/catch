@@ -6,7 +6,7 @@ import type { ModelClient } from '../llm/client.ts'
 import { loudnessSplit } from '../split/split.ts'
 import type { SttWord } from '../stt/types.ts'
 import { PromiseDetector } from './promises.ts'
-import { LINE_MS, PAGE_MS, QUIET_MS, Session, type EndedConversation, type SessionOptions } from './session.ts'
+import { LINE_MS, PAGE_MS, PROMISE_MS, QUIET_MS, Session, type EndedConversation, type SessionOptions } from './session.ts'
 import type { TranscriptWord } from './transcript.ts'
 
 // The session's promises (P2a) on their own: a sentence of the wearer's goes
@@ -173,5 +173,132 @@ describe("a session's promises", () => {
     expect(prompts).toHaveLength(1)
     expect(prompts[0]).not.toContain('secret')
     expect(prompts[0]).toContain('(nothing yet)')
+  })
+
+  // Fix round, head-test-gap-1 (probe H1): the promises page lists the wearer's promises in the order made (D43, D89).
+  it('lists two promises on the promises page in the order they were made, as the lens was sent them (H1)', async () => {
+    const { model } = fakeModel({ "I'll send you the deck tonight.": 'send Dev the deck tonight', "I'll intro you to Sam.": 'introduce Dev to Sam', "I'll book the room.": 'book the room' })
+    const { session, views, say, settle, clock } = setup(model)
+    session.setHearing(true)
+    say("Hi, I'm Dev.", 0, OTHER)
+    say("I'll send you the deck tonight.", 3, WEARER)
+    await settle()
+    clock.advance(LINE_MS)
+    say("I'll intro you to Sam.", 6, WEARER)
+    await settle()
+    clock.advance(LINE_MS)
+    say("I'll book the room.", 9, WEARER)
+    await settle()
+    clock.advance(LINE_MS)
+    await settle()
+    expect(lineViews(views), 'each promise was shown as it was made').toEqual(['Dev', 'promised · send Dev the deck tonight', 'promised · introduce Dev to Sam', 'promised · book the room'])
+    clock.advance(LINE_MS)
+    session.tap()
+    session.swipeDown()
+    expect(views.at(-1)!.view, 'the promises page, in the order made').toEqual({ kind: 'promises', you: ['send Dev the deck tonight', 'introduce Dev to Sam', 'book the room'] })
+  })
+})
+
+// Fix round, risk-2 and operator answer 9: a promise pass has D89's three
+// seconds on the session's clock. One that has not answered by then shows no
+// line, and the end of the conversation waits for it no longer; if it answers
+// later while the conversation is open, its promise is held without a line
+// (the promises page, the notification and the phone page still get it).
+// Once the end has handed the promises on, a pass still out is cancelled.
+describe('a promise pass past its three seconds (risk-2, answer 9)', () => {
+  /** A model that answers only when the test says, and whose call the session can cancel. */
+  function slowModel() {
+    const calls: { said: string; signal: AbortSignal | undefined; answer: (summary: string | undefined) => void }[] = []
+    const model: ModelClient = {
+      complete(_m, prompt, call) {
+        const said = /^The wearer now says: (.*)$/m.exec(prompt)![1]!
+        return new Promise((resolve, reject) => {
+          call?.signal?.addEventListener('abort', () => reject(new Error('aborted')))
+          calls.push({ said, signal: call?.signal, answer: (summary) => resolve(JSON.stringify(summary === undefined ? { promise: false } : { promise: true, summary })) })
+        })
+      },
+    }
+    return { model, calls }
+  }
+
+  it('ends the conversation at the pass\'s deadline when the model never answers, and cancels the call', async () => {
+    const { model, calls } = slowModel()
+    const errors: unknown[] = []
+    const { session, ended, say, settle, clock } = setup(model, { onModelError: (e) => errors.push(e) })
+    session.setHearing(true)
+    say("Hi, I'm Dev.", 0, OTHER)
+    say("I'll send you the deck tonight.", 2, WEARER)
+    expect(calls).toHaveLength(1)
+    session.longPress()
+    await settle()
+    expect(ended, 'the end waits while the pass is inside its three seconds').toEqual([])
+    clock.advance(PROMISE_MS - 1)
+    await settle()
+    expect(ended).toEqual([])
+    clock.advance(1)
+    await settle()
+    expect(ended.map((e) => [e.names, e.promises]), 'the end, at the deadline, without the unanswered promise').toEqual([[['Dev'], []]])
+    expect(calls[0]!.signal?.aborted, 'the call is cancelled once its answer can go nowhere').toBe(true)
+    expect(errors, 'the lost promise is reported').toHaveLength(1)
+    expect(String((errors[0] as Error).message)).not.toMatch(/deck|Dev/)
+  })
+
+  it('shows no line for a promise answered after three seconds, but holds it for the promises page and the end (answer 9)', async () => {
+    const { model, calls } = slowModel()
+    const late: unknown[] = []
+    const { session, views, ended, say, settle, clock } = setup(model, { onLatePass: () => late.push(true) })
+    session.setHearing(true)
+    say("Hi, I'm Dev.", 0, OTHER)
+    say("I'll send you the deck tonight.", 2, WEARER)
+    clock.advance(PROMISE_MS + 500)
+    await settle()
+    expect(late, 'the lateness is reported').toHaveLength(1)
+    calls[0]!.answer('send Dev the deck tonight')
+    await settle()
+    expect(lineViews(views), 'no promise line past three seconds').toEqual(['Dev'])
+    session.tap()
+    session.swipeDown()
+    expect(views.at(-1)!.view, 'held for the promises page').toEqual({ kind: 'promises', you: ['send Dev the deck tonight'] })
+    session.longPress()
+    await settle()
+    expect(ended.map((e) => e.promises), 'and for the end').toEqual([['send Dev the deck tonight']])
+  })
+})
+
+// Fix round, risk-3: the end's hook runs later when a pass was in flight; a
+// throw there reaches the session's error path, never an unhandled rejection,
+// and nothing runs once the session has closed.
+describe("the deferred end's hook (risk-3)", () => {
+  it('sends a throw from a deferred onEnd to onEndError, not to an unhandled rejection', async () => {
+    const { model, release } = fakeModel({ "I'll send you the deck.": 'send Dev the deck' }, true)
+    const failures: unknown[] = []
+    const { session, say, settle } = setup(model, {
+      onEnd: () => {
+        throw new Error('the store is closed')
+      },
+      onEndError: (e) => failures.push(e),
+    })
+    session.setHearing(true)
+    say("Hi, I'm Dev.", 0, OTHER)
+    say("I'll send you the deck.", 2, WEARER)
+    session.longPress()
+    release()
+    await settle()
+    await settle()
+    expect(failures.map((e) => (e as Error).message)).toEqual(['the store is closed'])
+  })
+
+  it('never runs a deferred end once the session has closed', async () => {
+    const { model, release } = fakeModel({ "I'll send you the deck.": 'send Dev the deck' }, true)
+    const { session, ended, say, settle } = setup(model)
+    session.setHearing(true)
+    say("Hi, I'm Dev.", 0, OTHER)
+    say("I'll send you the deck.", 2, WEARER)
+    session.longPress()
+    session.close()
+    release()
+    await settle()
+    await settle()
+    expect(ended).toEqual([])
   })
 })

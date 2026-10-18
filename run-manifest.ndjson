@@ -52,7 +52,7 @@
 {"file":"features/phone-handoff.feature","title":"Ticking off a promise removes it from the conversation's screen on the iPhone app [1]","status":"unbound"}
 {"file":"features/phone-handoff.feature","title":"Ticking off a promise removes it from the conversation's screen on the website [2]","status":"unbound"}
 {"file":"features/promises.feature","title":"A bare yes takes its object from what Dev just asked","status":"passed"}
-{"file":"features/promises.feature","title":"A catch line appears and fades [1]","status":"unbound"}
+{"file":"features/promises.feature","title":"A catch line appears and fades [1]","status":"passed"}
 {"file":"features/promises.feature","title":"A catch line appears and fades [2]","status":"passed"}
 {"file":"features/promises.feature","title":"A catch line appears and fades [3]","status":"unbound"}
 {"file":"features/promises.feature","title":"A catch line appears and fades [4]","status":"passed"}

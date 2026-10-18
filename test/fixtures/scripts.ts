@@ -312,6 +312,14 @@ export const SCRIPTS: Record<string, ScriptLine[]> = {
   'promise-sam': promiseScript('Do you know anyone in hiring?', "I'll intro you to Sam."),
   'promise-budget': promiseScript('Can you send me the budget by Friday?', "Yeah, I'll do it."),
   'think-about-it': promiseScript('Would you join the Tuesday meeting?', "I'll think about it."),
+  // D132, promises.feature row 1: Dev's "meet Priya" names her (D18), her
+  // name's line fades, then Priya introduces herself: one person.
+  'meet-priya': [
+    ...DEV_OPENING,
+    { at: 5, who: 'Dev', text: 'Come and meet Priya.' },
+    { at: 9, who: 'Priya', text: "Hi, I'm Priya." },
+    { at: 14, who: 'wearer', text: 'Anyway, good to see you.' },
+  ],
 
   // P2a, the phone handoff. D117: two promises of the wearer's and one of
   // Dev's, then the wearer says nothing (the scenario lets ten minutes pass).

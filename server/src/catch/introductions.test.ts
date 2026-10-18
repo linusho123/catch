@@ -75,6 +75,30 @@ describe('the held names (D87, D88, D57)', () => {
     expect(held.list()).toEqual(['Priya', 'Priya (2)', 'Priya (3)'])
   })
 
+  // D132 (amends D87): introduced, then introducing, is one person.
+  it("lists a name once when someone's \"meet X\" is followed by X's own introduction inside the window (D132)", () => {
+    const held = new HeldNames()
+    expect(held.hear('Dev', 0, 'self')).toEqual({ line: 'Dev', added: true })
+    expect(held.hear('Priya', 5000, 'meet')).toEqual({ line: 'Priya', added: true })
+    expect(held.hear('Priya', 9000, 'self'), 'Priya herself, shown again, listed once').toEqual({ line: 'Priya', added: false })
+    // A second "I'm Priya" inside the window is a second person again (D87).
+    expect(held.hear('Priya', 20_000, 'self')).toEqual({ line: 'Priya (2)', added: true })
+    expect(held.list()).toEqual(['Dev', 'Priya', 'Priya (2)'])
+  })
+
+  it('keeps D87 for every other repeat inside the window: meet then meet, self then self, "this is X" then self (D132)', () => {
+    for (const [first, then] of [
+      ['meet', 'meet'],
+      ['self', 'self'],
+      ['other', 'self'],
+      ['self', 'meet'],
+    ] as const) {
+      const held = new HeldNames()
+      held.hear('Priya', 0, first)
+      expect(held.hear('Priya', 4000, then), `${first} then ${then}`).toEqual({ line: 'Priya (2)', added: true })
+    }
+  })
+
   it('takes the window as two minutes, from the ruling', () => {
     expect(REPEATED_NAME_WINDOW_MS).toBe(120_000)
   })

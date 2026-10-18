@@ -14,6 +14,9 @@ import { pcmAt } from './player.ts'
 // and for writing the hand cassettes (test/cassettes/by-hand.ts) from the
 // very prompts the session builds.
 
+/** The longest single jump of the play's clock. */
+const STEP_MS = 250
+
 export interface SessionPlay {
   views: { at: number; view: LensView }[]
   ended: EndedConversation[]
@@ -40,8 +43,18 @@ export async function playIntoSession(fixture: string, split: SplitName, model: 
     ...fx.words.map((wd) => ({ t: wd.end, kind: 1, wd })),
   ].sort((a, b) => a.t - b.t || a.kind - b.kind)
   const settle = () => new Promise<void>((resolve) => setImmediate(resolve))
+  // The clock moves in steps well inside D89's three seconds, letting each
+  // model pass answer between them: in real time a cassette answers at once,
+  // so one synchronous jump across a silence must not outrun it (risk-2's
+  // deadline would call it late).
+  const advanceTo = async (ms: number) => {
+    while (clock.now() < ms) {
+      clock.advance(Math.min(STEP_MS, ms - clock.now()))
+      await settle()
+    }
+  }
   for (const item of items) {
-    clock.advance(Math.max(0, item.t * 1000 - clock.now()))
+    await advanceTo(item.t * 1000)
     if ('f' in item) {
       const { f, seq } = item
       if (!pcm.has(f.loudness)) pcm.set(f.loudness, pcmAt(f.loudness))
@@ -53,7 +66,7 @@ export async function playIntoSession(fixture: string, split: SplitName, model: 
       await settle()
     }
   }
-  clock.advance(2000)
+  await advanceTo(clock.now() + 2000)
   session.longPress()
   await settle()
   session.close()

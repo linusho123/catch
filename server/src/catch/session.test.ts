@@ -97,6 +97,26 @@ describe('a session', () => {
     expect(session.names.list()).toEqual([otherSays.replace(/^Hi, I'm |\.$/g, '')])
   })
 
+  // D132: Dev's "meet Priya" names her, and her own "Hi, I'm Priya" is the same person.
+  it('shows Priya again for her own introduction after "meet Priya", and lists her once (D132)', () => {
+    const { session, views, say, clock } = setup()
+    session.setHearing(true)
+    say("Hi, I'm Dev.", 0, OTHER)
+    say('Good to meet you, Dev.', 2, WEARER)
+    say('Come and meet Priya.', 5, OTHER)
+    clock.advance(FRAME_WAIT_MS)
+    // Her name's line from Dev's words fades before she speaks.
+    clock.advance(LINE_MS)
+    say("Hi, I'm Priya.", 9, OTHER)
+    clock.advance(FRAME_WAIT_MS)
+    expect(views.filter((v) => v.view.kind === 'line').map((v) => v.view)).toEqual([
+      { kind: 'line', text: 'Dev' },
+      { kind: 'line', text: 'Priya' },
+      { kind: 'line', text: 'Priya' },
+    ])
+    expect(session.names.list()).toEqual(['Dev', 'Priya'])
+  })
+
   it.each([["Hi, I'm Linus."], ["I am Linus."], ['My name is Linus.'], ["My name's Linus."]])(
     'takes %j from the wearer as their own name (D29)',
     (wearerSays) => {

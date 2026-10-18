@@ -1,5 +1,6 @@
 import { PROMISE_MODEL } from '../llm/gemini.ts'
 import type { ModelClient } from '../llm/client.ts'
+import { SafeModelError } from '../llm/errors.ts'
 
 // The commitment detector (D89, D90, D47): one model pass per candidate
 // utterance of the wearer's, through the model client (cassettes under test).
@@ -46,15 +47,41 @@ export function promisePrompt(utterance: string, before: readonly Said[], names:
   ].join('\n')
 }
 
-/** The model's answer: the summary, or undefined when it is no promise. Anything malformed is an error, never a guess. */
+/**
+ * A promise pass that failed, described without a word of the conversation:
+ * the model's answer is derived from what was said (a summary, or a quote of
+ * another person's words), so neither it nor the prompt goes into the message,
+ * which the server logs (D76, fix round head-log-1).
+ */
+export class PromisePassError extends SafeModelError {
+  override name = 'PromisePassError'
+}
+
+/**
+ * The model's answer: the summary, or undefined when it is no promise.
+ * Anything malformed is an error, never a guess, and the error names the
+ * failure, never the answer's text (head-log-1). The summary is one line on
+ * the lens and one line of the notification, so every run of whitespace in
+ * it, a newline among them, becomes one space (risk-5).
+ */
 export function parsePromise(response: string): string | undefined {
   const json = response.trim().replace(/^```(?:json)?\s*|\s*```$/g, '')
-  const answer = JSON.parse(json) as { promise?: unknown; summary?: unknown }
-  if (answer.promise === false) return undefined
-  if (answer.promise !== true || typeof answer.summary !== 'string' || answer.summary.trim() === '') {
-    throw new Error(`the promise model answered neither a promise nor no promise: ${JSON.stringify(response)}`)
+  let answer: { promise?: unknown; summary?: unknown }
+  try {
+    answer = JSON.parse(json) as { promise?: unknown; summary?: unknown }
+  } catch {
+    // JSON.parse quotes the text it could not read; that text is the model's answer.
+    throw new PromisePassError(`the promise model's answer was not JSON (${response.length} characters)`)
   }
-  return answer.summary.trim()
+  if (answer === null || typeof answer !== 'object') throw new PromisePassError('the promise model answered neither a promise nor no promise (not an object)')
+  if (answer.promise === false) return undefined
+  const summary = typeof answer.summary === 'string' ? answer.summary.replace(/\s+/g, ' ').trim() : ''
+  if (answer.promise !== true || summary === '') {
+    throw new PromisePassError(
+      `the promise model answered neither a promise nor no promise (promise: ${typeof answer.promise === 'boolean' ? answer.promise : typeof answer.promise}, summary: ${typeof answer.summary === 'string' ? `${answer.summary.length} characters` : typeof answer.summary})`,
+    )
+  }
+  return summary
 }
 
 export class PromiseDetector {
@@ -64,10 +91,15 @@ export class PromiseDetector {
     this.model = model
   }
 
-  /** The summary of the wearer's promise in `utterance`, or undefined: no model pass at all for a sentence with no cue. */
-  async detect(utterance: string, before: readonly Said[], names: readonly string[]): Promise<string | undefined> {
+  /**
+   * The summary of the wearer's promise in `utterance`, or undefined: no model
+   * pass at all for a sentence with no cue. `signal` cancels the model call
+   * (the session aborts a pass whose answer could go nowhere, risk-2).
+   */
+  async detect(utterance: string, before: readonly Said[], names: readonly string[], signal?: AbortSignal): Promise<string | undefined> {
     if (!isCandidate(utterance)) return undefined
-    return parsePromise(await this.model.complete(PROMISE_MODEL, promisePrompt(utterance, before.slice(-CONTEXT_SENTENCES), names)))
+    const prompt = promisePrompt(utterance, before.slice(-CONTEXT_SENTENCES), names)
+    return parsePromise(await this.model.complete(PROMISE_MODEL, prompt, signal ? { signal } : undefined))
   }
 }
 

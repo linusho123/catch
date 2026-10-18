@@ -10,6 +10,7 @@ import { command, PromiseDetector } from './catch/promises.ts'
 import { Session } from './catch/session.ts'
 import { Transcript } from './catch/transcript.ts'
 import type { ModelClient } from './llm/client.ts'
+import { SafeModelError } from './llm/errors.ts'
 import { Outbox, promiseNotification, type Notifier } from './notify.ts'
 import { phoneRoute, wearerOf } from './phone/api.ts'
 import { History } from './phone/history.ts'
@@ -52,6 +53,10 @@ import type { SpeechToText, SttStream, SttWord } from './stt/types.ts'
 // its notification to the wearer's phone through the outbox (notify.ts),
 // which holds it until the phone takes it (D114). The open conversation's
 // transcript lives in the store until its end, and is deleted there (D76).
+// Before P9 no session survives the process, so the server purges every
+// transcript left in the store as it starts, and forgetWearers does the same
+// (fix round, risk-1; P9's resume replaces this rule). Nothing the server
+// logs about a model pass quotes the conversation (head-log-1).
 
 export interface ServerOptions {
   port: number
@@ -78,6 +83,12 @@ export interface ServerOptions {
   model?: ModelClient
   /** Where phone notifications go (P2a on); without one, the phone page's history is the only way promises reach the phone. */
   notifier?: Notifier
+  /**
+   * Further accounts' shared tokens, each its own wearer (D79). Production
+   * serves one account and passes none; the test harness signs a second
+   * account in, so a notification sent to the wrong phone shows (test-2).
+   */
+  otherAudioTokens?: readonly string[]
 }
 
 /** What the server heard, for the pipeline stages later phases hang here; `at` is the server's clock. */
@@ -87,6 +98,10 @@ export interface ServerEvents {
   sttError: [{ session: number; at: number; error: unknown }]
   /** A model pass failed (under test, a missing cassette): the promise it judged is lost. */
   modelError: [{ at: number; error: unknown }]
+  /** A model pass had not answered within D89's three seconds: a promise it finds is held without a line (answer 9). */
+  modelLate: [{ at: number }]
+  /** A conversation's end could not be handed on (its history record or notification); the conversation has ended all the same (risk-3). */
+  endError: [{ at: number; error: unknown }]
 }
 
 /** How soon a lost speech-to-text stream is tried again: the dot returns within this of the provider coming back (D37). */
@@ -102,9 +117,22 @@ const digest = (s: string) => createHash('sha256').update(s).digest()
 
 const params = (req: IncomingMessage) => new URL(req.url ?? '/', 'http://localhost').searchParams
 
-function carriesToken(req: IncomingMessage, expected: Buffer): boolean {
+function carriesToken(req: IncomingMessage, expected: readonly Buffer[]): boolean {
   const given = params(req).get('token')
-  return given !== null && timingSafeEqual(digest(given), expected)
+  if (given === null) return false
+  const d = digest(given)
+  return expected.some((e) => timingSafeEqual(d, e))
+}
+
+/**
+ * What the log says of a failure that may have come from a model pass: a
+ * SafeModelError's own words, and of anything else only its kind, because
+ * any other message may quote the prompt or the answer, and both come from
+ * the conversation (fix round, head-log-1; D76).
+ */
+export function loggable(error: unknown): string {
+  if (error instanceof SafeModelError) return error.message
+  return error instanceof Error ? error.name : typeof error
 }
 
 export interface RunningServer {
@@ -137,10 +165,12 @@ const CORS = {
 
 export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   if (!opts.audioToken) throw new Error('CATCH_AUDIO_TOKEN is not set; /audio never runs without its shared token')
-  const expectedToken = digest(opts.audioToken)
+  const expectedTokens = [opts.audioToken, ...(opts.otherAudioTokens ?? [])].map(digest)
   const store = openStore(opts.dbPath)
   const history = new History(store)
   const transcript = new Transcript(store)
+  // The pre-P9 rule (risk-1): no conversation survives a restart, so whatever transcript the last process left is an ended one's (D76).
+  transcript.purge()
   const clock = opts.clock ?? systemClock
   const split = opts.split ?? createSplit()
   const events = new EventEmitter<ServerEvents>()
@@ -161,7 +191,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       res.end(JSON.stringify({ ok: true, store: 'sqlite', schema: store.schemaVersion() }))
       return
     }
-    if (phoneRoute(req, res, { history, expected: expectedToken, headers: CORS })) return
+    if (phoneRoute(req, res, { history, expected: expectedTokens, headers: CORS })) return
     res.writeHead(404, CORS).end()
   })
 
@@ -169,7 +199,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     server: http,
     path: '/audio',
     maxPayload: MAX_AUDIO_MESSAGE_BYTES,
-    verifyClient: (info, done) => (carriesToken(info.req, expectedToken) ? done(true) : done(false, 401, 'Unauthorized')),
+    verifyClient: (info, done) => (carriesToken(info.req, expectedTokens) ? done(true) : done(false, 401, 'Unauthorized')),
   })
   wss.on('connection', (socket, req) => {
     const session = ++sessions
@@ -186,8 +216,16 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         threadDetection: () => threadDetection,
         promises,
         onModelError: (error) => {
-          console.error(`a promise pass failed, so that promise is lost: ${(error as Error)?.message ?? String(error)}`)
+          console.error(`a promise pass failed, so that promise is lost: ${loggable(error)}`)
           events.emit('modelError', { at: clock.now(), error })
+        },
+        onLatePass: () => {
+          console.warn('a promise pass had not answered within three seconds (D89): a promise it finds is held without a line')
+          events.emit('modelLate', { at: clock.now() })
+        },
+        onEndError: (error) => {
+          console.error(`a conversation's end could not be recorded: ${loggable(error)}`)
+          events.emit('endError', { at: clock.now(), error })
         },
         transcript: { add: (word) => transcript.add(wearer, word), delete: () => transcript.delete(wearer) },
         // P4 gives the history the keep, P5 the owed promises.
@@ -297,11 +335,16 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
       for (const session of wearers.values()) session.close()
       wearers.clear()
       outbox?.forget()
+      // As at a start (risk-1): the forgotten sessions' conversations have ended, and their transcripts go.
+      transcript.purge()
     },
     setThreadDetection(on) {
       threadDetection = on
     },
     async close() {
+      // No session hands anything on after this (a deferred end, a quiet timer), so nothing touches the store once it is closed (risk-3).
+      for (const session of wearers.values()) session.close()
+      wearers.clear()
       outbox?.close()
       for (const client of wss.clients) client.terminate()
       await new Promise<void>((resolve) => wss.close(() => resolve()))

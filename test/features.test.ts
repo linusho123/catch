@@ -59,9 +59,8 @@ const WIP: WipEntry[] = [
       'The jogger reads the same on the <surface>',
     ],
   },
-  // P2a binds the wearer's own promises: D89, D90, D47, and rows 2 and 4 of the
-  // outline. Its row 3 and the owed list wait for P5 (D91, D113); its row 1 is
-  // an operator question (Dev's "come and meet Priya" catches Priya first, D88).
+  // P2a binds the wearer's own promises: D89, D90, D47, and rows 1, 2 and 4 of
+  // the outline (row 1 by D132). Its row 3 and the owed list wait for P5 (D91, D113).
   {
     feature: 'promises',
     scenarios: [

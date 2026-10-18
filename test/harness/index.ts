@@ -1,6 +1,7 @@
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import WebSocket from 'ws'
 import { host } from './even-host.ts'
 import { startServer, type RunningServer } from '../../server/src/app.ts'
 import type { ModelClient } from '../../server/src/llm/client.ts'
@@ -27,6 +28,9 @@ import { FixtureRun, FixtureStt } from './player.ts'
 /** A throwaway token for the harness only; the real one is the Fly secret CATCH_AUDIO_TOKEN. */
 export const HARNESS_TOKEN = 'harness-token-not-a-secret'
 
+/** A second account's throwaway token (D79): another pair of glasses, another phone (fix round, test-2). */
+export const OTHER_HARNESS_TOKEN = 'harness-other-account-not-a-secret'
+
 export interface Harness {
   clock: VirtualClock
   server: RunningServer
@@ -41,6 +45,14 @@ export interface Harness {
   reset(): Promise<void>
   /** Starts the lens against the server; rejects, loudly, if it cannot open /audio. */
   startLens(): Promise<Lens>
+  /**
+   * Signs another pair of glasses in to the second account
+   * (OTHER_HARNESS_TOKEN), as a bare /audio socket, and resolves once the
+   * server holds that account's session and shows it the dot. Call it before
+   * startLens: the fixture provider has one stream, and the scenario's lens
+   * must hold it. Closed by the next reset.
+   */
+  signInOtherAccount(): Promise<WebSocket>
   /** Starts playing a fixture by name (test/fixtures/<name>.json); fixture second 0 is now. */
   play(name: string): FixtureRun
   close(): Promise<void>
@@ -70,11 +82,13 @@ async function start(): Promise<Harness> {
     stt: realStt ? deepgram(process.env.DEEPGRAM_API_KEY ?? '') : stt,
     model,
     notifier: notifications,
+    otherAudioTokens: [OTHER_HARNESS_TOKEN],
   })
   stt.attach(server.events)
   const modelErrors: unknown[] = []
   server.events.on('modelError', ({ error }) => modelErrors.push(error))
   const lenses: Lens[] = []
+  const others: WebSocket[] = []
   host.reset(clock)
   const h: Harness = {
     clock,
@@ -87,6 +101,7 @@ async function start(): Promise<Harness> {
     modelErrors,
     async reset() {
       await Promise.all(lenses.splice(0).map((lens) => lens.stop()))
+      for (const socket of others.splice(0)) socket.terminate()
       // The wearer's session outlives a socket (D79); a scenario starts with none.
       server.forgetWearers()
       // D120's switch back to its default: detection on.
@@ -110,6 +125,19 @@ async function start(): Promise<Harness> {
       lenses.push(lens)
       await lens.connected
       return lens
+    },
+    async signInOtherAccount() {
+      const socket = new WebSocket(`${server.url.replace(/^http/, 'ws')}/audio?token=${OTHER_HARNESS_TOKEN}&lens=other-account`)
+      others.push(socket)
+      await new Promise<void>((resolve, reject) => {
+        socket.on('message', (data) => {
+          const msg = JSON.parse(String(data)) as { type: string; view?: { kind: string } }
+          if (msg.type === 'show' && msg.view?.kind === 'dot') resolve()
+        })
+        socket.once('error', reject)
+        socket.once('unexpected-response', (_req, res) => reject(new Error(`the second account could not open /audio: ${res.statusCode}`)))
+      })
+      return socket
     },
     play: (name) => new FixtureRun(name, { clock, host, stt, realStt }),
     async close() {

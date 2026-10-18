@@ -45,7 +45,25 @@ export class Transcript {
   /** The conversation has ended: every word of it goes (D76). */
   delete(wearer: string): void {
     this.store.db.prepare('DELETE FROM transcript WHERE wearer = ?').run(wearer)
-    // The words are overwritten in the file (secure_delete, store.ts); the write-ahead log that held them is emptied too.
+    this.scrub()
+  }
+
+  /**
+   * Every wearer's transcript goes: the pre-P9 rule for a restart (fix round,
+   * risk-1). Before P9 no session survives the process, so a conversation the
+   * last process was holding has ended, and its words must not wait on the
+   * volume for that wearer's next end (D76), nor join the next conversation's
+   * words. The server calls it as it starts, and forgetWearers, the stand-in
+   * for a restart, calls it too. P9's resume replaces it: a restart then
+   * finds the open conversation and its transcript where it left them.
+   */
+  purge(): void {
+    this.store.db.exec('DELETE FROM transcript')
+    this.scrub()
+  }
+
+  /** The deleted words are overwritten in the file (secure_delete, store.ts), and the write-ahead log that held them is emptied too. */
+  private scrub(): void {
     this.store.db.exec('PRAGMA wal_checkpoint(TRUNCATE)')
   }
 }

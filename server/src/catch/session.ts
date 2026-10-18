@@ -4,8 +4,8 @@ import type { AudioFrame } from '../../../shared/wire.ts'
 import { pcmLoudnessDbfs, type FrameSignal, type Side, type SplitWord, type WearerSplit } from '../split/split.ts'
 import type { SttWord } from '../stt/types.ts'
 import { HeldNames } from './held-names.ts'
-import { findIntroductions, findSelfIntroductions } from './introductions.ts'
-import { CONTEXT_SENTENCES, type PromiseDetector, type Said } from './promises.ts'
+import { findIntroductionsHow, findSelfIntroductions } from './introductions.ts'
+import { CONTEXT_SENTENCES, PromisePassError, type PromiseDetector, type Said } from './promises.ts'
 import { Thread } from './thread.ts'
 import type { TranscriptWord } from './transcript.ts'
 
@@ -40,8 +40,16 @@ import type { TranscriptWord } from './transcript.ts'
 // <summary>` for a second and a half and is held for the conversation, and a
 // swipe down on the names page turns to the promises page (D43, D112). At the
 // end the conversation's promises go to the phone (onEnd, once every pass in
-// flight has answered), and its transcript is deleted, in the store and in
-// the session's memory (D76).
+// flight has answered or reached its deadline), and its transcript is
+// deleted, in the store and in the session's memory (D76).
+//
+// Every pass has D89's three seconds on the injected clock (fix round,
+// risk-2). One that has not answered by then shows no line, is reported
+// (onLatePass), and no longer holds up the end; if it answers while its
+// conversation is still open, the promise is held without a line, so it still
+// reaches the promises page, the notification and the phone page (operator
+// answer 9). Once the end has handed the promises on, any pass still out is
+// cancelled (its AbortSignal reaches the request itself) and reported lost.
 
 /** D17: a catch line holds for a second and a half. A ruling, not a tuning value. */
 export const LINE_MS = 1500
@@ -55,6 +63,13 @@ export const FRAME_WAIT_MS = 300
 
 /** D31, D43: a held page stays five seconds with no touch. A ruling, not a tuning value. */
 export const PAGE_MS = 5000
+
+/**
+ * D89: a promise line within three seconds. A pass not answered by then shows
+ * no line, and the end of its conversation waits for it no longer (risk-2). A
+ * ruling, not a tuning value.
+ */
+export const PROMISE_MS = 3000
 
 /** D92: a conversation ends after ten minutes in which the wearer does not speak. A ruling, not a tuning value. */
 export const QUIET_MS = 10 * 60 * 1000
@@ -79,8 +94,12 @@ export interface SessionOptions {
   onEnd?: (ended: EndedConversation) => void
   /** The wearer's promise detector (D89); without one, nothing is ever promised. */
   promises?: PromiseDetector
-  /** A model pass failed (an error, or under test a missing cassette): the promise it judged is lost, loudly. */
+  /** A model pass failed (an error, under test a missing cassette, or no answer before its conversation's end): the promise it judged is lost, loudly. */
   onModelError?: (error: unknown) => void
+  /** A model pass had not answered within D89's three seconds: a promise it finds is held without a line (answer 9). */
+  onLatePass?: () => void
+  /** The end's hook threw (a store error, say); the conversation has ended all the same (risk-3). */
+  onEndError?: (error: unknown) => void
   /** Where the open conversation's transcript is held, and deleted at its end (D73, D76). */
   transcript?: { add(word: TranscriptWord): void; delete(): void }
 }
@@ -98,8 +117,15 @@ export interface EndedConversation {
 /** One conversation's promises: a slot per pass, in the order the sentences were said, and the passes still out. */
 interface Promises {
   slots: (string | undefined)[]
+  /** What the end waits for: one per pass, settled at its answer or at its deadline, whichever comes first. */
   inflight: Set<Promise<void>>
+  /** Every pass not yet answered, deadline or not: cancelled once the end has handed the promises on. */
+  out: Set<AbortController>
+  /** The end has handed this conversation's promises on (or the session closed): a later answer can go nowhere. */
+  done: boolean
 }
+
+const noPromises = (): Promises => ({ slots: [], inflight: new Set(), out: new Set(), done: false })
 
 const held = (p: Promises) => p.slots.filter((s): s is string => s !== undefined)
 
@@ -168,9 +194,13 @@ export class Session {
   private readonly threadDetection: () => boolean
   private readonly detector: PromiseDetector | undefined
   private readonly onModelError: (error: unknown) => void
+  private readonly onLatePass: () => void
+  private readonly onEndError: (error: unknown) => void
   private readonly transcript: SessionOptions['transcript']
   /** The open conversation's promises. */
-  private promises: Promises = { slots: [], inflight: new Set() }
+  private promises: Promises = noPromises()
+  /** Ended conversations whose end still waits for a pass: none is handed on once the session closes (risk-3). */
+  private readonly ending = new Set<Promises>()
   /** The wearer's sentence so far, someone else's, and the sentences said before them (the detector's context). */
   private wearerSentence: string[] = []
   private otherSentence: string[] = []
@@ -195,6 +225,8 @@ export class Session {
     this.onEnd = opts.onEnd
     this.detector = opts.promises
     this.onModelError = opts.onModelError ?? (() => {})
+    this.onLatePass = opts.onLatePass ?? (() => {})
+    this.onEndError = opts.onEndError ?? (() => {})
     this.transcript = opts.transcript
     if (opts.show) this.attach(opts.show)
   }
@@ -327,6 +359,10 @@ export class Session {
 
   close(): void {
     this.closed = true
+    // Nothing of an ended conversation's is handed on after the session has closed, and no pass is left on the network (risk-3).
+    this.stopPasses(this.promises)
+    for (const promises of this.ending) this.stopPasses(promises)
+    this.ending.clear()
     this.clearView()
     if (this.pendingTimer) this.clock.clearTimeout(this.pendingTimer)
     this.pendingTimer = undefined
@@ -394,11 +430,11 @@ export class Session {
     const line = this.thread.other(start, end)
     if (line !== undefined && this.threadDetection()) this.showThread(line)
     this.otherRun.push(text)
-    for (const { name, index } of findIntroductions(this.otherRun)) {
+    for (const { name, index, how } of findIntroductionsHow(this.otherRun)) {
       if (this.otherCaught.has(index)) continue
       this.otherCaught.add(index)
       if (this.ownNames.has(name.toLowerCase()) || name.toLowerCase() === this.wearerName) continue
-      const heard = this.names.hear(name, this.clock.now())
+      const heard = this.names.hear(name, this.clock.now(), how)
       this.showLine(heard.line)
     }
   }
@@ -436,19 +472,52 @@ export class Session {
     if (this.said.length > CONTEXT_SENTENCES) this.said.splice(0, this.said.length - CONTEXT_SENTENCES)
   }
 
-  /** One model pass (D89, D90, D47); a promise is held in this conversation's slot and shown, if the conversation is still open. */
+  /**
+   * One model pass (D89, D90, D47), with D89's three seconds on the clock
+   * (risk-2). A promise is held in this conversation's slot, and shown if it
+   * came within the three seconds and the conversation is still open; one
+   * that came later is held without a line (answer 9).
+   */
   private judgePromise(text: string, before: Said[]): void {
     const promises = this.promises
     const slot = promises.slots.push(undefined) - 1
-    const pass: Promise<void> = this.detector!.detect(text, before, this.names.list())
+    const abort = new AbortController()
+    promises.out.add(abort)
+    let late = false
+    let leave!: () => void
+    const waited = new Promise<void>((resolve) => (leave = resolve))
+    promises.inflight.add(waited)
+    const left = () => {
+      promises.inflight.delete(waited)
+      leave()
+    }
+    const deadline = this.clock.setTimeout(() => {
+      late = true
+      if (!promises.done) this.onLatePass()
+      left()
+    }, PROMISE_MS)
+    this.detector!.detect(text, before, this.names.list(), abort.signal)
       .then((summary) => {
         if (summary === undefined) return
+        if (promises.done) throw new PromisePassError('the promise pass answered after its conversation had ended, so that promise is lost')
         promises.slots[slot] = summary
-        if (this.promises === promises) this.showLine(`promised · ${summary}`)
+        if (!late && this.promises === promises) this.showLine(`promised · ${summary}`)
       })
-      .catch((error: unknown) => this.onModelError(error))
-      .finally(() => promises.inflight.delete(pass))
-    promises.inflight.add(pass)
+      .catch((error: unknown) => {
+        if (this.closed) return
+        this.onModelError(abort.signal.aborted ? new PromisePassError('the conversation ended before the promise pass answered, so that promise is lost') : error)
+      })
+      .finally(() => {
+        this.clock.clearTimeout(deadline)
+        promises.out.delete(abort)
+        left()
+      })
+  }
+
+  /** The conversation's promises are final: a pass still out can go nowhere, so it is cancelled. */
+  private stopPasses(promises: Promises): void {
+    promises.done = true
+    for (const abort of promises.out) abort.abort()
   }
 
   /** The quiet timer starts over: the conversation ends ten minutes after the wearer last spoke (D92). */
@@ -473,7 +542,7 @@ export class Session {
     // Snapshot, reset, then the hook: the conversation is over whatever the hook does (fix round, M4).
     const ended = this.inConversation ? { startedAt: this.startedAt, endedAt: this.clock.now(), names: this.names.list() } : undefined
     const promises = this.promises
-    this.promises = { slots: [], inflight: new Set() }
+    this.promises = noPromises()
     this.inConversation = false
     this.names.clear()
     this.otherRun = []
@@ -486,11 +555,29 @@ export class Session {
     this.said = []
     this.judged = []
     if (ended) this.transcript?.delete()
-    if (!ended) return
-    // The promises once every pass still out has answered; at once (on the clock's own reading) when none is.
-    const finish = () => this.onEnd?.({ ...ended, promises: held(promises) })
-    if (promises.inflight.size === 0) finish()
-    else void Promise.allSettled(promises.inflight).then(finish)
+    if (!ended) {
+      this.stopPasses(promises)
+      return
+    }
+    // The promises once every pass still out has answered or reached its
+    // deadline (risk-2); at once (on the clock's own reading) when none is.
+    // A throw from the hook goes to onEndError, never out of a timer or an
+    // unhandled rejection, and nothing is handed on once the session has
+    // closed (risk-3).
+    const finish = () => {
+      this.ending.delete(promises)
+      if (promises.done) return
+      this.stopPasses(promises)
+      if (this.closed) return
+      try {
+        this.onEnd?.({ ...ended, promises: held(promises) })
+      } catch (error) {
+        this.onEndError(error)
+      }
+    }
+    if (promises.inflight.size === 0) return finish()
+    this.ending.add(promises)
+    void Promise.allSettled(promises.inflight).then(finish)
   }
 
   private showLine(text: string): void {

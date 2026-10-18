@@ -67,13 +67,23 @@ export function promiseNotification(conversation: number | undefined, you: reado
   return { title: 'Catch', body: cutLine(line), ...(conversation === undefined ? {} : { data: { conversation: String(conversation) } }) }
 }
 
-/** The notifications not yet taken by their phone, oldest first, each tried again until it is (D114). */
+/** One account's notifications not yet taken by its phone, oldest first, and its pending retry. */
+interface PhoneQueue {
+  items: PhoneNotification[]
+  retry: TimerHandle | undefined
+  sending: boolean
+}
+
+/**
+ * The notifications not yet taken by their phone, each tried again until it
+ * is (D114). One queue per account (fix round, risk-4 a): each notification is
+ * addressed to its own account's phone (D79), so a phone that is off holds
+ * back only its own account's notifications, in order.
+ */
 export class Outbox {
-  private readonly queue: { to: string; notification: PhoneNotification }[] = []
+  private queues = new Map<string, PhoneQueue>()
   private readonly notifier: Notifier
   private readonly clock: Clock
-  private retry: TimerHandle | undefined
-  private sending = false
   private closed = false
 
   constructor(notifier: Notifier, clock: Clock) {
@@ -81,53 +91,76 @@ export class Outbox {
     this.clock = clock
   }
 
-  /** Notifications waiting for their phone. */
+  /** Notifications waiting for their phone, every account's. */
   get waiting(): number {
-    return this.queue.length
+    let n = 0
+    for (const q of this.queues.values()) n += q.items.length
+    return n
   }
 
-  /** Queues `notification` for the phone of `to` and tries it at once. */
+  /** Queues `notification` for the phone of `to` and tries it at once, unless that phone's queue is waiting for its retry. */
   enqueue(to: string, notification: PhoneNotification): void {
-    this.queue.push({ to, notification })
-    if (!this.retry) void this.flush()
+    if (this.closed) return
+    let q = this.queues.get(to)
+    if (!q) {
+      q = { items: [], retry: undefined, sending: false }
+      this.queues.set(to, q)
+    }
+    q.items.push(notification)
+    if (!q.retry) void this.flush(to, q)
   }
 
+  /** No notification is sent, and no retry armed, once closed (risk-4 c). */
   close(): void {
     this.closed = true
     this.forget()
   }
 
-  /** Drops every waiting notification, as a restart of the process would (P9 makes them survive one). */
+  /**
+   * Drops every waiting notification, as a restart of the process would (P9
+   * makes them survive one). A send still in flight belongs to a queue that
+   * is gone: when it answers it touches nothing queued after this (risk-4 b).
+   */
   forget(): void {
-    this.queue.length = 0
-    if (this.retry) this.clock.clearTimeout(this.retry)
-    this.retry = undefined
+    for (const q of this.queues.values()) {
+      if (q.retry) this.clock.clearTimeout(q.retry)
+      q.retry = undefined
+    }
+    this.queues = new Map()
   }
 
-  /** Sends from the head, in order; the first the phone does not take waits, with all behind it, for the next try. */
-  private async flush(): Promise<void> {
-    if (this.sending || this.closed) return
-    this.sending = true
+  /** Whether `q` is still the live queue of `to` (not forgotten, not closed). */
+  private live(to: string, q: PhoneQueue): boolean {
+    return !this.closed && this.queues.get(to) === q
+  }
+
+  /** Sends one account's queue from its head, in order; the first its phone does not take waits, with all behind it, for the next try. */
+  private async flush(to: string, q: PhoneQueue): Promise<void> {
+    if (q.sending || !this.live(to, q)) return
+    q.sending = true
     try {
-      while (this.queue.length > 0 && !this.closed) {
-        const { to, notification } = this.queue[0]!
+      while (q.items.length > 0 && this.live(to, q)) {
+        const notification = q.items[0]!
         let taken = false
         try {
           taken = await this.notifier.send(to, notification)
         } catch {
           taken = false
         }
+        // Forgotten or closed while the phone answered: this queue is gone, and nothing newer is ours to touch.
+        if (!this.live(to, q)) return
         if (!taken) {
-          this.retry = this.clock.setTimeout(() => {
-            this.retry = undefined
-            void this.flush()
+          q.retry = this.clock.setTimeout(() => {
+            q.retry = undefined
+            void this.flush(to, q)
           }, NOTIFY_RETRY_MS)
           return
         }
-        this.queue.shift()
+        if (q.items[0] === notification) q.items.shift()
       }
+      if (q.items.length === 0 && this.queues.get(to) === q) this.queues.delete(to)
     } finally {
-      this.sending = false
+      q.sending = false
     }
   }
 }

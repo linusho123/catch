@@ -5,7 +5,7 @@ import { NOTIFY_RETRY_MS } from '../../server/src/notify.ts'
 import { wearerOf } from '../../server/src/phone/api.ts'
 import { History } from '../../server/src/phone/history.ts'
 import type { Store } from '../../server/src/store.ts'
-import { HARNESS_TOKEN } from '../harness/index.ts'
+import { HARNESS_TOKEN, OTHER_HARNESS_TOKEN } from '../harness/index.ts'
 import { linesOf, type Captured } from '../harness/notifications.ts'
 import { isHistory, openPhone, rowsOn, type PhoneScreen } from '../harness/phone.ts'
 import { find, rows, tables } from '../harness/store-reader.ts'
@@ -87,6 +87,9 @@ const QUIET_S = 600
 
 /** The account the harness's glasses are signed in to (D79). */
 const ACCOUNT = wearerOf(HARNESS_TOKEN)
+
+/** Another account, with its own glasses and its own phone, signed in for "no other phone shows it" (fix round, test-2). */
+const OTHER_ACCOUNT = wearerOf(OTHER_HARNESS_TOKEN)
 
 /** A summary as a command, the way the phone reads it. */
 const asCommand = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
@@ -305,9 +308,13 @@ const phoneHandoff: Definer<HandoffWorld> = (reg) => {
     expect(its.map((p) => [p.side, p.text]), 'its promise summary, and nothing else').toEqual([['you', asCommand(w.promised![0]!)]])
   })
 
-  // D79
+  // D79. The in-world control (fix round, test-2): another account's glasses
+  // are signed in to the same server for the whole scenario, so "no other
+  // phone" has another phone that could have been sent it.
   reg.define(/^two people take turns wearing one pair of glasses signed in to the wearer's account$/, async (w) => {
-    await begin(w)
+    await begin(w, async (h) => {
+      await h.signInOtherAccount()
+    })
     // The lens is signed in to the account by its token; two voices at the glasses' mic, one after the other.
     const run = await startRun(w, `shared-pair.${V}`, 0)
     const wearers = [...new Set(run.fixture.lines.filter((l) => l.who === 'wearer' || l.who.startsWith('wearer:')).map((l) => l.who))]
@@ -334,6 +341,7 @@ const phoneHandoff: Definer<HandoffWorld> = (reg) => {
 
   reg.define(/^no other phone shows it$/, (w) => {
     const h = w.h!
+    expect(h.notifications.phone(OTHER_ACCOUNT), "the other account's phone was sent it").toEqual([])
     expect(h.notifications.received.filter((c) => c.to !== ACCOUNT), 'another phone was sent it').toEqual([])
     expect(h.notifications.refused, 'another phone was even tried').toEqual([])
   })

@@ -23,12 +23,12 @@ function bearer(req: IncomingMessage): string | undefined {
 
 /**
  * Answers a request if it is the phone API's; returns false for any other path.
- * `expected` is the digest of the shared token.
+ * `expected` is the digest of each account's shared token (D79).
  */
 export function phoneRoute(
   req: IncomingMessage,
   res: ServerResponse,
-  opts: { history: History; expected: Buffer; headers: Record<string, string> },
+  opts: { history: History; expected: readonly Buffer[]; headers: Record<string, string> },
 ): boolean {
   const path = new URL(req.url ?? '/', 'http://localhost').pathname
   if (path !== PHONE_HISTORY_PATH && !path.startsWith(PHONE_CONVERSATION_PATH)) return false
@@ -41,7 +41,7 @@ export function phoneRoute(
     return true
   }
   const token = bearer(req)
-  if (token === undefined || !timingSafeEqual(Buffer.from(wearerOf(token), 'hex'), opts.expected)) {
+  if (token === undefined || !opts.expected.some((e) => timingSafeEqual(Buffer.from(wearerOf(token), 'hex'), e))) {
     json(401, { error: 'the shared token is missing or wrong' })
     return true
   }

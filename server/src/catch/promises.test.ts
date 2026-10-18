@@ -46,6 +46,27 @@ describe('the promise detector', () => {
     expect(asked[0]!.prompt).toContain("The wearer now says: Yeah, I'll do it.")
   })
 
+  // Fix round, risk-5: a summary is one line on the lens and one line of the notification's body.
+  it('collapses every run of whitespace in the summary, newlines among them, to one space (risk-5)', () => {
+    expect(parsePromise('{"promise": true, "summary": "  send Dev\\nthe deck\\t\\r\\n  tonight "}')).toBe('send Dev the deck tonight')
+  })
+
+  // Fix round, head-log-1: the model's answer is derived from the conversation, so it never reaches an error (or a log).
+  it("names a malformed answer's failure without the answer's text (head-log-1)", () => {
+    for (const answer of ['The Xylophone plan, yes.', '{"promise": "maybe", "summary": "send Xylophone the deck"}', '{"promise": true, "summary": "Xylophone', '{"promise": true}']) {
+      let thrown: unknown
+      try {
+        parsePromise(answer)
+      } catch (error) {
+        thrown = error
+      }
+      expect(thrown, answer).toBeInstanceOf(Error)
+      expect((thrown as Error).message, answer).not.toMatch(/xylophone|[{}"]/i)
+      expect(String((thrown as Error).stack), answer).not.toMatch(/xylophone/i)
+      expect(JSON.stringify(thrown), answer).not.toMatch(/xylophone/i)
+    }
+  })
+
   it('writes a summary as a command for the phone', () => {
     expect(command('send Dev the deck tonight')).toBe('Send Dev the deck tonight')
   })

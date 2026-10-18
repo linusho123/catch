@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { VirtualClock } from '../../test/harness/clock.ts'
 import { cutLine, listOf, NOTIFICATION_LINE_CHARS, NOTIFY_RETRY_MS, Outbox, promiseNotification, type Notifier, type PhoneNotification } from './notify.ts'
 
@@ -75,5 +75,74 @@ describe('the outbox', () => {
     ])
     for (const g of p.got) expect(g.at).toBeLessThan(50)
     outbox.close()
+  })
+
+  // Fix round, risk-4: a phone that answers when the test says, so a send can be in flight across forget() or close().
+  function slowPhone(clock: VirtualClock) {
+    const tried: { at: number; to: string; body: string }[] = []
+    const answers: ((taken: boolean) => void)[] = []
+    const notifier: Notifier = {
+      send(to, n) {
+        tried.push({ at: clock.now(), to, body: n.body })
+        return new Promise((resolve) => answers.push(resolve))
+      },
+    }
+    return { tried, notifier, answer: (taken: boolean) => answers.shift()!(taken) }
+  }
+  const settle = () => new Promise((r) => setImmediate(r))
+
+  it('never drops a notification queued after forget() when a send from before it answers late (risk-4 b, D114)', async () => {
+    const clock = new VirtualClock(1)
+    const p = slowPhone(clock)
+    const outbox = new Outbox(p.notifier, clock)
+    outbox.enqueue('a', { title: 'Catch', body: 'before the restart' })
+    await settle()
+    outbox.forget()
+    outbox.enqueue('a', { title: 'Catch', body: 'after the restart' })
+    await settle()
+    // The old send answers now: it must not take the new notification with it.
+    p.answer(true)
+    await settle()
+    expect(p.tried.map((t) => t.body), 'the notification queued after forget() was sent').toEqual(['before the restart', 'after the restart'])
+    expect(outbox.waiting, 'it waits for its own send to answer').toBe(1)
+    p.answer(true)
+    await settle()
+    expect(outbox.waiting).toBe(0)
+    outbox.close()
+  })
+
+  it("delivers one account's notification at once while another account's phone is unreachable (risk-4 a, D79, D114)", async () => {
+    const clock = new VirtualClock(1)
+    const got: { to: string; body: string }[] = []
+    const notifier: Notifier = {
+      async send(to, n) {
+        if (to === 'off') return false
+        got.push({ to, body: n.body })
+        return true
+      },
+    }
+    const outbox = new Outbox(notifier, clock)
+    outbox.enqueue('off', { title: 'Catch', body: 'for the phone that is off' })
+    outbox.enqueue('on', { title: 'Catch', body: 'for the phone that is on' })
+    await settle()
+    expect(got, 'the reachable phone is not held back by the other').toEqual([{ to: 'on', body: 'for the phone that is on' }])
+    expect(outbox.waiting).toBe(1)
+    outbox.close()
+  })
+
+  it('arms no retry once closed, whatever a send in flight answers (risk-4 c)', async () => {
+    const clock = new VirtualClock(1)
+    const p = slowPhone(clock)
+    const outbox = new Outbox(p.notifier, clock)
+    outbox.enqueue('a', { title: 'Catch', body: 'one' })
+    await settle()
+    outbox.close()
+    const armed = vi.spyOn(clock, 'setTimeout')
+    p.answer(false)
+    await settle()
+    expect(armed, 'a retry timer armed after the outbox closed').not.toHaveBeenCalled()
+    clock.advance(10 * NOTIFY_RETRY_MS)
+    await settle()
+    expect(p.tried, 'tried again after the outbox closed').toHaveLength(1)
   })
 })

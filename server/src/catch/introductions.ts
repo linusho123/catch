@@ -17,6 +17,13 @@ export interface DetectedName {
   index: number
 }
 
+/**
+ * How a name was given: by its owner ("I'm X", "my name is X"), by someone
+ * else's "meet X", or by someone else otherwise ("this is X", "X, nice to
+ * meet you"). D132 reads the first two together.
+ */
+export type Introduced = 'self' | 'meet' | 'other'
+
 /** Capitalized words that are never a name after a trigger, or before ", nice to meet you". */
 const NOT_A_NAME = new Set(
   [
@@ -50,6 +57,11 @@ export function findIntroductions(words: readonly string[]): DetectedName[] {
   return detect(words).map(({ name, index }) => ({ name, index }))
 }
 
+/** The same, with how each name was given (D132). */
+export function findIntroductionsHow(words: readonly string[]): (DetectedName & { how: Introduced })[] {
+  return detect(words).map(({ name, index, how }) => ({ name, index, how }))
+}
+
 /**
  * Only the introductions in which the speaker gives their own name: "I'm X",
  * "I am X", "my name is X", "my name's X". The wearer's own name (D29) is
@@ -58,15 +70,15 @@ export function findIntroductions(words: readonly string[]): DetectedName[] {
  */
 export function findSelfIntroductions(words: readonly string[]): DetectedName[] {
   return detect(words)
-    .filter((d) => d.self)
+    .filter((d) => d.how === 'self')
     .map(({ name, index }) => ({ name, index }))
 }
 
-function detect(words: readonly string[]): (DetectedName & { self: boolean })[] {
-  const found: (DetectedName & { self: boolean })[] = []
-  const add = (index: number, self: boolean) => {
+function detect(words: readonly string[]): (DetectedName & { how: Introduced })[] {
+  const found: (DetectedName & { how: Introduced })[] = []
+  const add = (index: number, how: Introduced | boolean) => {
     const name = nameAt(words, index)
-    if (name !== null && !found.some((f) => f.index === index)) found.push({ name, index, self })
+    if (name !== null && !found.some((f) => f.index === index)) found.push({ name, index, how: how === true ? 'self' : how === false ? 'other' : how })
   }
   for (let i = 0; i < words.length; i++) {
     const w = lower(words[i])
@@ -80,7 +92,7 @@ function detect(words: readonly string[]): (DetectedName & { self: boolean })[] 
     // "this is X"
     if (w === 'this' && lower(words[i + 1]) === 'is') add(i + 2, false)
     // "meet X" (not "meet you")
-    if (w === 'meet') add(i + 1, false)
+    if (w === 'meet') add(i + 1, 'meet')
     // "X, nice to meet you": X opens the run or a sentence, and carries the comma.
     const opens = i === 0 || endsSentence(words[i - 1])
     if (

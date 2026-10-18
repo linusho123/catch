@@ -9,8 +9,13 @@ import { generateText, type GeminiModel, type GeminiOptions } from './gemini.ts'
 // of the model id and the prompt, and never reaches the network. A missing
 // cassette fails loudly; CATCH_REAL_LLM=1 records one by hand.
 
+/** One call's options: `signal` cancels it (the request itself, live; risk-2). */
+export interface CallOptions {
+  signal?: AbortSignal
+}
+
 export interface ModelClient {
-  complete(model: GeminiModel, prompt: string): Promise<string>
+  complete(model: GeminiModel, prompt: string, call?: CallOptions): Promise<string>
 }
 
 export interface Cassette {
@@ -21,7 +26,7 @@ export interface Cassette {
 }
 
 export function liveModel(opts: GeminiOptions = {}): ModelClient {
-  return { complete: (model, prompt) => generateText(model, prompt, opts) }
+  return { complete: (model, prompt, call) => generateText(model, prompt, { ...opts, ...(call?.signal ? { signal: call.signal } : {}) }) }
 }
 
 export function cassetteKey(model: GeminiModel, prompt: string): string {
@@ -48,8 +53,8 @@ export function replayModel(dir: string): ModelClient {
 /** Calls `live` and writes each answer to `dir` as a cassette. Only behind CATCH_REAL_LLM=1. */
 export function recordingModel(dir: string, live: ModelClient): ModelClient {
   return {
-    async complete(model, prompt) {
-      const response = await live.complete(model, prompt)
+    async complete(model, prompt, call) {
+      const response = await live.complete(model, prompt, call)
       const tape: Cassette = { cassette: 1, model, prompt, response }
       mkdirSync(dir, { recursive: true })
       writeFileSync(join(dir, `${cassetteKey(model, prompt)}.json`), `${JSON.stringify(tape, null, 2)}\n`)

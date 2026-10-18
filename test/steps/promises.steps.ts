@@ -29,13 +29,13 @@ import {
 // on both variants. The model answers from cassettes written by hand
 // (test/cassettes/by-hand.ts: no GEMINI_API_KEY was at hand).
 //
-// Bound: rows 2 and 4 of "A catch line appears and fades", D89's bare
+// Bound: rows 1, 2 and 4 of "A catch line appears and fades", D89's bare
 // action, D90's bare yes, D47. Row 3 (Dev's promise), D91 and D113 are P5's:
 // "Dev says" and the owed list are unbound, so the outline and those three
 // scenarios stay scenario-scoped wip. Row 1 (Priya, after Dev's "come and
-// meet Priya") is left unbound too: Dev's own words catch Priya by D18's
-// "meet X", so her "Hi, I'm Priya" inside two minutes is "Priya (2)" by D88,
-// not the row's "Priya" (a question for the operator).
+// meet Priya") is D132's: Dev's own words name Priya by D18's "meet X", her
+// name's line comes and goes, and her own "Hi, I'm Priya" is the same person,
+// shown as "Priya", never "Priya (2)".
 
 const V = 'wearer-louder'
 
@@ -43,7 +43,7 @@ const V = 'wearer-louder'
 const BOUNDS: Record<string, number> = { '2 seconds': 2000, '3 seconds': 3000, 'three seconds': 3000 }
 
 /** The P2a fixtures the promises scenarios are played on: Dev's opening, one line of Dev's, the wearer's answer (scripts.ts). */
-const FIXTURES = ['promise-deck', 'promise-sam', 'promise-budget', 'think-about-it']
+const FIXTURES = ['promise-deck', 'promise-sam', 'promise-budget', 'think-about-it', 'meet-priya']
 
 interface PromiseWorld extends LensWorld {
   /** What Dev has just said, as the step quotes it. */
@@ -56,15 +56,15 @@ interface PromiseWorld extends LensWorld {
 
 const norm = (t: string) => t.toLowerCase().replace(/[.,!?]/g, '').trim()
 
-/** The fixture in which the wearer answers `words` (to Dev's `devSaid`, if given), Dev's name having been caught at its start. */
-function fixtureFor(words: string, devSaid: string | undefined): string {
+/** The fixture in which `who` (the wearer by default) answers `words` (to Dev's `devSaid`, if given), Dev's name having been caught at its start. */
+function fixtureFor(words: string, devSaid: string | undefined, who = 'wearer'): string {
   const fits = (fx: Fixture) => {
-    const i = fx.lines.findIndex((l) => l.who === 'wearer' && norm(l.text) === norm(words))
+    const i = fx.lines.findIndex((l) => l.who === who && norm(l.text) === norm(words))
     if (i < 1) return false
     return devSaid === undefined || (fx.lines[i - 1]!.who === 'Dev' && norm(fx.lines[i - 1]!.text) === norm(devSaid))
   }
   const found = FIXTURES.map((n) => `${n}.${V}`).find((n) => fits(loadFixture(n)))
-  expect(found, `no fixture has the wearer say "${words}"${devSaid ? ` after Dev's "${devSaid}"` : ''}`).toBeDefined()
+  expect(found, `no fixture has ${who} say "${words}"${devSaid ? ` after Dev's "${devSaid}"` : ''}`).toBeDefined()
   return found!
 }
 
@@ -87,7 +87,30 @@ const promises: Definer<PromiseWorld> = (reg) => {
     w.devSaid = String(devArg)
   })
 
-  // Rows 2 and 4, D89, D90, D47. ("Priya says" and "Dev says" are unbound: see the header.)
+  // Row 1, D132: Priya introduces herself after Dev's "meet Priya" named her.
+  reg.define(/^Priya says "([^"]+)"$/, async (w, wordsArg) => {
+    const h = w.h!
+    w.words = String(wordsArg)
+    const run = await startRun(w, fixtureFor(w.words, w.devSaid, 'Priya'), 0)
+    const fx = run.fixture
+    lineIn(run, "Hi, I'm Dev.")
+    const answer = fx.lines.findIndex((l) => l.who === 'Priya' && norm(l.text) === norm(w.words!))
+    const before = lineIn(run, fx.lines[answer - 1]!.text)
+    await playTo(w, before.start)
+    expect(linesShown(h, w.dotSince!, h.clock.now()).map((l) => l.text), 'the names caught before').toEqual(['Dev'])
+    expectDotOnly(screenAt(h, h.clock.now()), "before Dev's line")
+    expect(before.words.every((wd) => wd.role === 'other'), 'Dev says it').toBe(true)
+    const said = lineIn(run, fx.lines[answer]!.text, before.end)
+    expect(said.words.every((wd) => wd.role === 'other'), 'Priya, not the wearer, says it').toBe(true)
+    // Dev's "meet Priya" named her first (D18): her name's line came and went before she spoke, so hers is the second hearing.
+    await playTo(w, said.start)
+    expect(linesShown(h, run.at(before.start), h.clock.now()).map((l) => l.text), `Dev's "${w.devSaid}" names Priya`).toEqual(['Priya'])
+    expectDotOnly(screenAt(h, h.clock.now()), 'as Priya begins')
+    await playTo(w, said.end)
+    w.saidAt = run.at(said.end)
+  })
+
+  // Rows 2 and 4, D89, D90, D47. ("Dev says" is unbound: see the header.)
   reg.define(/^the wearer says "([^"]+)"$/, async (w, wordsArg) => {
     const h = w.h!
     w.words = String(wordsArg)

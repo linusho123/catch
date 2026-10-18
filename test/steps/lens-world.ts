@@ -204,13 +204,18 @@ export async function fastForward(w: LensWorld, t: number): Promise<void> {
 /** Fixture seconds now. */
 export const nowSec = (w: LensWorld) => w.run!.seconds(w.h!.clock.now())
 
-/** Starts the scenario: the harness reset, the lens started, and the dot drawn (Catch can hear). */
-export async function begin(w: LensWorld): Promise<Harness> {
+/**
+ * Starts the scenario: the harness reset, the lens started, and the dot drawn
+ * (Catch can hear). `beforeLens` runs between the reset and the lens: a
+ * second account signed in (phone-handoff, test-2) goes there.
+ */
+export async function begin(w: LensWorld, beforeLens?: (h: Harness) => Promise<void>): Promise<Harness> {
   if (w.h) return w.h
   started = true
   const h = await harness()
   await h.reset()
   w.h = h
+  await beforeLens?.(h)
   await h.startLens()
   // The server shows the dot once its speech-to-text stream is open.
   for (let waited = 0; waited < 2000 && !isDotOnly(screenAt(h, h.clock.now()) ?? { at: 0, method: '', containers: [] }); waited += 20) {
