@@ -308,6 +308,11 @@ export class FixtureRun {
     this.items = [...frames, ...words].sort((a, b) => a.t - b.t || a.kind - b.kind)
   }
 
+  /** The end of the 100 ms frame that carries fixture second `t`: a word ending at `t` is heard once it is played. */
+  frameEnd(t: number): number {
+    return Math.round(Math.ceil(t / FRAME_SECONDS - 1e-6) * FRAME_SECONDS * 1000) / 1000
+  }
+
   /** The clock reading at fixture second `t`. */
   at(t: number): number {
     return this.epoch + t * 1000
@@ -357,6 +362,11 @@ export class FixtureRun {
     const now = this.seconds(this.deps.clock.now())
     const skipped = this.fixture.words.find((w) => w.start < t && w.end > now)
     if (skipped) throw new Error(`skipTo(${t}) would skip "${skipped.text}" at ${skipped.start}-${skipped.end}s; play it instead`)
+    // Nor the frame that carries the end of a word already played: the provider gives a word only once it has heard it (FixtureStt).
+    const said = this.fixture.words.filter((w) => w.end <= now + 1e-9).at(-1)
+    if (said && this.frameEnd(said.end) > now + 1e-9 && this.frameEnd(said.end) <= t) {
+      throw new Error(`skipTo(${t}) would skip the end of "${said.text}"'s audio (its frame to ${this.frameEnd(said.end)}s); play to run.frameEnd(${said.end}) first`)
+    }
     while (this.cursor < this.items.length && this.items[this.cursor]!.t <= t) this.cursor++
     this.deps.clock.advance(Math.max(0, this.at(t) - this.deps.clock.now()))
   }

@@ -35,7 +35,9 @@ export interface Harness {
   stt: FixtureStt
   notifications: NotificationCapture
   model: ModelClient
-  /** Stops the last scenario's lenses (their sockets closed, so nothing of theirs is still in flight), forgets the wearer's session, switches thread detection back on, clears the record and sets the clock to zero. */
+  /** Every model pass the server reports failed since the last reset (a missing cassette among them): a scenario fails on any (lens-world.ts). */
+  modelErrors: unknown[]
+  /** Stops the last scenario's lenses (their sockets closed, so nothing of theirs is still in flight), forgets the wearer's session, switches thread detection back on, clears the record and the store, and sets the clock to zero. */
   reset(): Promise<void>
   /** Starts the lens against the server; rejects, loudly, if it cannot open /audio. */
   startLens(): Promise<Lens>
@@ -70,6 +72,8 @@ async function start(): Promise<Harness> {
     notifier: notifications,
   })
   stt.attach(server.events)
+  const modelErrors: unknown[] = []
+  server.events.on('modelError', ({ error }) => modelErrors.push(error))
   const lenses: Lens[] = []
   host.reset(clock)
   const h: Harness = {
@@ -80,6 +84,7 @@ async function start(): Promise<Harness> {
     stt,
     notifications,
     model,
+    modelErrors,
     async reset() {
       await Promise.all(lenses.splice(0).map((lens) => lens.stop()))
       // The wearer's session outlives a socket (D79); a scenario starts with none.
@@ -90,6 +95,13 @@ async function start(): Promise<Harness> {
       clock.reset()
       host.reset(clock)
       notifications.reset(clock)
+      modelErrors.length = 0
+      // A scenario starts with an empty store: no history, no transcript left by the last one (the clock starts again at zero).
+      const db = server.store.db
+      const names = db.prepare("SELECT name FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name != 'meta'").all() as { name: string }[]
+      db.exec('PRAGMA foreign_keys = OFF')
+      for (const { name } of names) db.exec(`DELETE FROM "${name}"`)
+      db.exec('PRAGMA foreign_keys = ON')
     },
     async startLens() {
       const { evenBridge } = await import('./even-host.ts')

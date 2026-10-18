@@ -3,8 +3,9 @@
 // with the matching token; then `npm run lens:simulate` opens the Even Hub
 // simulator on the lens. The secrets come from the untracked catch/.env, read
 // by Node's --env-file-if-exists in the npm script (names in .env.example):
-// DEEPGRAM_API_KEY for speech-to-text, CATCH_AUDIO_TOKEN for /audio. The only
-// network either process needs is the speech-to-text provider.
+// DEEPGRAM_API_KEY for speech-to-text, CATCH_AUDIO_TOKEN for /audio, and the
+// optional GEMINI_API_KEY for the promise detector (P2a). The only
+// network either process needs is the speech-to-text and model providers.
 import { spawn } from 'node:child_process'
 import { join, resolve } from 'node:path'
 

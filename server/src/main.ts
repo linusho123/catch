@@ -1,4 +1,5 @@
 import { startServer, threadDetectionFromEnv } from './app.ts'
+import { liveModel } from './llm/client.ts'
 import { splitFromEnv } from './split/split.ts'
 import { deepgram } from './stt/deepgram.ts'
 
@@ -10,6 +11,10 @@ import { deepgram } from './stt/deepgram.ts'
 // CATCH_SPLIT and CATCH_LOUDNESS_THRESHOLD_DBFS choose and tune the split;
 // CATCH_WEARER_NAME (optional) is the wearer's name, never caught.
 // CATCH_THREAD_DETECTION (on | off, default on) is the operator's D120 switch.
+// GEMINI_API_KEY (optional locally) turns on the promise detector; without
+// it Catch still hears and catches names, and promises nothing. There is no
+// phone push yet, so no notifier: a conversation's promises reach the phone
+// through the phone page's history.
 const port = Number(process.env.PORT ?? 8080)
 const host = process.env.HOST
 const dbPath = process.env.CATCH_DB ?? 'data/catch.db'
@@ -23,9 +28,11 @@ if (!deepgramKey) {
 const split = splitFromEnv()
 const wearerName = process.env.CATCH_WEARER_NAME?.trim() || undefined
 const threadDetection = threadDetectionFromEnv(process.env.CATCH_THREAD_DETECTION)
-const server = await startServer({ port, host, dbPath, audioToken, split, wearerName, threadDetection, stt: deepgram(deepgramKey) })
+const geminiKey = process.env.GEMINI_API_KEY?.trim() ?? ''
+const model = geminiKey ? liveModel({ apiKey: geminiKey }) : undefined
+const server = await startServer({ port, host, dbPath, audioToken, split, wearerName, threadDetection, model, stt: deepgram(deepgramKey) })
 console.log(
-  `catch server listening on :${port} (/audio, /health), split ${split.name}, thread detection ${threadDetection ? 'on' : 'off'}, store at ${dbPath}`,
+  `catch server listening on :${port} (/audio, /health), split ${split.name}, thread detection ${threadDetection ? 'on' : 'off'}, promises ${model ? 'on' : 'off (no GEMINI_API_KEY)'}, store at ${dbPath}`,
 )
 // A lost speech-to-text stream is retried every second; say why, once per outage.
 let deaf = false

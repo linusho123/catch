@@ -6,9 +6,11 @@ import { WebSocketServer } from 'ws'
 import { systemClock, type Clock, type TimerHandle } from '../../shared/clock.ts'
 import { parseLensMessage, type LensView, type ServerMessage } from '../../shared/lens-protocol.ts'
 import { decodeFrame, type AudioFrame } from '../../shared/wire.ts'
+import { command, PromiseDetector } from './catch/promises.ts'
 import { Session } from './catch/session.ts'
+import { Transcript } from './catch/transcript.ts'
 import type { ModelClient } from './llm/client.ts'
-import type { Notifier } from './notify.ts'
+import { Outbox, promiseNotification, type Notifier } from './notify.ts'
 import { phoneRoute, wearerOf } from './phone/api.ts'
 import { History } from './phone/history.ts'
 import { createSplit, type WearerSplit } from './split/split.ts'
@@ -45,7 +47,11 @@ import type { SpeechToText, SttStream, SttWord } from './stt/types.ts'
 // The phone page (D130) reads the history and each conversation's screen from
 // the read-only phone API under /phone/ (phone/api.ts), with the same token.
 // Each conversation that ends is offered to the history (phone/history.ts),
-// which keeps it only if it produced a promise or a keep (D76, D100).
+// which keeps it only if it produced a promise or a keep (D76, D100), with
+// the wearer's promises as commands under YOU; one with promises also sends
+// its notification to the wearer's phone through the outbox (notify.ts),
+// which holds it until the phone takes it (D114). The open conversation's
+// transcript lives in the store until its end, and is deleted there (D76).
 
 export interface ServerOptions {
   port: number
@@ -70,7 +76,7 @@ export interface ServerOptions {
   threadDetection?: boolean
   /** The model client the detectors and the jogger writer call (P1a on). */
   model?: ModelClient
-  /** Where phone notifications go (P2a on). */
+  /** Where phone notifications go (P2a on); without one, the phone page's history is the only way promises reach the phone. */
   notifier?: Notifier
 }
 
@@ -79,6 +85,8 @@ export interface ServerEvents {
   frame: [{ session: number; at: number; frame: AudioFrame }]
   words: [{ session: number; at: number; words: SttWord[] }]
   sttError: [{ session: number; at: number; error: unknown }]
+  /** A model pass failed (under test, a missing cassette): the promise it judged is lost. */
+  modelError: [{ at: number; error: unknown }]
 }
 
 /** How soon a lost speech-to-text stream is tried again: the dot returns within this of the provider coming back (D37). */
@@ -105,8 +113,9 @@ export interface RunningServer {
   clock: Clock
   events: EventEmitter<ServerEvents>
   /**
-   * Drops every wearer's in-memory session, as a restart of the process would
-   * (P9 makes them survive one). The test harness calls it between scenarios.
+   * Drops every wearer's in-memory session and every notification waiting
+   * for its phone, as a restart of the process would (P9 makes them survive
+   * one). The test harness calls it between scenarios.
    */
   forgetWearers(): void
   /** The operator's D120 switch, set while the server runs: every session, open or new, reads it from the next word or tap. */
@@ -131,10 +140,13 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
   const expectedToken = digest(opts.audioToken)
   const store = openStore(opts.dbPath)
   const history = new History(store)
+  const transcript = new Transcript(store)
   const clock = opts.clock ?? systemClock
   const split = opts.split ?? createSplit()
   const events = new EventEmitter<ServerEvents>()
   let threadDetection = opts.threadDetection ?? true
+  const outbox = opts.notifier ? new Outbox(opts.notifier, clock) : undefined
+  const promises = opts.model ? new PromiseDetector(opts.model) : undefined
   let sessions = 0
   /** One session per wearer, keyed by the digest of the shared token their lens carries (D79). */
   const wearers = new Map<string, Session>()
@@ -171,9 +183,20 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         clock,
         split,
         wearerName: opts.wearerName,
-        // P2a gives the history the conversation's promises, P4 its keep, P5 the owed ones.
         threadDetection: () => threadDetection,
-        onEnd: (ended) => history.record(wearer, { ...ended, you: [], owed: [], kept: false }),
+        promises,
+        onModelError: (error) => {
+          console.error(`a promise pass failed, so that promise is lost: ${(error as Error)?.message ?? String(error)}`)
+          events.emit('modelError', { at: clock.now(), error })
+        },
+        transcript: { add: (word) => transcript.add(wearer, word), delete: () => transcript.delete(wearer) },
+        // P4 gives the history the keep, P5 the owed promises.
+        onEnd: ({ promises: said, ...ended }) => {
+          const you = said.map(command)
+          const id = history.record(wearer, { ...ended, you, owed: [], kept: false })
+          const notification = promiseNotification(id, you)
+          if (notification) outbox?.enqueue(wearer, notification)
+        },
       })
     wearers.set(wearer, lens)
 
@@ -244,6 +267,7 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
         const msg = parseLensMessage(bytes.toString('utf8'))
         if (msg?.type === 'touch' && msg.gesture === 'tap') lens.tap()
         if (msg?.type === 'touch' && msg.gesture === 'long-press') lens.longPress()
+        if (msg?.type === 'touch' && msg.gesture === 'swipe-down') lens.swipeDown()
         return
       }
       try {
@@ -272,11 +296,13 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
     forgetWearers() {
       for (const session of wearers.values()) session.close()
       wearers.clear()
+      outbox?.forget()
     },
     setThreadDetection(on) {
       threadDetection = on
     },
     async close() {
+      outbox?.close()
       for (const client of wss.clients) client.terminate()
       await new Promise<void>((resolve) => wss.close(() => resolve()))
       await new Promise<void>((resolve, reject) => http.close((err) => (err ? reject(err) : resolve())))

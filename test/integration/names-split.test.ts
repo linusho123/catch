@@ -89,7 +89,7 @@ async function play(split: SplitName, fixture: string, until: number, opts: { to
       if (wd.start >= until) break
       if (wd.end <= now()) continue
       if (wd.start > now() && !opts.outage) run.skipTo(wd.start)
-      await run.playTo(wd.end)
+      await run.playTo(run.frameEnd(wd.end))
     }
     await run.playTo(now() + 3.5)
     const shown = linesShown({ host }, 0, clock.now())

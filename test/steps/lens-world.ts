@@ -77,9 +77,23 @@ export interface LensWorld {
   /** The names held before the moment the scenario is about, read from a names page or the lines shown. */
   heldBefore?: string[]
   pressedAt?: number
+  /** The clock when the wearer last spoke before a silence the scenario counts (D92). */
+  quietFrom?: number
 }
 
 let started = false
+
+/**
+ * After every scenario: a model pass that failed (a missing cassette above
+ * all) fails the scenario loudly, whatever its steps read, so a promise is
+ * never lost in silence.
+ */
+export async function afterScenario(): Promise<void> {
+  if (!started) return
+  const h = await harness()
+  const errors = h.modelErrors.splice(0)
+  if (errors.length > 0) throw new Error(`a model pass failed in this scenario: ${errors.map((e) => (e as Error)?.message ?? String(e)).join('; ')}`)
+}
 
 /** Closes the worker's harness if a scenario started it. */
 export async function closeHarness(): Promise<void> {
@@ -168,16 +182,23 @@ export async function playTo(w: LensWorld, t: number): Promise<void> {
 
 /**
  * Jumps the fixture to second `t` across its silences, playing every word on
- * the way (the player refuses to skip a word, M6): a long pause costs no wall time.
+ * the way, and the frame that carries its end (the player refuses to skip
+ * either, M6): a long pause costs no wall time.
  */
 export async function fastForward(w: LensWorld, t: number): Promise<void> {
   const run = w.run!
+  const skip = async (to: number) => {
+    // The frame carrying the last word said is played before the jump, so the provider has heard it.
+    const said = run.fixture.words.filter((wd) => wd.end <= nowSec(w) + 1e-9).at(-1)
+    if (said && run.frameEnd(said.end) > nowSec(w)) await run.playTo(Math.min(to, run.frameEnd(said.end)))
+    if (to > nowSec(w)) run.skipTo(to)
+  }
   for (const wd of run.fixture.words) {
     if (wd.end <= nowSec(w) || wd.start >= t) continue
-    if (wd.start > nowSec(w)) run.skipTo(wd.start)
-    await run.playTo(wd.end)
+    if (wd.start > nowSec(w)) await skip(wd.start)
+    await run.playTo(Math.min(t, run.frameEnd(wd.end)))
   }
-  if (t > nowSec(w)) run.skipTo(t)
+  if (t > nowSec(w)) await skip(t)
 }
 
 /** Fixture seconds now. */
@@ -258,8 +279,8 @@ export function rememberLines(w: LensWorld): void {
   w.linesBefore = linesShown(w.h!, w.dotSince!, w.h!.clock.now()).map((l) => l.text)
 }
 
-/** The containers a held page draws: the names page's header, names and hint, or the one nothing-held page (D31, D43); with detection off, the thread line above them (D120). */
-export const PAGE_PARTS = ['thread', 'header', 'names', 'hint', 'empty']
+/** The containers a held page draws: the names page's header, names and hint, or the one nothing-held page (D31, D43); with detection off, the thread line above them (D120); the promises page's header and list (D43, D112). */
+export const PAGE_PARTS = ['thread', 'header', 'names', 'hint', 'empty', 'promises']
 export const isPage = (s: Screen) => visible(s).length > 0 && visible(s).every((c) => PAGE_PARTS.includes(c.containerName))
 
 /**
@@ -296,6 +317,52 @@ export async function tapForPage(w: LensWorld): Promise<Screen> {
   w.page = shown
   w.pageRead = false
   return shown!
+}
+
+/** The lens comes back to the bare dot (a line fades), and the dot alone shows now. */
+export async function untilDot(w: LensWorld): Promise<void> {
+  const h = w.h!
+  await waitFor(w, () => (isDotOnly(screenAt(h, h.clock.now())!) ? true : undefined), LINE_MS + 2 * SLACK_MS)
+  expectDotOnly(screenAt(h, h.clock.now()), 'before the tap')
+}
+
+/** D43's promises page: its header, and nothing on it but its list. */
+export const isPromisesPage = (s: Screen) =>
+  visible(s).some((c) => c.containerName === 'header' && c.content === 'this conversation 2/2') && visible(s).some((c) => c.containerName === 'promises')
+
+/** The promises a promises page lists, in order: none on `no promises yet` (D112). */
+export function promisesOn(page: Screen): string[] {
+  const list = visible(page).find((c) => c.containerName === 'promises')
+  if (!list || list.content === 'no promises yet') return []
+  return list.content.split('\n').filter((l) => l.trim() !== '')
+}
+
+/**
+ * The wearer swipes down (the SDK's SCROLL_BOTTOM_EVENT, 2, on the container
+ * that takes the touches), and the promises page that comes up: dim, the
+ * header above its list, nothing else on the lens.
+ */
+export async function swipeDown(w: LensWorld): Promise<Screen> {
+  const h = w.h!
+  const at = h.clock.now()
+  h.host.push('textEvent', { containerID: 3, containerName: 'names', eventType: 2 })
+  const shown = await waitFor(w, () => screens(h).find((s) => s.at >= at && isPromisesPage(s)))
+  expect(shown, `a swipe down brought up no promises page; screens since: ${JSON.stringify(screens(h).filter((s) => s.at >= at).map((s) => visible(s).map((c) => c.content)))}`).toBeDefined()
+  expect(shown!.at - at, 'the promises page comes on the swipe').toBeLessThanOrEqual(SLACK_MS)
+  const parts = [...visible(shown!)].sort((a, b) => a.box.y - b.box.y)
+  expect(parts.map((c) => c.containerName), 'the promises page: its header, then its list').toEqual(['header', 'promises'])
+  for (const c of parts) expect(c.brightness, `the page's ${c.containerName} is dim`).toBe(LOWEST_READABLE)
+  expect(parts[0]!.box.y + parts[0]!.box.height, 'the header sits above the list').toBeLessThanOrEqual(parts[1]!.box.y)
+  w.page = shown
+  w.pageRead = false
+  return shown!
+}
+
+/** A tap brings up the names page listing `names`, and a swipe down past its end turns to the promises page. */
+export async function tapToPromises(w: LensWorld, names: string[]): Promise<Screen> {
+  const page = await tapForPage(w)
+  expect(namesOn(page), 'the names page first').toEqual(names)
+  return swipeDown(w)
 }
 
 /** The names a page lists, in order: none on the nothing-held page. */

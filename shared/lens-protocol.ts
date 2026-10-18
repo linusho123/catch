@@ -20,6 +20,12 @@ export type LensView =
    * wearer's last words, the page's first line, above the names (D120).
    */
   | { kind: 'names'; names: string[]; thread?: string }
+  /**
+   * The promises page (D43), after the names page on a swipe down: the
+   * wearer's own promises in the order made, or `no promises yet` when there
+   * are none (D112). P5 adds those owed to the wearer, after them.
+   */
+  | { kind: 'promises'; you: string[] }
 
 /** Server to lens. */
 export type ServerMessage =
@@ -27,8 +33,14 @@ export type ServerMessage =
   | { type: 'show'; view: LensView }
   | { type: 'error'; message: string }
 
-/** A tap; a long-press ends the conversation now (D52). Double-tap is Even's exit and never leaves the lens. */
-export type Gesture = 'tap' | 'long-press'
+/**
+ * A tap; a long-press ends the conversation now (D52); a swipe down turns the
+ * names page to the promises page (D43). Double-tap is Even's exit and never
+ * leaves the lens.
+ */
+export type Gesture = 'tap' | 'long-press' | 'swipe-down'
+
+const GESTURES: readonly string[] = ['tap', 'long-press', 'swipe-down'] satisfies Gesture[]
 
 /** Lens to server. */
 export type LensMessage = { type: 'touch'; gesture: Gesture }
@@ -36,7 +48,7 @@ export type LensMessage = { type: 'touch'; gesture: Gesture }
 export function parseLensMessage(raw: string): LensMessage | null {
   try {
     const msg = JSON.parse(raw) as Partial<LensMessage>
-    if (msg.type === 'touch' && (msg.gesture === 'tap' || msg.gesture === 'long-press')) return { type: 'touch', gesture: msg.gesture }
+    if (msg.type === 'touch' && typeof msg.gesture === 'string' && GESTURES.includes(msg.gesture)) return { type: 'touch', gesture: msg.gesture }
   } catch {
     // not JSON: ignored like any other message the server does not know
   }

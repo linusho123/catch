@@ -1,0 +1,174 @@
+{
+  "fixture": 1,
+  "synthetic": true,
+  "script": "one-promise",
+  "variant": "other-louder",
+  "lines": [
+    {
+      "at": 0,
+      "who": "wearer",
+      "text": "Morning, how was the trip?"
+    },
+    {
+      "gap": 0.8,
+      "who": "Ana",
+      "text": "Long, but worth it."
+    },
+    {
+      "gap": 0.6,
+      "who": "wearer",
+      "text": "Good. I'll book the room for Thursday."
+    },
+    {
+      "gap": 0.8,
+      "who": "Ana",
+      "text": "Perfect, thanks."
+    }
+  ],
+  "words": [
+    {
+      "text": "Morning,",
+      "start": 0,
+      "end": 0.495,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "how",
+      "start": 0.555,
+      "end": 0.87,
+      "role": "wearer",
+      "loudness": -25.6,
+      "speaker": 0
+    },
+    {
+      "text": "was",
+      "start": 0.93,
+      "end": 1.245,
+      "role": "wearer",
+      "loudness": -27.1,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 1.305,
+      "end": 1.62,
+      "role": "wearer",
+      "loudness": -27.4,
+      "speaker": 0
+    },
+    {
+      "text": "trip?",
+      "start": 1.68,
+      "end": 2.04,
+      "role": "wearer",
+      "loudness": -25.8,
+      "speaker": 0
+    },
+    {
+      "text": "Long,",
+      "start": 2.84,
+      "end": 3.2,
+      "role": "other",
+      "loudness": -14.3,
+      "speaker": 1
+    },
+    {
+      "text": "but",
+      "start": 3.26,
+      "end": 3.575,
+      "role": "other",
+      "loudness": -14.9,
+      "speaker": 1
+    },
+    {
+      "text": "worth",
+      "start": 3.635,
+      "end": 4.04,
+      "role": "other",
+      "loudness": -13.4,
+      "speaker": 1
+    },
+    {
+      "text": "it.",
+      "start": 4.1,
+      "end": 4.37,
+      "role": "other",
+      "loudness": -13.7,
+      "speaker": 1
+    },
+    {
+      "text": "Good.",
+      "start": 4.97,
+      "end": 5.33,
+      "role": "wearer",
+      "loudness": -26.1,
+      "speaker": 0
+    },
+    {
+      "text": "I'll",
+      "start": 5.39,
+      "end": 5.705,
+      "role": "wearer",
+      "loudness": -25.1,
+      "speaker": 0
+    },
+    {
+      "text": "book",
+      "start": 5.765,
+      "end": 6.125,
+      "role": "wearer",
+      "loudness": -26.6,
+      "speaker": 0
+    },
+    {
+      "text": "the",
+      "start": 6.185,
+      "end": 6.5,
+      "role": "wearer",
+      "loudness": -24.7,
+      "speaker": 0
+    },
+    {
+      "text": "room",
+      "start": 6.56,
+      "end": 6.92,
+      "role": "wearer",
+      "loudness": -26.3,
+      "speaker": 0
+    },
+    {
+      "text": "for",
+      "start": 6.98,
+      "end": 7.295,
+      "role": "wearer",
+      "loudness": -25.9,
+      "speaker": 0
+    },
+    {
+      "text": "Thursday.",
+      "start": 7.355,
+      "end": 7.895,
+      "role": "wearer",
+      "loudness": -27,
+      "speaker": 0
+    },
+    {
+      "text": "Perfect,",
+      "start": 8.695,
+      "end": 9.19,
+      "role": "other",
+      "loudness": -14.2,
+      "speaker": 1
+    },
+    {
+      "text": "thanks.",
+      "start": 9.25,
+      "end": 9.7,
+      "role": "other",
+      "loudness": -13.6,
+      "speaker": 1
+    }
+  ]
+}

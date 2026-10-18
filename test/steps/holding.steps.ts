@@ -1,12 +1,14 @@
 import { expect } from 'vitest'
 import type { Definer } from 'gherkin-node-test/vitest'
 import { findIntroductions } from '../../server/src/catch/introductions.ts'
+import { wearerOf } from '../../server/src/phone/api.ts'
+import { HARNESS_TOKEN } from '../harness/index.ts'
+import { linesOf } from '../harness/notifications.ts'
 import {
   begin,
   CANVAS,
   expectDotOnly,
   fastForward,
-  isDotOnly,
   isPage,
   LINE_MS,
   lineIn,
@@ -16,27 +18,33 @@ import {
   nowSec,
   PAGE_MS,
   playTo,
+  promisesOn,
   quoted,
   screenAt,
   screens,
   screensDuring,
   SLACK_MS,
   startRun,
+  swipeDown,
   tap,
   tapForPage,
+  untilDot,
   visible,
   waitFor,
   type LensWorld,
   type Screen,
 } from './lens-world.ts'
 
-// holding.feature (P1b): the names page, its five seconds, the empty page,
-// and the lens half of the conversation's end (quiet and the long-press). The
-// promises page is P2a's, scrolling P10's; the phone's half of the end binds
-// in P2a, and the keep in "A long-press ends the conversation now" in P4, so
-// those two scenarios stay scenario-scoped wip and these bindings of their
-// lens steps first run then. Every "sees" and every "a tap shows" is read from
-// the bridge stub's record on fixture time (lens-world.ts). The default split,
+// holding.feature (P1b, P2a): the names page, its five seconds, the empty
+// page, the promises page on a swipe down (P2a: the wearer's own promises and
+// `no promises yet`; the owed line is P5's, so "A swipe down turns to the
+// promises page" stays scenario-scoped wip with that step unbound), and the
+// conversation's end on the lens and, from P2a, on the phone: the
+// notification capture is the phone (D126). Scrolling is P10's; the keep in
+// "A long-press ends the conversation now" is P4's, so that scenario stays
+// wip with its keep steps unbound. Every "sees" and every "a tap shows" is
+// read from the bridge stub's record on fixture time (lens-world.ts), every
+// "the phone" from the capture's record. The default split,
 // loudness (D126), on the wearer-louder fixtures (D127); the session's own
 // tests (server/src/catch/session.test.ts) hold the same rules on any split.
 
@@ -51,6 +59,18 @@ const SILENCES: Record<string, { fixture: string; seconds: number }> = {
   'ten minutes and one second': { fixture: `quiet-10min1s.${V}`, seconds: 601 },
 }
 
+/** The account the harness's glasses are signed in to: its phone is the one the notifications go to (D79). */
+const ACCOUNT = wearerOf(HARNESS_TOKEN)
+
+/** D89: a promise line within three seconds. */
+const PROMISE_BOUND_MS = 3000
+
+/** The promise lines (`promised · …`) shown in [from, to], as the lens showed them, and the lens's other lines. */
+function promiseLinesShown(w: LensWorld, from: number, to: number): { promises: string[]; others: string[] } {
+  const lines = linesShown(w.h!, from, to).map((l) => l.text)
+  return { promises: lines.filter((l) => l.startsWith('promised · ')), others: lines.filter((l) => !l.startsWith('promised · ')) }
+}
+
 /** The page a tap shows: the one a step before has just brought up and nobody has read yet, or a new tap's. */
 async function pageFromTap(w: LensWorld): Promise<Screen> {
   if (w.page && !w.pageRead) {
@@ -62,11 +82,9 @@ async function pageFromTap(w: LensWorld): Promise<Screen> {
   return page
 }
 
-/** The lens comes back to the bare dot (a line fades), and the dot alone shows now. */
-async function untilDot(w: LensWorld): Promise<void> {
-  const h = w.h!
-  await waitFor(w, () => (isDotOnly(screenAt(h, h.clock.now())!) ? true : undefined), LINE_MS + 2 * SLACK_MS)
-  expectDotOnly(screenAt(h, h.clock.now()), 'before the tap')
+/** Nobody promises anything in either direction in what the fixture says. */
+function expectNothingPromised(w: LensWorld): void {
+  for (const l of w.run!.fixture.lines) expect(l.text, `"${l.text}" promises something`).not.toMatch(/\b(i'll|i will|i promise|let me|i'm going to)\b/i)
 }
 
 /** Nobody introduces themselves and nobody promises anything in what the fixture says. */
@@ -221,12 +239,16 @@ const holding: Definer<LensWorld> = (reg) => {
     const priya = lineIn(run, "Hi, I'm Priya.")
     const deck = lineIn(run, "Dev, I'll send you the deck.", priya.end)
     expect(deck.words.every((wd) => wd.role === 'wearer'), 'the wearer promises Dev the deck').toBe(true)
-    await playTo(w, deck.end)
-    expect(linesShown(w.h!, w.dotSince!, w.h!.clock.now()).map((l) => l.text)).toEqual(['Priya'])
+    // The promise is made (P2a): its line comes within three seconds of the words; Priya is the one name caught.
+    await playTo(w, deck.end + (PROMISE_BOUND_MS + SLACK_MS) / 1000)
+    const shown = promiseLinesShown(w, w.dotSince!, w.h!.clock.now())
+    expect(shown.others, 'the names caught').toEqual(['Priya'])
+    expect(shown.promises, 'the promise the lens showed').toEqual(['promised · send Dev the deck'])
     w.heldBefore = ['Priya']
     // The wearer's silence, to the second, with Dev talking through it until just before the wearer speaks.
     const back = lineIn(run, 'Sorry, where were we?', deck.end)
     expect(back.words.every((wd) => wd.role === 'wearer')).toBe(true)
+    w.quietFrom = run.at(deck.end)
     const between = run.fixture.words.filter((wd) => wd.start > deck.end && wd.end < back.start)
     expect(between.every((wd) => wd.role === 'other'), 'the wearer says nothing in between').toBe(true)
     expect(back.start - deck.end, `the wearer is silent for ${seconds} s`).toBeCloseTo(seconds, 3)
@@ -253,6 +275,80 @@ const holding: Definer<LensWorld> = (reg) => {
   reg.define(/^a tap shows "([^"]+)"$/, async (w, textArg) => {
     const page = await pageFromTap(w)
     expect(visible(page).map((c) => c.content)).toEqual([String(textArg)])
+  })
+
+  // D92's phone column (P2a): nothing within the conversation; at its quiet end, the promise notification.
+  reg.define(/^the phone has received (nothing|the promise notification at the tenth minute)$/, async (w, phoneArg) => {
+    const h = w.h!
+    if (String(phoneArg) === 'nothing') {
+      expect(h.notifications.received, 'the phone received a notification while the conversation went on').toEqual([])
+      expect(h.notifications.refused, 'a notification was even tried').toEqual([])
+      return
+    }
+    const got = h.notifications.phone(ACCOUNT)
+    expect(got.map((c) => linesOf(c.notification)), "the account holder's phone").toEqual([['Catch', 'Send Dev the deck']])
+    expect(h.notifications.received, 'no other phone received anything').toEqual(got)
+    // At the tenth minute of the wearer's silence, on fixture time.
+    const late = got[0]!.at - (w.quietFrom! + 10 * 60_000)
+    expect(Math.abs(late), `the notification came ${late} ms off the tenth minute`).toBeLessThanOrEqual(SLACK_MS)
+  })
+
+  // D52's phone half (P2a); the keep and its notification are P4's.
+  reg.define(/^the phone shows the promise notification within thirty seconds$/, async (w) => {
+    const h = w.h!
+    await waitFor(w, () => (h.notifications.phone(ACCOUNT).length > 0 ? true : undefined), 30_000)
+    const got = h.notifications.phone(ACCOUNT)
+    expect(got.map((c) => linesOf(c.notification)), "the account holder's phone").toEqual([['Catch', 'Send Dev the deck tonight']])
+    expect(got[0]!.at - w.pressedAt!, 'within thirty seconds of the long-press').toBeLessThanOrEqual(30_000)
+  })
+
+  // D43, D112: the promises page (P2a; the owed line after them is P5's).
+  reg.define(/^the names page of a conversation with two promises made and one owed is showing$/, async (w) => {
+    const h = await begin(w)
+    const run = await startRun(w, `held-page.${V}`, 0)
+    const deck = lineIn(run, "Dev, I'll send you the deck.")
+    const sam = lineIn(run, "And I'll introduce you to Sam.", deck.end)
+    const agenda = lineIn(run, "Great, I'll send you the agenda.", sam.end)
+    for (const line of [deck, sam]) expect(line.words.every((wd) => wd.role === 'wearer'), 'the wearer promises').toBe(true)
+    expect(agenda.words.every((wd) => wd.role === 'other'), 'Dev promises').toBe(true)
+    await playTo(w, run.fixture.words.at(-1)!.end + LINE_DONE_S)
+    const shown = promiseLinesShown(w, w.dotSince!, h.clock.now())
+    expect(shown.promises, 'the two promises the wearer made, as the lens showed them').toEqual(['promised · send Dev the deck', 'promised · introduce Dev to Sam'])
+    expect(shown.others, 'the names caught').toEqual(['Priya', 'Marcus', 'Dana'])
+    await untilDot(w)
+    const page = await tapForPage(w)
+    expect(namesOn(page)).toEqual(['Priya', 'Marcus', 'Dana'])
+  })
+
+  reg.define(/^Priya and Marcus have introduced themselves and nothing has been promised in either direction$/, async (w) => {
+    const h = await begin(w)
+    const run = await startRun(w, `names-only.${V}`, 0)
+    await playTo(w, run.fixture.words.at(-1)!.end + LINE_DONE_S)
+    expectNothingPromised(w)
+    expect(linesShown(h, w.dotSince!, h.clock.now()).map((l) => l.text), 'the names caught, and nothing else').toEqual(['Priya', 'Marcus'])
+  })
+
+  reg.define(/^the wearer has tapped and the names page is showing$/, async (w) => {
+    await untilDot(w)
+    const page = await tapForPage(w)
+    expect(visible(page).find((c) => c.containerName === 'header')?.content).toBe('this conversation 1/2')
+    expect(namesOn(page)).toEqual(['Priya', 'Marcus'])
+  })
+
+  reg.define(/^the wearer swipes down past the end of the names$/, async (w) => {
+    const names = w.page!
+    const page = await swipeDown(w)
+    // The page turned: the names page was up when the swipe came, and every name on it was already in view.
+    expect(page.at - names.at, 'the swipe came while the names page was up').toBeLessThan(PAGE_MS)
+    w.pageRead = true
+  })
+
+  reg.define(/^the wearer sees (".+") first$/, (w, listArg) => {
+    expect(promisesOn(w.page!).slice(0, quoted(String(listArg)).length), 'the promises page, from the top').toEqual(quoted(String(listArg)))
+  })
+
+  reg.define(/^the wearer sees the promises page reading "([^"]+)"$/, (w, textArg) => {
+    expect(visible(w.page!).map((c) => c.content), 'the promises page').toEqual(['this conversation 2/2', String(textArg)])
   })
 
   // D52, the lens half (scenario-scoped wip until P2a binds the phone and P4 the keep).

@@ -19,6 +19,8 @@ export function openStore(path: string): Store {
   if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true })
   const db = new DatabaseSync(path)
   db.exec('PRAGMA journal_mode = WAL')
+  // D76: a deleted row's bytes are overwritten, so a transcript deleted at the boundary is gone from the file too.
+  db.exec('PRAGMA secure_delete = ON')
   db.exec('CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)')
   db.prepare('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)').run('schema_version', String(SCHEMA_VERSION))
   return {

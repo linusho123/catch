@@ -5,7 +5,9 @@ import { pcmLoudnessDbfs, type FrameSignal, type Side, type SplitWord, type Wear
 import type { SttWord } from '../stt/types.ts'
 import { HeldNames } from './held-names.ts'
 import { findIntroductions, findSelfIntroductions } from './introductions.ts'
+import { CONTEXT_SENTENCES, type PromiseDetector, type Said } from './promises.ts'
 import { Thread } from './thread.ts'
+import type { TranscriptWord } from './transcript.ts'
 
 // One /audio session: what the server makes of one pair of glasses. It lines
 // the provider's words up with the lens's frames, asks the split (D125) whose
@@ -31,6 +33,15 @@ import { Thread } from './thread.ts'
 // With automatic detection switched off (D120, the operator's setting), no
 // thread line ever comes on its own, and a tap at the dot gives the thread
 // back as the held page's first line, above the names.
+//
+// The wearer's promises (P2a): every sentence of the wearer's that carries a
+// commitment cue goes to the promise detector (promises.ts) with the
+// sentences before it and the names caught; a promise shows as `promised ·
+// <summary>` for a second and a half and is held for the conversation, and a
+// swipe down on the names page turns to the promises page (D43, D112). At the
+// end the conversation's promises go to the phone (onEnd, once every pass in
+// flight has answered), and its transcript is deleted, in the store and in
+// the session's memory (D76).
 
 /** D17: a catch line holds for a second and a half. A ruling, not a tuning value. */
 export const LINE_MS = 1500
@@ -64,17 +75,33 @@ export interface SessionOptions {
    * a session already open.
    */
   threadDetection?: () => boolean
-  /** A conversation has ended (quiet or long-press): what it held, for the phone's history (D100). */
+  /** A conversation has ended (quiet or long-press): what it held, for the phone (D100, D28). */
   onEnd?: (ended: EndedConversation) => void
+  /** The wearer's promise detector (D89); without one, nothing is ever promised. */
+  promises?: PromiseDetector
+  /** A model pass failed (an error, or under test a missing cassette): the promise it judged is lost, loudly. */
+  onModelError?: (error: unknown) => void
+  /** Where the open conversation's transcript is held, and deleted at its end (D73, D76). */
+  transcript?: { add(word: TranscriptWord): void; delete(): void }
 }
 
-/** A conversation as it ends, on the session's clock (ms). P2a adds its promises, P4 its keep. */
+/** A conversation as it ends, on the session's clock (ms). P4 adds its keep, P5 the owed promises. */
 export interface EndedConversation {
   startedAt: number
   endedAt: number
   /** The names caught, in the order heard. */
   names: string[]
+  /** The wearer's promises, as the lens summarizes them, in the order made (D89). */
+  promises: string[]
 }
+
+/** One conversation's promises: a slot per pass, in the order the sentences were said, and the passes still out. */
+interface Promises {
+  slots: (string | undefined)[]
+  inflight: Set<Promise<void>>
+}
+
+const held = (p: Promises) => p.slots.filter((s): s is string => s !== undefined)
 
 /** One lens's hold on the session: what its socket may still do. */
 export interface Attachment {
@@ -139,6 +166,15 @@ export class Session {
   /** The wearer's most recent continuous run, and whether someone has taken the floor from it (D35, D48). */
   private readonly thread = new Thread()
   private readonly threadDetection: () => boolean
+  private readonly detector: PromiseDetector | undefined
+  private readonly onModelError: (error: unknown) => void
+  private readonly transcript: SessionOptions['transcript']
+  /** The open conversation's promises. */
+  private promises: Promises = { slots: [], inflight: new Set() }
+  /** The wearer's sentence so far, someone else's, and the sentences said before them (the detector's context). */
+  private wearerSentence: string[] = []
+  private otherSentence: string[] = []
+  private said: Said[] = []
 
   // What the lens shows.
   private hearing = false
@@ -157,6 +193,9 @@ export class Session {
     this.wearerName = opts.wearerName?.trim().toLowerCase() || undefined
     this.threadDetection = opts.threadDetection ?? (() => true)
     this.onEnd = opts.onEnd
+    this.detector = opts.promises
+    this.onModelError = opts.onModelError ?? (() => {})
+    this.transcript = opts.transcript
     if (opts.show) this.attach(opts.show)
   }
 
@@ -256,6 +295,18 @@ export class Session {
   }
 
   /**
+   * A swipe down: on the names page, the promises page, for five seconds
+   * (D43, D112). Anywhere else it means nothing yet (P6 pauses at the dot).
+   */
+  swipeDown(): void {
+    if (!this.hearing || this.view.kind !== 'names') return
+    this.clearView()
+    this.view = { kind: 'promises', you: held(this.promises) }
+    this.viewTimer = this.clock.setTimeout(() => this.backToDot(), PAGE_MS)
+    this.render()
+  }
+
+  /**
    * A long-press ends the conversation now (D52, D92). A line or a page
    * showing goes back to the dot at once, so the end is visible and the ended
    * conversation's names are never shown after it (operator answer 4).
@@ -321,6 +372,8 @@ export class Session {
       this.startedAt = this.clock.now() - agoMs
       this.restartQuiet(agoMs)
     }
+    if (this.inConversation) this.transcript?.add({ text, start, end, side })
+    this.sentences(text, side)
     if (side === 'wearer') {
       if (this.inConversation) this.restartQuiet(agoMs)
       this.otherRun = []
@@ -350,6 +403,54 @@ export class Session {
     }
   }
 
+  /**
+   * Gathers the words into sentences, by the provider's punctuation or a
+   * change of speaker; each finished sentence of the wearer's is a candidate
+   * promise (promises.ts says which are worth a model pass).
+   */
+  private sentences(text: string, side: Side): void {
+    const mine = side === 'wearer' ? this.wearerSentence : this.otherSentence
+    if (side === 'wearer') this.finishOther()
+    else this.finishWearer()
+    mine.push(text)
+    if (!/[.!?]$/.test(text)) return
+    if (side === 'wearer') this.finishWearer()
+    else this.finishOther()
+  }
+
+  private finishOther(): void {
+    if (this.otherSentence.length === 0) return
+    this.remember({ who: 'other', text: this.otherSentence.splice(0).join(' ') })
+  }
+
+  private finishWearer(): void {
+    if (this.wearerSentence.length === 0) return
+    const text = this.wearerSentence.splice(0).join(' ')
+    const before = this.said.slice()
+    this.remember({ who: 'wearer', text })
+    if (this.inConversation && this.detector) this.judgePromise(text, before)
+  }
+
+  private remember(s: Said): void {
+    this.said.push(s)
+    if (this.said.length > CONTEXT_SENTENCES) this.said.splice(0, this.said.length - CONTEXT_SENTENCES)
+  }
+
+  /** One model pass (D89, D90, D47); a promise is held in this conversation's slot and shown, if the conversation is still open. */
+  private judgePromise(text: string, before: Said[]): void {
+    const promises = this.promises
+    const slot = promises.slots.push(undefined) - 1
+    const pass: Promise<void> = this.detector!.detect(text, before, this.names.list())
+      .then((summary) => {
+        if (summary === undefined) return
+        promises.slots[slot] = summary
+        if (this.promises === promises) this.showLine(`promised · ${summary}`)
+      })
+      .catch((error: unknown) => this.onModelError(error))
+      .finally(() => promises.inflight.delete(pass))
+    promises.inflight.add(pass)
+  }
+
   /** The quiet timer starts over: the conversation ends ten minutes after the wearer last spoke (D92). */
   private restartQuiet(agoMs: number): void {
     if (this.quietTimer) this.clock.clearTimeout(this.quietTimer)
@@ -359,19 +460,37 @@ export class Session {
     }, QUIET_MS - agoMs)
   }
 
-  /** The conversation ends: its names clear, and the wearer's next speech begins the next one (D92, D129). */
+  /**
+   * The conversation ends: its names clear, its transcript is deleted (D76),
+   * its promises go to the phone, and the wearer's next speech begins the
+   * next one (D92, D129).
+   */
   private endConversation(): void {
     if (this.quietTimer) this.clock.clearTimeout(this.quietTimer)
     this.quietTimer = undefined
+    // A sentence of the wearer's cut short by the end is still a candidate.
+    this.finishWearer()
     // Snapshot, reset, then the hook: the conversation is over whatever the hook does (fix round, M4).
     const ended = this.inConversation ? { startedAt: this.startedAt, endedAt: this.clock.now(), names: this.names.list() } : undefined
+    const promises = this.promises
+    this.promises = { slots: [], inflight: new Set() }
     this.inConversation = false
     this.names.clear()
     this.otherRun = []
     this.otherCaught.clear()
     this.wearerRun = []
     this.thread.clear()
-    if (ended) this.onEnd?.(ended)
+    // D76: nothing of what was said survives the boundary, in the store or here.
+    this.wearerSentence = []
+    this.otherSentence = []
+    this.said = []
+    this.judged = []
+    if (ended) this.transcript?.delete()
+    if (!ended) return
+    // The promises once every pass still out has answered; at once (on the clock's own reading) when none is.
+    const finish = () => this.onEnd?.({ ...ended, promises: held(promises) })
+    if (promises.inflight.size === 0) finish()
+    else void Promise.allSettled(promises.inflight).then(finish)
   }
 
   private showLine(text: string): void {

@@ -26,7 +26,8 @@ function wordsOf(line: ScriptLine, at: number, variant: Variant, speaker: number
   const natural = tokens.map((t) => 0.18 + 0.045 * t.replace(/[^\p{L}\p{N}]/gu, '').length)
   const total = natural.reduce((a, b) => a + b, 0) + WORD_GAP * (tokens.length - 1)
   const scale = line.span ? (line.span - WORD_GAP * (tokens.length - 1)) / (total - WORD_GAP * (tokens.length - 1)) : 1
-  const role = line.who === 'wearer' ? 'wearer' : 'other'
+  // `wearer:<name>` is a second person wearing the glasses: the wearer at the mic (scripts.ts).
+  const role = line.who === 'wearer' || line.who.startsWith('wearer:') ? 'wearer' : 'other'
   let t = at
   return tokens.map((text, i) => {
     const dur = natural[i]! * scale

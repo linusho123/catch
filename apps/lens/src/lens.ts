@@ -86,6 +86,8 @@ const PAGE_BOX = { x: 0, y: 0, w: CANVAS.width, h: CANVAS.height }
 const HEADER_BOX = { x: 0, y: 0, w: CANVAS.width, h: 40 }
 const NAMES_BOX = { x: 0, y: 40, w: CANVAS.width, h: 208 }
 const HINT_BOX = { x: 0, y: 248, w: CANVAS.width, h: 40 }
+/** The promises page's list, under its header to the foot of the lens. */
+const PROMISES_BOX = { x: 0, y: 40, w: CANVAS.width, h: CANVAS.height - 40 }
 /** With detection off, the thread line heads the page and the rest moves down a line (D120). */
 const THREAD_BOX = { x: 0, y: 0, w: CANVAS.width, h: 40 }
 const HEADER_UNDER_THREAD_BOX = { x: 0, y: 40, w: CANVAS.width, h: 40 }
@@ -99,6 +101,10 @@ export const NAMES_HEADER = 'this conversation 1/2'
 export const PROMISES_HINT = '↓ promises'
 /** The page when nothing is held (D31). */
 export const NOTHING_HELD = 'this conversation · nothing held'
+/** The promises page's header: page 2 of 2 (D43). */
+export const PROMISES_HEADER = 'this conversation 2/2'
+/** The promises page when nothing is promised (D112). */
+export const NO_PROMISES = 'no promises yet'
 
 /** The containers that draw one view. Exactly one thing at a time. */
 export function containersFor(view: LensView): TextContainerProperty[] {
@@ -126,6 +132,12 @@ export function containersFor(view: LensView): TextContainerProperty[] {
         text(4, 'header', NAMES_HEADER, HEADER_BOX, false),
         text(3, 'names', view.names.join('\n'), NAMES_BOX),
         text(5, 'hint', PROMISES_HINT, HINT_BOX, false),
+      ]
+    case 'promises':
+      // D43, D112: the header, then the wearer's promises one per line, or `no promises yet`.
+      return [
+        text(4, 'header', PROMISES_HEADER, HEADER_BOX, false),
+        text(7, 'promises', view.you.length > 0 ? view.you.join('\n') : NO_PROMISES, PROMISES_BOX),
       ]
   }
 }
@@ -235,6 +247,10 @@ export async function startLens(opts: LensOptions): Promise<Lens> {
     // A long-press ends the conversation now (D52); its release means nothing.
     if (textType === OsEventTypeList.LONG_PRESS_EVENT || sysType === OsEventTypeList.LONG_PRESS_EVENT) {
       sendToServer({ type: 'touch', gesture: 'long-press' })
+    }
+    // A swipe down (the SDK's scroll toward the bottom) turns the names page to the promises (D43).
+    if (textType === OsEventTypeList.SCROLL_BOTTOM_EVENT || sysType === OsEventTypeList.SCROLL_BOTTOM_EVENT) {
+      sendToServer({ type: 'touch', gesture: 'swipe-down' })
     }
   })
 

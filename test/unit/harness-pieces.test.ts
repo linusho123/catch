@@ -35,12 +35,16 @@ describe('the notification capture', () => {
     const clock = new VirtualClock(1)
     const phone = new NotificationCapture(clock)
     clock.advance(2000)
-    expect(await phone.send({ title: 'Catch', body: 'Send Dev the deck tonight' })).toBe(true)
+    expect(await phone.send('account-a', { title: 'Catch', body: 'Send Dev the deck tonight' })).toBe(true)
+    expect(await phone.send('account-b', { title: 'Catch', body: 'Call Ana' })).toBe(true)
     phone.reachable = false
-    expect(await phone.send({ title: 'Catch', body: 'Introduce Dev to Sam' })).toBe(false)
-    expect(phone.received.map((r) => r.notification.body)).toEqual(['Send Dev the deck tonight'])
+    expect(await phone.send('account-a', { title: 'Catch', body: 'Introduce Dev to Sam' })).toBe(false)
+    expect(phone.received.map((r) => r.notification.body)).toEqual(['Send Dev the deck tonight', 'Call Ana'])
     expect(phone.received[0]!.at).toBeGreaterThanOrEqual(2000)
     expect(phone.refused.map((r) => r.notification.body)).toEqual(['Introduce Dev to Sam'])
+    // Each account's phone shows only what was sent to it (D79).
+    expect(phone.phone('account-a').map((r) => r.notification.body)).toEqual(['Send Dev the deck tonight'])
+    expect(phone.phone('account-b').map((r) => r.notification.body)).toEqual(['Call Ana'])
   })
 })
 

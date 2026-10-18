@@ -79,8 +79,15 @@ describe('the loudness split', () => {
   }
 })
 
+/**
+ * Fixtures with one person at the glasses. In shared-pair (D79) two people
+ * take turns wearing them, each with a provider label of their own; the
+ * labels can name only one of them the wearer's (pinned below).
+ */
+const oneWearer = (name: string) => !name.startsWith('shared-pair.')
+
 describe("the provider's speaker labels", () => {
-  for (const name of fixtureNames()) {
+  for (const name of fixtureNames().filter(oneWearer)) {
     it(`map to the wearer or not on ${name}`, () => {
       expect(classify(providerLabelSplit(), name)).toEqual(roles(name))
     })
@@ -89,7 +96,7 @@ describe("the provider's speaker labels", () => {
   // M2: the label majority must do the work. Here the per-word anchor (the
   // speaker-role vote) is wrong on a few words, because their frames carry the
   // wrong role; the provider's labels still put those words on the right side.
-  for (const name of fixtureNames()) {
+  for (const name of fixtureNames().filter(oneWearer)) {
     it(`correct the anchor where a few frames carry the wrong role on ${name} (M2)`, () => {
       const fx = loadFixture(name)
       const truth = roles(name)
@@ -113,7 +120,19 @@ describe("the provider's speaker labels", () => {
   }
 
   // M2: the roleless path, the configured alternative in the simulator (D126).
-  for (const name of wearerLouder) {
+  // Known limit (P2a, D79): the labels tell two wearers apart, and only one label can be the wearer's,
+  // so the second person to wear the glasses is someone else to this split. D79 binds on loudness, the default.
+  for (const name of fixtureNames().filter((n) => !oneWearer(n))) {
+    it(`take only the first wearer's label for the wearer's on ${name} (known limit)`, () => {
+      const fx = loadFixture(name)
+      const sides = classify(providerLabelSplit(), name)
+      const first = fx.words.find((w) => w.role === 'wearer')!.speaker
+      fx.words.forEach((w, i) => expect(sides[i], `"${w.text}" (label ${w.speaker})`).toBe(w.role === 'wearer' && w.speaker === first ? 'wearer' : 'other'))
+      expect(new Set(fx.words.filter((w) => w.role === 'wearer').map((w) => w.speaker)).size, 'two wearers, two labels').toBe(2)
+    })
+  }
+
+  for (const name of wearerLouder.filter(oneWearer)) {
     it(`tell every word's side with every frame unknown, as in the simulator, on ${name} (M2)`, () => {
       expect(classify(providerLabelSplit(), name, { roleless: true })).toEqual(roles(name))
     })

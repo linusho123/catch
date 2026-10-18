@@ -14,9 +14,9 @@
 {"file":"features/holding.feature","title":"A swipe down turns to the promises page","status":"unbound"}
 {"file":"features/holding.feature","title":"A tap shows the names page","status":"passed"}
 {"file":"features/holding.feature","title":"Nothing held shows an empty page","status":"passed"}
-{"file":"features/holding.feature","title":"Quiet ends a conversation at ten minutes [1]","status":"unbound"}
-{"file":"features/holding.feature","title":"Quiet ends a conversation at ten minutes [2]","status":"unbound"}
-{"file":"features/holding.feature","title":"The promises page with nothing promised","status":"unbound"}
+{"file":"features/holding.feature","title":"Quiet ends a conversation at ten minutes [1]","status":"passed"}
+{"file":"features/holding.feature","title":"Quiet ends a conversation at ten minutes [2]","status":"passed"}
+{"file":"features/holding.feature","title":"The promises page with nothing promised","status":"passed"}
 {"file":"features/holding.feature","title":"Thirty names scroll before the promises page","status":"unbound"}
 {"file":"features/kept-conversations.feature","title":"A kept call produces a jogger","status":"unbound"}
 {"file":"features/kept-conversations.feature","title":"A kept conversation of any length gets a jogger [1]","status":"unbound"}
@@ -38,11 +38,11 @@
 {"file":"features/names.feature","title":"The wearer's own name is not caught","status":"passed"}
 {"file":"features/phone-handoff.feature","title":"A conversation with nothing to keep never appears on the phone","status":"passed"}
 {"file":"features/phone-handoff.feature","title":"A long list is cut off and opens in full","status":"unbound"}
-{"file":"features/phone-handoff.feature","title":"A shared pair delivers to the account holder's phone","status":"unbound"}
+{"file":"features/phone-handoff.feature","title":"A shared pair delivers to the account holder's phone","status":"passed"}
 {"file":"features/phone-handoff.feature","title":"An owed promise can be ticked off the same way on the iPhone app [1]","status":"unbound"}
 {"file":"features/phone-handoff.feature","title":"An owed promise can be ticked off the same way on the website [2]","status":"unbound"}
-{"file":"features/phone-handoff.feature","title":"An unkept conversation's transcript is deleted everywhere","status":"unbound"}
-{"file":"features/phone-handoff.feature","title":"No promises means no notification","status":"unbound"}
+{"file":"features/phone-handoff.feature","title":"An unkept conversation's transcript is deleted everywhere","status":"passed"}
+{"file":"features/phone-handoff.feature","title":"No promises means no notification","status":"passed"}
 {"file":"features/phone-handoff.feature","title":"Notifications wait for an unreachable phone","status":"unbound"}
 {"file":"features/phone-handoff.feature","title":"One notification carries both lines","status":"unbound"}
 {"file":"features/phone-handoff.feature","title":"The home lists conversations newest first on the iPhone app [1]","status":"unbound"}
@@ -51,16 +51,16 @@
 {"file":"features/phone-handoff.feature","title":"The jogger reads the same on the website [2]","status":"unbound"}
 {"file":"features/phone-handoff.feature","title":"Ticking off a promise removes it from the conversation's screen on the iPhone app [1]","status":"unbound"}
 {"file":"features/phone-handoff.feature","title":"Ticking off a promise removes it from the conversation's screen on the website [2]","status":"unbound"}
-{"file":"features/promises.feature","title":"A bare yes takes its object from what Dev just asked","status":"unbound"}
+{"file":"features/promises.feature","title":"A bare yes takes its object from what Dev just asked","status":"passed"}
 {"file":"features/promises.feature","title":"A catch line appears and fades [1]","status":"unbound"}
-{"file":"features/promises.feature","title":"A catch line appears and fades [2]","status":"unbound"}
+{"file":"features/promises.feature","title":"A catch line appears and fades [2]","status":"passed"}
 {"file":"features/promises.feature","title":"A catch line appears and fades [3]","status":"unbound"}
-{"file":"features/promises.feature","title":"A catch line appears and fades [4]","status":"unbound"}
+{"file":"features/promises.feature","title":"A catch line appears and fades [4]","status":"passed"}
 {"file":"features/promises.feature","title":"A promise from someone unnamed is held as theirs","status":"unbound"}
-{"file":"features/promises.feature","title":"A promise with no stated time shows the bare action","status":"unbound"}
+{"file":"features/promises.feature","title":"A promise with no stated time shows the bare action","status":"passed"}
 {"file":"features/promises.feature","title":"An owed promise takes the name once it is caught","status":"unbound"}
 {"file":"features/promises.feature","title":"Dev's promise is held in the owed list, apart from the wearer's own","status":"unbound"}
-{"file":"features/promises.feature","title":"Thinking about it is not a promise","status":"unbound"}
+{"file":"features/promises.feature","title":"Thinking about it is not a promise","status":"passed"}
 {"file":"features/promises.feature","title":"Two unnamed promisers are numbered, and a name attaches to the most recent","status":"unbound"}
 {"file":"features/staying-dark.feature","title":"A pause freezes the conversation","status":"unbound"}
 {"file":"features/staying-dark.feature","title":"A second swipe down resumes listening","status":"unbound"}

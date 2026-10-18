@@ -1,0 +1,7 @@
+{
+  "cassette": 1,
+  "by": "hand",
+  "model": "gemini-3.5-flash-lite",
+  "prompt": "You read a live conversation for a person wearing smart glasses (the wearer) and decide whether the wearer has just made a promise.\n\nNames caught in this conversation, in the order heard: Priya\nWhat was said just before, oldest first:\nWearer: Hey Dev, how is it going?\nOther: Hi, I'm Priya.\n\nThe wearer now says: Dev, I'll send you the deck.\n\nA promise is the wearer committing to do something (\"I'll send you the deck tonight\"; \"Yeah, I'll do it\" in answer to a request). Considering, hedging or declining is not a promise (\"I'll think about it\", \"I would if I could\", \"maybe\").\nIf it is a promise, write it as a short command to the wearer: start with the verb in lower case, never \"I\" or \"you\"; put the name of the person the wearer is promising in place of \"you\" (the name the wearer addressed, or else the most recent name caught); keep any stated time or condition word for word (\"tonight\", \"by Friday\"); when the wearer's words lack the object, take it from what the other person just asked; write \"intro\" as \"introduce\".\nAnswer with JSON only, one line: {\"promise\": true, \"summary\": \"send Dev the deck tonight\"} or {\"promise\": false}.",
+  "response": "{\"promise\":true,\"summary\":\"send Dev the deck\"}"
+}

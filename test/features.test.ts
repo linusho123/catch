@@ -1,13 +1,14 @@
 import { copyFileSync, mkdtempSync, readdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, join, resolve } from 'node:path'
-import { afterAll } from 'vitest'
+import { afterAll, afterEach } from 'vitest'
 import { runFeatures, type Definer, type WipEntry } from 'gherkin-node-test/vitest'
-import { closeHarness } from './steps/lens-world.ts'
+import { afterScenario, closeHarness } from './steps/lens-world.ts'
 import droppedThread from './steps/dropped-thread.steps.ts'
 import holding from './steps/holding.steps.ts'
 import names from './steps/names.steps.ts'
 import phoneHandoff from './steps/phone-handoff.steps.ts'
+import promises from './steps/promises.steps.ts'
 import stayingDark from './steps/staying-dark.steps.ts'
 
 // gherkin-node-test over features/. One definer per feature file joins here as
@@ -24,22 +25,23 @@ const FEATURE_DIR = join(ROOT, 'features')
 
 // The wip register: features (or scenarios) not yet bound. It only shrinks.
 const WIP: WipEntry[] = [
-  // P1b binds D43's names page, D31 and the dismissal; these wait for P2a (the
-  // promises page; the phone's half of the end), P4 (the keep) and P10 (scrolling).
-  // The lens steps of the two ends are bound, and first run when P2a binds the phone.
+  // P1b binds D43's names page, D31 and the dismissal; P2a the promises page
+  // (D112) and the phone's half of the quiet end. These wait: the owed line on
+  // the promises page for P5, the keep in the long-press end for P4 (its phone
+  // half is bound), scrolling for P10.
   {
     feature: 'holding',
     scenarios: [
       'A swipe down turns to the promises page',
       'Thirty names scroll before the promises page',
-      'The promises page with nothing promised',
-      'Quiet ends a conversation at ten minutes',
       'A long-press ends the conversation now',
     ],
   },
   'kept-conversations',
-  // P2b′ (D130) binds the phone page's "nothing to keep" scenario. The rest waits:
-  // the notifications for P2a; the jogger row for P4; the tick-off outlines and
+  // P2b′ (D130) binds the phone page's "nothing to keep" scenario; P2a binds D51,
+  // D76 and D79 in full, and the bound halves of D117 (its owed line waits for
+  // P5), D28 (its "opens in full" needs both owed promises, P5) and D114 (its
+  // kept conversation, P4). The rest waits: the jogger row for P4; the tick-off outlines and
   // every website row are cut (D126, D130). "The home lists conversations newest
   // first on the <surface>": its iPhone row is lifted in P4 (after P2a's promises
   // and P4's keep), with steps that match only the "iPhone app" surface; this
@@ -50,17 +52,26 @@ const WIP: WipEntry[] = [
     scenarios: [
       'One notification carries both lines',
       'A long list is cut off and opens in full',
-      'No promises means no notification',
       'Notifications wait for an unreachable phone',
       "Ticking off a promise removes it from the conversation's screen on the <surface>",
       'An owed promise can be ticked off the same way on the <surface>',
       'The home lists conversations newest first on the <surface>',
       'The jogger reads the same on the <surface>',
-      "An unkept conversation's transcript is deleted everywhere",
-      "A shared pair delivers to the account holder's phone",
     ],
   },
-  'promises',
+  // P2a binds the wearer's own promises: D89, D90, D47, and rows 2 and 4 of the
+  // outline. Its row 3 and the owed list wait for P5 (D91, D113); its row 1 is
+  // an operator question (Dev's "come and meet Priya" catches Priya first, D88).
+  {
+    feature: 'promises',
+    scenarios: [
+      'A catch line appears and fades',
+      "Dev's promise is held in the owed list, apart from the wearer's own",
+      'A promise from someone unnamed is held as theirs',
+      'An owed promise takes the name once it is caught',
+      'Two unnamed promisers are numbered, and a name attaches to the most recent',
+    ],
+  },
   // P1a binds D14, D16 and D37; these wait for P3 (D32, the promise line), P6 (pause).
   {
     feature: 'staying-dark',
@@ -79,6 +90,7 @@ const definers: Record<string, Definer<any>> = {
   holding,
   names,
   'phone-handoff': phoneHandoff,
+  promises,
   'staying-dark': stayingDark,
 }
 
@@ -107,6 +119,7 @@ const featureOf = (entry: WipEntry) => (typeof entry === 'string' ? entry : entr
 const pick = <T>(entries: Record<string, T>) =>
   Object.fromEntries(Object.entries(entries).filter(([name]) => selected.includes(name)))
 
+afterEach(afterScenario)
 afterAll(closeHarness)
 
 const manifest = join(ROOT, 'run-manifest.ndjson')

@@ -3,7 +3,9 @@
 // turns each script into SYNTHETIC pre-transcribed word timings, in two
 // variants: wearer louder at the mic, and the other person louder.
 // `who` is 'wearer' or the person's name; the name never reaches the server,
-// only the word's role and the provider label derived from it.
+// only the word's role and the provider label derived from it. A second
+// person wearing the same glasses is `wearer:<name>`: the wearer at the mic,
+// with a provider label of their own.
 
 export interface ScriptLine {
   /** Start time in seconds from the fixture's start; or */
@@ -44,6 +46,22 @@ const SMALL_TALK_TURNS: [who: string, text: string][] = [
   ['wearer', 'That explains the tacos.'],
   ['Dev', 'Right, the tacos are the best thing there now.'],
 ]
+
+/** Dev introduces himself; the wearer answers by name. Dev's line has faded by second 4. */
+const DEV_OPENING: ScriptLine[] = [
+  { at: 0, who: 'Dev', text: "Hi, I'm Dev." },
+  { gap: 0.6, who: 'wearer', text: 'Good to meet you, Dev.' },
+]
+
+/** P2a: Dev's opening, then at second 5 Dev says `dev`, the wearer answers `wearer`, and speaks again at second 14. */
+function promiseScript(dev: string, wearer: string): ScriptLine[] {
+  return [
+    ...DEV_OPENING,
+    { at: 5, who: 'Dev', text: dev },
+    { gap: 0.6, who: 'wearer', text: wearer },
+    { at: 14, who: 'wearer', text: 'Anyway, good to see you.' },
+  ]
+}
 
 /** Dev talking on through the wearer's silence (D92: the room's talk never keeps a conversation open). */
 const DEV_FILLER = ['The launch went fine.', 'Batch two was late.', 'We need more boxes.', 'Strange weather lately.']
@@ -285,6 +303,58 @@ export const SCRIPTS: Record<string, ScriptLine[]> = {
     { gap: 0.8, who: 'Dev', text: 'Morning! Why this vendor?' },
     { gap: 0.6, who: 'wearer', text: 'Two reasons. The first is cost, and the second reason is' },
     { gap: 300, who: 'wearer', text: 'speed, mostly.' },
+  ],
+
+  // P2a, the wearer's promises (D89, D90, D47): Dev introduces himself, his
+  // line has faded by second 5, he says one thing, the wearer answers, and the
+  // wearer speaks again at second 14, after any line has come and gone.
+  'promise-deck': promiseScript('Are you free tonight?', "I'll send you the deck tonight."),
+  'promise-sam': promiseScript('Do you know anyone in hiring?', "I'll intro you to Sam."),
+  'promise-budget': promiseScript('Can you send me the budget by Friday?', "Yeah, I'll do it."),
+  'think-about-it': promiseScript('Would you join the Tuesday meeting?', "I'll think about it."),
+
+  // P2a, the phone handoff. D117: two promises of the wearer's and one of
+  // Dev's, then the wearer says nothing (the scenario lets ten minutes pass).
+  handoff: [
+    ...DEV_OPENING,
+    { at: 5, who: 'Dev', text: 'Are you free tonight?' },
+    { gap: 0.6, who: 'wearer', text: "I'll send you the deck tonight." },
+    { gap: 2, who: 'wearer', text: "I'll intro you to Sam." },
+    { gap: 1, who: 'Dev', text: "Great, I'll send you the agenda." },
+  ],
+  // D28: five promises of the wearer's and two of Dev's; the scenario ends the conversation.
+  'long-list': [
+    ...DEV_OPENING,
+    { at: 5, who: 'Dev', text: 'Are you free tonight?' },
+    { gap: 0.6, who: 'wearer', text: "I'll send you the deck tonight." },
+    { gap: 1, who: 'wearer', text: "I'll intro you to Sam." },
+    { gap: 1, who: 'wearer', text: "I'll book the room for Thursday." },
+    { gap: 1, who: 'wearer', text: "I'll email you the budget." },
+    { gap: 1, who: 'wearer', text: "I'll call you on Monday." },
+    { gap: 1, who: 'Dev', text: "Great, I'll send you the agenda." },
+    { gap: 1, who: 'Dev', text: "And I'll share the notes." },
+  ],
+  // D51: Priya and Marcus introduce themselves and nobody promises anything; then the wearer says nothing.
+  'names-only': [
+    { at: 0, who: 'wearer', text: 'Hi everyone, good to see you all.' },
+    { at: 3, who: 'Priya', text: "Hi, I'm Priya." },
+    { gap: 0.8, who: 'Marcus', text: 'My name is Marcus.' },
+    { gap: 0.8, who: 'wearer', text: 'Nice to meet you both.' },
+  ],
+  // D76: a conversation nobody is named in, with one promise of the wearer's; then the wearer says nothing.
+  'one-promise': [
+    { at: 0, who: 'wearer', text: 'Morning, how was the trip?' },
+    { gap: 0.8, who: 'Ana', text: 'Long, but worth it.' },
+    { gap: 0.6, who: 'wearer', text: "Good. I'll book the room for Thursday." },
+    { gap: 0.8, who: 'Ana', text: 'Perfect, thanks.' },
+  ],
+  // D79: two people take turns wearing the one pair (both are the wearer at
+  // the mic, `wearer:Ana` being the second), each makes a promise; the
+  // scenario ends the conversation.
+  'shared-pair': [
+    ...DEV_OPENING,
+    { at: 5, who: 'wearer', text: "I'll send you the deck tonight." },
+    { at: 10, who: 'wearer:Ana', text: "My turn with the glasses. I'll intro you to Sam." },
   ],
 }
 
