@@ -1073,3 +1073,11 @@ D131 2026-10-17 [V] amends D48
   spread: Someone else takes the floor
   touches: D48 D35
 # the visionary at the P3 questions, Saturday evening: the rulings said six words while every bound row shows the ellipsis and five; chosen: "Match the examples". D35's own {6 words} is read the same way. Also ruled the same evening, without changing any ruling: the demo changes, not D35. The thread line still clears when the wearer speaks again; in the demo the teammate's cut-in is a question long enough that the line shows while they are still talking, and the judge glances at it before answering.
+
+D132 2026-10-17 [V] amends D87
+  resp: a repeated name within two minutes of its first appearance is a second person and gets `(2)`, as in a round of introductions, except when the name was first heard as someone else's "meet X" and X then introduces themselves: that is the same person, introduced and then introducing, and is listed once; a repeated name more than two minutes later is the same person re-introducing to a newcomer and is listed once; Catch still cannot tell voices apart, so this is a rule about timing and wording, not identity [V]
+  why: two minutes is the window of D87, unchanged [V]
+  -> fence-assumption repeated-name-rule-by-timing
+  serves: N3
+  touches: D87 D88 D57
+# the visionary at the P2a questions, Saturday evening: in the promises outline's first row Dev says "come and meet Priya" and Priya then says "Hi, I'm Priya"; under D87 she became `Priya (2)`. Chosen: "Same person". Road not taken: change the row to show `Priya (2)`. Same evening: the Gemini key is free tier; the README discloses that free-tier content may be used by Google to improve its models.
