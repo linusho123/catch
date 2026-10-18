@@ -10,6 +10,7 @@ import { VirtualClock } from '../harness/clock.ts'
 import { NotificationCapture } from '../harness/notifications.ts'
 import { dbfsOf, FixtureRun, FixtureStt, pcmAt, readWavPcm } from '../harness/player.ts'
 import { isLoopback } from '../setup/no-network.ts'
+import { fastForward } from '../steps/lens-world.ts'
 
 /** A 16 kHz mono s16le WAV (or another rate) holding `pcm`, written to `path` or a fresh temp file. */
 function wav(rate: number, pcm: Uint8Array, path = join(mkdtempSync(join(tmpdir(), 'catch-wav-')), 'a.wav')): string {
@@ -126,6 +127,35 @@ describe('skipping across silence', () => {
     expect(() => run.skipTo((first!.start + first!.end) / 2)).toThrow(new RegExp(`would skip "${first!.text}"`))
     expect(run.seconds(clock.now())).toBeLessThan(0.001)
     run.skipTo(first!.start)
+  })
+})
+
+// Operator answer 5, the P9 restart scenario's load flake: a loaded machine
+// left the clock ahead of the player, its catch-up took the clock past the
+// fast-forward's end, and the words left behind were played only after the
+// long-press that ended the conversation, so the jogger's prompt (its
+// cassette's key) lost "good.". A fast-forward plays every word up to its end
+// before it returns, however far the clock has run.
+describe('fast-forwarding on a loaded machine', () => {
+  it('plays every word said up to its end, and the frame that carries it, even when catching up takes the clock past it', async () => {
+    // A synthetic fixture: the restart's last exchange, a second and a half of silence, then the end.
+    const said = ['The', 'logs', 'go', 'to', 'Parquet', 'now.', 'Sounds', 'good.']
+    const words = said.map((text, i) => ({ text, start: i * 0.3, end: i * 0.3 + 0.25, role: i < 6 ? 'other' : 'wearer', loudness: i < 6 ? -24 : -12, speaker: i < 6 ? 1 : 0 }))
+    const dir = mkdtempSync(join(tmpdir(), 'catch-fixtures-'))
+    writeFileSync(join(dir, 'loaded.json'), JSON.stringify({ fixture: 'loaded', synthetic: true, script: [], variant: 'wearer-louder', lines: [], words }))
+    const clock = new VirtualClock(1e-9)
+    const delivered: string[] = []
+    const frames: number[] = []
+    // Each frame pushed costs the loaded machine half a second of fixture time.
+    const host = { pushAudio: (_pcm: unknown, _role: unknown, _dir: unknown, at: number) => (frames.push(at), clock.advance(500)) }
+    const stt = { deliver: (ws: { text: string }[]) => delivered.push(...ws.map((x) => x.text)) }
+    const run = new FixtureRun('loaded', { clock, host: host as never, stt: stt as never, fixtureDir: dir })
+    // The machine stalled: the clock is a second ahead of the player when the fast-forward to the end begins.
+    clock.advance(1000)
+    const end = 4
+    await fastForward({ run, h: { clock } } as never, end)
+    expect(delivered, 'every word said before the end, in order, before the fast-forward returns').toEqual(said)
+    expect(Math.max(...frames), "the frame that carries the last word's end").toBeGreaterThanOrEqual(run.at(run.frameEnd(words.at(-1)!.end)))
   })
 })
 

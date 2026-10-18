@@ -264,7 +264,11 @@ export function startPhone(opts: PhoneOptions): Phone {
     const done = answer?.id === on.id && [...answer.you, ...answer.owed].some((p) => p.id === promise && p.done)
     if (done) ticked.add(promise)
     // Drawn again only while that conversation is the screen showing; any other screen drawn later reads the same sets.
-    if (shown?.id !== on.id) return
+    // A history the wearer went back to may have answered before the write landed: a confirmed tick asks it again, so its open count drops (risk-3).
+    if (shown?.id !== on.id) {
+      if (done && screen === history) await history()
+      return
+    }
     drawConversation(done ? answer! : shown, done ? undefined : TICK_NOT_SAVED)
   }
 

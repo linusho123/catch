@@ -183,14 +183,16 @@ export async function playTo(w: LensWorld, t: number): Promise<void> {
 /**
  * Jumps the fixture to second `t` across its silences, playing every word on
  * the way, and the frame that carries its end (the player refuses to skip
- * either, M6): a long pause costs no wall time.
+ * either, M6): a long pause costs no wall time. Every word up to `t` has been
+ * played when it returns, however far the clock has run meanwhile.
  */
 export async function fastForward(w: LensWorld, t: number): Promise<void> {
   const run = w.run!
   const skip = async (to: number) => {
     // Whatever the clock has already passed is played first, late and in order, never jumped over (P4: a long
     // fixture takes the clock a moment to load, and without this its opening words were skipped unheard).
-    await run.playTo(nowSec(w))
+    // Until the player has caught up: on a loaded machine the catch-up itself takes the clock on (operator answer 5).
+    while (run.next <= nowSec(w)) await run.playTo(nowSec(w))
     // The frame carrying the last word said is played before the jump, so the provider has heard it.
     const said = run.fixture.words.filter((wd) => wd.end <= nowSec(w) + 1e-9).at(-1)
     if (said && run.frameEnd(said.end) > nowSec(w)) await run.playTo(Math.min(to, run.frameEnd(said.end)))
@@ -202,6 +204,9 @@ export async function fastForward(w: LensWorld, t: number): Promise<void> {
     await run.playTo(Math.min(t, run.frameEnd(wd.end)))
   }
   if (t > nowSec(w)) await skip(t)
+  // A word the clock passed while the player was catching up is played now, before the step goes on (operator
+  // answer 5: on a loaded machine the restart scenario's last words were left to be played after the long-press).
+  await run.playTo(t)
 }
 
 /** Fixture seconds now. */

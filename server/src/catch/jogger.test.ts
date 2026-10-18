@@ -4,7 +4,9 @@ import type { ModelClient } from '../llm/client.ts'
 import { JOGGER_MODEL } from '../llm/gemini.ts'
 import {
   honestBold,
+  joggerBudgetMs,
   JOGGER_BUDGET_MS,
+  JOGGER_LONG_BUDGET_MS,
   JoggerPassError,
   joggerLines,
   joggerPrompt,
@@ -222,7 +224,7 @@ describe('the tidy pass', () => {
 
   async function kept(model: ModelClient, clock = new VirtualClock(1e-6)) {
     const outcomes: TidyOutcome[] = []
-    const jogger = await writeKeptJogger(model, INPUT, { clock, onTidy: (o) => outcomes.push(o) })
+    const jogger = await writeKeptJogger(model, INPUT, { clock, conversationMs: 25 * 60_000, onTidy: (o) => outcomes.push(o) })
     return { jogger, outcomes }
   }
 
@@ -267,12 +269,78 @@ describe('the tidy pass', () => {
       ['a number nobody said', [TIDIED[0]!, TIDIED[1]!, 'Validated with **AlphaFold** on 300 designs.', promise]],
       ['a long bullet', [TIDIED[0]!, TIDIED[1]!, `Validated with **AlphaFold** ${'and then '.repeat(12)}done.`, promise]],
       ['no bullets', []],
+      // risk-1: a bullet's first word is a name or a number like any other.
+      ['an invented name opening a bullet', ['Zorblax designs proteins with **diffusion models**.', TIDIED[1]!, TIDIED[2]!, promise]],
+      ['an invented number opening a bullet', ['300 proteins are designed with **diffusion models**.', TIDIED[1]!, TIDIED[2]!, promise]],
     ]
     for (const [what, bullets] of broken) {
       const { model } = twoPasses(answer(bullets))
       const { jogger, outcomes } = await kept(model)
       expect(jogger.bullets, what).toEqual(FIRST)
       expect(outcomes.map((o) => (o.tidied ? 'tidied' : o.why)), what).toEqual(['rejected'])
+    }
+  })
+
+  it("lets a bullet open with a name or a word the transcript or the draft has, a name's possessive too (risk-1)", () => {
+    const draft = { bullets: FIRST, fixed: [FIRST[2]!, FIRST[5]!] }
+    const transcript = joggerLines(CALL).map((l) => l.text).join('\n')
+    const promise = FIRST[5]!
+    expect(tidyRejection(draft, ["Ana's lab designs proteins with **diffusion models**.", FIRST[2]!, TIDIED[2]!, promise], transcript)).toBeUndefined()
+    expect(tidyRejection(draft, ['Designs come from **diffusion models**.', FIRST[2]!, TIDIED[2]!, promise], transcript)).toBeUndefined()
+    expect(tidyRejection(draft, ["Zorblax's lab designs proteins with **diffusion models**.", FIRST[2]!, TIDIED[2]!, promise], transcript)).toBeDefined()
+  })
+
+  // risk-2: a promise or the missed time stays at its place among the plain bullets, which the bold terms alone do not pin.
+  it('keeps the first draft when a promise or the missed time moves among the plain bullets, and allows merges around them', async () => {
+    const PLAIN = JSON.stringify({
+      bullets: [
+        { line: 3, text: 'Her lab designs proteins.' },
+        { line: 4, text: 'You asked how designs are validated.' },
+        { line: 5, text: 'They screen them.' },
+      ],
+    })
+    const asked = CALL.find((w) => w.text === 'designs?')!.end
+    const modelsEnd = CALL.find((w) => w.text === 'models.')!.end
+    const promise = 'You promised: send Ana the transcript by Friday'
+    const plain = (gap: boolean) => ({ ...INPUT, promiseTimes: [asked], gaps: gap ? [{ at: modelsEnd, ms: 240_000 }] : [] })
+    const lab = 'Her lab designs proteins.'
+    const ask = 'You asked how designs are validated.'
+    const screen = 'They screen them.'
+    const merged = 'You asked how designs are validated: they screen them.'
+    const gapLine = '4 minutes not heard'
+    const cases: [what: string, gap: boolean, tidied: string[], kept: boolean][] = [
+      ['a promise moved to the end', false, [lab, ask, screen, promise], false],
+      ['a promise moved before an earlier point', false, [promise, lab, ask, screen], false],
+      ['a promise moved ahead of a merged bullet', false, [promise, 'Her lab designs proteins and screens them.'], false],
+      ['the gap line and the promise moved to the end', true, [lab, ask, screen, gapLine, promise], false],
+      ['the gap line and the promise moved before an earlier point', true, [gapLine, promise, lab, merged], false],
+      ['a point moved in between the gap line and the promise', true, [lab, gapLine, ask, promise, screen], false],
+      ['bullets merged after the promise', false, [lab, promise, merged], true],
+      ['bullets merged after the gap line and the promise', true, [lab, gapLine, promise, merged], true],
+    ]
+    for (const [what, gap, tidied, kept] of cases) {
+      const { model } = twoPasses(answer(tidied), PLAIN)
+      const outcomes: TidyOutcome[] = []
+      const jogger = await writeKeptJogger(model, plain(gap), { clock: new VirtualClock(1e-6), conversationMs: 25 * 60_000, onTidy: (o) => outcomes.push(o) })
+      const first = gap ? [lab, gapLine, promise, ask, screen] : [lab, promise, ask, screen]
+      expect(jogger.bullets, what).toEqual(kept ? tidied : first)
+      expect(outcomes.map((o) => (o.tidied ? 'tidied' : o.why)), what).toEqual([kept ? 'tidied' : 'rejected'])
+    }
+  })
+
+  // head-probe-T6: a time of day the number rule lets through (the transcript says it) is still refused.
+  it('keeps the first draft when the tidied one says when something was said, even a time the transcript has', async () => {
+    const transcript = words([
+      ['other', 'The demo starts at 10:30 in Hall B.', 0],
+      ['wearer', 'Great, see you there.', 5],
+    ])
+    const draft = JSON.stringify({ bullets: [{ line: 1, text: 'The demo is in Hall B.' }] })
+    for (const tidied of ['The demo starts at 10:30 in Hall B.', '10:30 is when the demo starts in Hall B.']) {
+      const { model } = twoPasses(answer([tidied]), draft)
+      const outcomes: TidyOutcome[] = []
+      const jogger = await writeKeptJogger(model, { names: [], transcript, promises: [], promiseTimes: [], gaps: [] }, { clock: new VirtualClock(1e-6), conversationMs: 60_000, onTidy: (o) => outcomes.push(o) })
+      expect(jogger.bullets, tidied).toEqual(['The demo is in Hall B.'])
+      expect(outcomes, tidied).toEqual([{ tidied: false, why: 'rejected', reason: 'it says when something was said' }])
     }
   })
 
@@ -322,6 +390,49 @@ describe('the tidy pass', () => {
     }
   })
 
+  // Operator answer 3: a conversation of an hour or more shares D116's "a few minutes", read as three, like the kept-conversations steps.
+  it('shares three minutes instead of thirty seconds for a conversation of an hour or more', async () => {
+    expect(joggerBudgetMs(60 * 60_000 - 1)).toBe(JOGGER_BUDGET_MS)
+    expect(joggerBudgetMs(60 * 60_000)).toBe(JOGGER_LONG_BUDGET_MS)
+    expect(JOGGER_LONG_BUDGET_MS).toBe(3 * 60_000)
+    // A first pass of a minute: past the thirty seconds, inside the three minutes.
+    for (const [conversationMs, expected] of [
+      [60 * 60_000 - 1, 'over budget'],
+      [60 * 60_000, 'tidied'],
+      [3 * 60 * 60_000, 'tidied'],
+    ] as const) {
+      const clock = new VirtualClock(1e-9)
+      const { model, asked } = twoPasses(answer(TIDIED), DRAFT_ANSWER, () => clock.advance(60_000))
+      const outcomes: TidyOutcome[] = []
+      const jogger = await writeKeptJogger(model, INPUT, { clock, conversationMs, onTidy: (o) => outcomes.push(o) })
+      expect(asked, `${conversationMs} ms`).toHaveLength(expected === 'tidied' ? 2 : 1)
+      expect(jogger.bullets, `${conversationMs} ms`).toEqual(expected === 'tidied' ? TIDIED : FIRST)
+      expect(outcomes.map((o) => (o.tidied ? 'tidied' : o.why)), `${conversationMs} ms`).toEqual([expected])
+    }
+    // And the three minutes end where they do: a tidy still out a millisecond past them is dropped, one a millisecond inside is kept.
+    for (const [extra, expected] of [
+      [9, TIDIED],
+      [10, FIRST],
+    ] as const) {
+      const clock = new VirtualClock(1e-9)
+      let release!: () => void
+      const tidyAsked = new Promise<void>((r) => (release = r))
+      const { model } = twoPasses(
+        async () => {
+          release()
+          await new Promise<void>((r) => clock.setTimeout(r, extra))
+          return JSON.stringify({ bullets: TIDIED })
+        },
+        DRAFT_ANSWER,
+        () => clock.advance(JOGGER_LONG_BUDGET_MS - 10),
+      )
+      const writing = writeKeptJogger(model, INPUT, { clock, conversationMs: 2 * 60 * 60_000 })
+      await tidyAsked
+      clock.advance(extra)
+      expect((await writing).bullets, `a tidy answering ${extra} ms after a first pass of three minutes less 10 ms`).toEqual(expected)
+    }
+  })
+
   it('asks no tidy pass when the first used the thirty seconds, or there is nothing to tidy', async () => {
     const clock = new VirtualClock(1e-9)
     const slow = twoPasses(answer(TIDIED), DRAFT_ANSWER, () => clock.advance(JOGGER_BUDGET_MS))
@@ -330,7 +441,7 @@ describe('the tidy pass', () => {
     expect(jogger.bullets).toEqual(FIRST)
     expect(outcomes).toEqual([{ tidied: false, why: 'over budget' }])
     const silent = twoPasses(answer(TIDIED))
-    const heardNothing = await writeKeptJogger(silent.model, { ...INPUT, transcript: [], promises: [], promiseTimes: [] }, { clock: new VirtualClock(1e-6) })
+    const heardNothing = await writeKeptJogger(silent.model, { ...INPUT, transcript: [], promises: [], promiseTimes: [] }, { clock: new VirtualClock(1e-6), conversationMs: 25 * 60_000 })
     expect(silent.asked).toHaveLength(0)
     expect(heardNothing.bullets).toEqual(['4 minutes not heard'])
   })

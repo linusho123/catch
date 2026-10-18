@@ -34,9 +34,10 @@ import type { TranscriptWord } from './transcript.ts'
 // lost or moved, a heading, a longer list, a bullet longer than the draft's
 // longest, or a name or number neither the transcript nor the draft has, and
 // the first draft is kept. Both passes share D116's thirty seconds on the
-// injected clock: a tidy pass that fails, has not answered when they run out,
-// or would start after they have, leaves the first draft to be stored as it
-// is.
+// injected clock (three minutes, D116's "a few minutes", for a conversation of
+// an hour or more: operator answer 3): a tidy pass that fails, has not
+// answered when they run out, or would start after they have, leaves the
+// first draft to be stored as it is.
 
 /** One line of the transcript as the jogger's model reads it: a sentence, or a run of one side's words. */
 export interface JoggerLine {
@@ -68,6 +69,14 @@ export interface Draft extends Jogger {
 
 /** D116: a kept conversation under an hour has its jogger within thirty seconds; both passes share them. */
 export const JOGGER_BUDGET_MS = 30_000
+
+/** D116's "a few minutes" for a conversation of an hour or more, read as three (operator answer 3, the kept-conversations steps' number); both passes share them. */
+export const JOGGER_LONG_BUDGET_MS = 3 * 60_000
+
+/** The time both passes share, from the conversation's length (D116). */
+export function joggerBudgetMs(conversationMs: number): number {
+  return conversationMs >= 60 * 60_000 ? JOGGER_LONG_BUDGET_MS : JOGGER_BUDGET_MS
+}
 
 /** A jogger pass that failed, described without a word of the conversation (head-log-1). */
 export class JoggerPassError extends SafeModelError {
@@ -273,15 +282,51 @@ function marks(bullets: readonly string[], fixed: ReadonlySet<string>): string[]
   }
   return out
 }
-/** The names and numbers in a bullet: every capitalized word but its first, and every word with a digit. */
+/**
+ * The names and numbers in a bullet: every capitalized word, its first
+ * included (a sentence's first word is capitalized anyway, so one neither the
+ * transcript nor the draft has is refused too: the cost is only the first
+ * draft kept; risk-1), and every word with a digit; a possessive as its name.
+ */
 const namesAndNumbers = (text: string) =>
   text
     .replace(BOLD, '$1')
     .split(/\s+/)
-    .slice(1)
     .map((t) => t.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ''))
     .filter((t) => /^\p{Lu}/u.test(t) || /\d/.test(t))
-    .map((t) => t.toLowerCase())
+    // A name's possessive is the name: "Ana's lab" names Ana.
+    .map((t) => t.toLowerCase().replace(/['’]s$/, ''))
+
+/**
+ * Whether each code-placed bullet is where the draft had it among the plain
+ * ones (risk-2): the plain bullets between one fixed bullet and the next,
+ * and before the first and after the last, as runs. The tidy only merges,
+ * drops and rewords, so a run the draft had empty stays empty (a point there
+ * has moved past a promise or the missed time), and a fixed bullet with
+ * plain bullets before it, or after it, in the draft still has some on that
+ * side (merges within a run are allowed).
+ */
+function fixedInPlace(draft: readonly string[], tidied: readonly string[], fixed: ReadonlySet<string>): boolean {
+  const runs = (bullets: readonly string[]) => {
+    const out = [0]
+    for (const b of bullets) {
+      if (fixed.has(b)) out.push(0)
+      else out[out.length - 1]!++
+    }
+    return out
+  }
+  const before = runs(draft)
+  const after = runs(tidied)
+  if (before.length !== after.length) return false
+  if (before.some((n, i) => n === 0 && after[i]! > 0)) return false
+  const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0)
+  for (let k = 1; k < before.length; k++) {
+    // Fixed bullet k sits between runs k - 1 and k.
+    if (sum(before.slice(0, k)) > 0 && sum(after.slice(0, k)) === 0) return false
+    if (sum(before.slice(k)) > 0 && sum(after.slice(k)) === 0) return false
+  }
+  return true
+}
 
 /**
  * Why a tidied draft is not kept, or undefined when it is: the structural
@@ -302,6 +347,7 @@ export function tidyRejection(draft: Draft, tidied: readonly string[], transcrip
   const before = marks(draft.bullets, fixed)
   const after = marks(tidied, fixed).filter((m) => before.includes(m))
   if (after.join('\n') !== before.join('\n')) return 'a promise, a missed-time line or a term in bold is lost or out of order'
+  if (!fixedInPlace(draft.bullets, tidied, fixed)) return 'a promise or a missed-time line has moved among the other bullets'
   const longest = Math.max(25, ...draft.bullets.map(wordCount))
   if (tidied.some((b) => wordCount(b) > longest)) return 'a bullet is longer than the draft allows'
   const known = new Set(normalized(`${transcript} ${draft.bullets.join(' ')}`).split(' '))
@@ -321,8 +367,8 @@ export interface KeptJoggerOptions {
   clock: Clock
   /** Cancels both passes: the server closing, or the wearers forgotten. */
   signal?: AbortSignal
-  /** D116's thirty seconds by default; when the first pass started counts from the call. */
-  budgetMs?: number
+  /** How long the conversation ran (ms): under an hour both passes share thirty seconds, from an hour three minutes (joggerBudgetMs); counted from the call. */
+  conversationMs: number
   onTidy?: (outcome: TidyOutcome) => void
 }
 
@@ -335,7 +381,7 @@ export interface KeptJoggerOptions {
 export async function writeKeptJogger(model: ModelClient, input: JoggerInput, opts: KeptJoggerOptions): Promise<Jogger> {
   const { clock, signal } = opts
   const report = (outcome: TidyOutcome) => opts.onTidy?.(outcome)
-  const deadline = clock.now() + (opts.budgetMs ?? JOGGER_BUDGET_MS)
+  const deadline = clock.now() + joggerBudgetMs(opts.conversationMs)
   const draft = await writeJogger(model, input, signal ? { signal } : undefined)
   const first: Jogger = { bullets: draft.bullets }
   const lines = joggerLines(input.transcript)

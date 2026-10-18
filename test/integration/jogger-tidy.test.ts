@@ -61,8 +61,13 @@ afterEach(async () => {
   vi.restoreAllMocks()
 })
 
-/** Plays one kept conversation ("The Zanzibar plan is ready.") and ends it with a long-press; resolves at the end, on the clock. */
-async function keptConversation(tidy: () => Promise<string>) {
+/**
+ * Plays one kept conversation ("The Zanzibar plan is ready.") and ends it with
+ * a long-press; resolves at the end, on the clock. With `minutes`, the wearer
+ * says "Okay." every nine minutes, so its quiet never ends it (D92), until it
+ * has run that long, and only then keeps it.
+ */
+async function keptConversation(tidy: () => Promise<string>, minutes = 0) {
   const logged: string[] = []
   vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => void logged.push(args.map(String).join(' ')))
   vi.spyOn(console, 'warn').mockImplementation((...args: unknown[]) => void logged.push(args.map(String).join(' ')))
@@ -94,15 +99,28 @@ async function keptConversation(tidy: () => Promise<string>) {
     expect(ok(), what).toBe(true)
   }
   const shown = (text: string) => () => views.some((v) => v.kind === 'line' && v.text === text)
-  const tokens = 'The Zanzibar plan is, like, ready.'.split(' ')
-  const frames = Math.ceil((tokens.length * 0.3 + 0.2) / FRAME_S)
-  for (let seq = 0; seq < frames; seq++) {
-    socket.send(encodeFrame({ seq, captureMs: (seq + 1) * FRAME_S * 1000, speakerRole: 'unknown', direction: null, pcm: pcmAt(WEARER_DBFS) }))
+  let seq = 0
+  /** The wearer says `text` from second `at` of the stream: its frames, acknowledged, then its words. */
+  const speak = async (text: string, at: number) => {
+    const tokens = text.split(' ')
+    const frames = Math.ceil((tokens.length * 0.3 + 0.2) / FRAME_S)
+    const sent = acks + frames
+    for (let i = 0; i < frames; i++) {
+      socket.send(encodeFrame({ seq: seq++, captureMs: (at + (i + 1) * FRAME_S) * 1000, speakerRole: 'unknown', direction: null, pcm: pcmAt(WEARER_DBFS) }))
+    }
+    await until('every frame acknowledged', () => acks === sent)
+    say(tokens.map((t, i) => ({ text: t, start: at + i * 0.3, end: at + i * 0.3 + 0.3, confidence: 1, speaker: null, isFinal: true })))
   }
-  await until('every frame acknowledged', () => acks === frames)
-  say(tokens.map((t, i) => ({ text: t, start: i * 0.3, end: i * 0.3 + 0.3, confidence: 1, speaker: null, isFinal: true })))
+  await speak('The Zanzibar plan is, like, ready.', 0)
   await until('the words reached the store', () => find(dbPath, 'Zanzibar').length > 0)
   await until('the dot is up', () => views.at(-1)?.kind === 'dot')
+  for (let at = 9 * 60; at < minutes * 60; at += 9 * 60) {
+    clock.advance(at * 1000 - clock.now())
+    const before = rows(dbPath, 'transcript').length
+    await speak('Okay.', at)
+    await until('"Okay." reached the store', () => rows(dbPath, 'transcript').length > before)
+  }
+  if (minutes > 0) clock.advance(minutes * 60_000 - clock.now())
   socket.send(JSON.stringify({ type: 'touch', gesture: 'swipe-up' }))
   await until('the keep prompt', shown('keep this conversation?'))
   socket.send(JSON.stringify({ type: 'touch', gesture: 'tap' }))
@@ -142,6 +160,36 @@ describe("a kept conversation's tidy pass (P7)", () => {
     expect(k.modelErrors, 'the failure is a model error').toHaveLength(1)
     expect(k.logged.some((l) => /tidy pass was skipped, so its first draft is stored: it failed/.test(l)), 'logged').toBe(true)
     for (const line of k.logged) expect(line).not.toMatch(/zanzibar|like/i)
+  })
+
+  // Operator answer 3: from an hour, both passes share D116's "a few minutes", read as three; the server gives the pass the conversation's length.
+  it('gives the tidy pass of a conversation of an hour or more three minutes, and one under an hour thirty seconds', async () => {
+    for (const [minutes, tidied] of [
+      [61, true],
+      [50, false],
+    ] as const) {
+      let answer!: (s: string) => void
+      let asked = false
+      const k = await keptConversation(
+        () =>
+          new Promise<string>((r) => {
+            asked = true
+            answer = r
+          }),
+        minutes,
+      )
+      const conversation = rows(k.dbPath, 'conversations')[0]!
+      expect((Number(conversation.ended_at) - Number(conversation.started_at)) / 60_000, `a ${minutes}-minute conversation`).toBeCloseTo(minutes, 0)
+      await k.until('the tidy pass is asked', () => asked)
+      k.clock.advance(60_000)
+      answer(JSON.stringify({ bullets: TIDIED }))
+      await k.until('the jogger is stored', () => k.after().jogger.length > 0)
+      expect(k.after().jogger, `a tidy answering a minute after the end of a ${minutes}-minute conversation`).toEqual([tidied ? TIDIED : FIRST])
+      expect(k.tidies.map((o) => (o.tidied ? 'tidied' : o.why)), `${minutes} minutes`).toEqual([tidied ? 'tidied' : 'late'])
+      for (const s of sockets.splice(0)) s.terminate()
+      for (const s of servers.splice(0)) await s.close().catch(() => {})
+      vi.restoreAllMocks()
+    }
   })
 
   it('stores the first draft when the tidy pass has not answered as the thirty seconds run out, and not a moment before', async () => {

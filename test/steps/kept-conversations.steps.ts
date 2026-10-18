@@ -132,6 +132,8 @@ async function playOnTo(w: KeptWorld, t: number): Promise<void> {
   const lastSaid = run.fixture.words.filter((wd) => wd.end <= t).at(-1)!
   await fastForward(w, Math.min(t, lastSaid.end + PROMISE_DONE_S))
   if (t > nowSec(w)) await fastForward(w, t)
+  // And the server has every word played: a restart or a long-press that follows cuts the conversation after them, never inside them (operator answer 5).
+  await run.delivered()
   w.promised = linesShown(w.h!, w.dotSince!, w.h!.clock.now())
     .map((l) => l.text)
     .filter((l) => l.startsWith('promised · '))
@@ -443,8 +445,11 @@ const kept: Definer<KeptWorld> = (reg) => {
     await h.restartServer()
     expect(h.server, 'the server was started again').not.toBe(before)
     // A minute goes by; what is said in it reaches nothing.
-    await fastForward(w, BACK_AT_S)
-    expect(run.fixture.words.some((wd) => wd.start > RESTART_AT_S && wd.end < BACK_AT_S), 'something is said while Catch is gone').toBe(true)
+    // A minute after the restart as it happened: on a loaded machine the clock may have run past RESTART_AT_S before it (operator answer 5).
+    const goneS = run.seconds(goneAt)
+    const backS = goneS + (BACK_AT_S - RESTART_AT_S)
+    await fastForward(w, backS)
+    expect(run.fixture.words.some((wd) => wd.start > goneS && wd.end < backS), 'something is said while Catch is gone').toBe(true)
     // The plugin is launched again (a new launch, D129) and finds the server.
     await h.startLens()
     const back = await waitFor(w, () => screens(h).find((s) => s.at > goneAt && isDotOnly(s)), 3000)
@@ -453,7 +458,7 @@ const kept: Definer<KeptWorld> = (reg) => {
       expect(visible(s), `at ${s.at} ms the lens shows ${JSON.stringify(visible(s).map((c) => c.content))} while Catch is gone`).toEqual([])
     }
     expect((back!.at - goneAt) / 60_000, 'one minute later').toBeCloseTo(1, 1)
-    w.deaf = { from: RESTART_AT_S, to: BACK_AT_S }
+    w.deaf = { from: goneS, to: backS }
   })
 
   reg.define(/^a tap shows the three names in their original order$/, async (w) => {

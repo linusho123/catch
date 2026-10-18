@@ -344,5 +344,38 @@ describe('the page', () => {
       await phone.open(3)
       expect(you(root), 'the promise that was not saved is on its screen again').toEqual(CONVERSATION.you.map((p) => p.text))
     })
+
+    it('draws the history again with the drop when a tick is confirmed after the wearer went back to it and it answered first (risk-3)', async () => {
+      let release!: () => void
+      const held = new Promise<void>((r) => (release = r))
+      let saved = false
+      const counted = (): HistoryResponse => ({
+        open: HISTORY.open - (saved ? 1 : 0),
+        conversations: HISTORY.conversations.map((c) => (c.id === 3 && saved ? { ...c, open: c.open - 1 } : c)),
+      })
+      const fetch = (async (url: string) => {
+        const path = new URL(url).pathname
+        if (path === '/phone/history') return json(counted())()
+        if (path === '/phone/conversations/3') return json(CONVERSATION)()
+        if (path === PROMISE) {
+          await held
+          saved = true
+          return json(done(CONVERSATION, 0))()
+        }
+        return new Response('', { status: 404 })
+      }) as typeof globalThis.fetch
+      const root = new PhoneScreenRecord(systemClock)
+      const phone = startPhone({ root, server: 'http://localhost:1', token: 't', fetch, now: () => NOW })
+      await phone.open(3)
+      const ticking = phone.tick(0)
+      await phone.home()
+      expect(rowsOn(root.innerHTML).find((r) => r.at === at(14, 10))!.open, 'the history answered before the tick landed').toBe('2 open')
+      release()
+      await ticking
+      for (let i = 0; i < 5; i++) await new Promise((r) => setTimeout(r, 0))
+      expect(isHistory(root.innerHTML)).toBe(true)
+      expect(rowsOn(root.innerHTML).find((r) => r.at === at(14, 10))!.open, "the row's open count dropped once the tick was confirmed").toBe('1 open')
+      expect(root.innerHTML).toContain('<p class="open-total">4 open</p>')
+    })
   })
 })

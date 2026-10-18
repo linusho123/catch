@@ -269,12 +269,12 @@ export async function startServer(opts: ServerOptions): Promise<RunningServer> {
           if (abort.signal.aborted) return
           events.emit('joggerTidy', { at: clock.now(), conversation: id, outcome })
           if (outcome.tidied || outcome.why === 'nothing to tidy') return
-          const why = outcome.why === 'rejected' ? `its answer was rejected (${outcome.reason})` : outcome.why === 'failed' ? `it failed: ${loggable(outcome.error)}` : outcome.why === 'late' ? 'it had not answered within the thirty seconds (D116)' : 'the first pass had used the thirty seconds (D116)'
+          const why = outcome.why === 'rejected' ? `its answer was rejected (${outcome.reason})` : outcome.why === 'failed' ? `it failed: ${loggable(outcome.error)}` : outcome.why === 'late' ? 'it had not answered within the time D116 gives' : 'the first pass had used the time D116 gives'
           console.warn(`a kept conversation's jogger tidy pass was skipped, so its first draft is stored: ${why}`)
           // A failed pass is a model error like any other: under test, a missing cassette fails loudly.
           if (outcome.why === 'failed') events.emit('modelError', { at: clock.now(), error: outcome.error })
         }
-        writeKeptJogger(opts.model, { names: ended.names, transcript: words, promises: said, promiseTimes, gaps }, { clock, signal: abort.signal, onTidy })
+        writeKeptJogger(opts.model, { names: ended.names, transcript: words, promises: said, promiseTimes, gaps }, { clock, signal: abort.signal, onTidy, conversationMs: ended.endedAt - ended.startedAt })
           .then((jogger) => {
             if (abort.signal.aborted) return
             history.recordJogger(id, jogger.bullets)
