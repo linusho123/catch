@@ -1,3 +1,29 @@
+# Catch
+
+**Catch holds what you were about to lose.** It is an Even Hub app for the Even Realities G2 that stays dark until a conversation slips: the name someone just told you, the thing you just promised, or the sentence you were in the middle of when someone cut you off. Then it shows one dim line, and lets it go.
+
+## For judges and testers
+
+**Install (G2 + iPhone):** you need the Even app 2.2.10 or later with a G2 paired. Send us the email of your Even account; we add it to Catch's Beta group in Even Hub. Accept the invite, install **Catch** from Even Hub in the Even app, open it, and allow the glasses microphone. No account or key of your own is needed: the hosted server (`wss://catch-g2.fly.dev`) and its token are built into the package.
+
+**What you will see:**
+- A dim dot, top right: Catch is listening. No dot means it cannot hear (check the phone's network).
+- Someone says "Hi, I'm Priya" → `Priya`, dim, lower third, for a second and a half.
+- You say "I'll send you the link tonight" → `promised · send … the link tonight`.
+- You stop mid-sentence and someone talks over you for two seconds or more → your last words (`…and the second reason is`) wait until you speak again or tap.
+
+**Controls:** tap shows the names held in this conversation (five seconds, or tap again); swipe down from there shows your promises; long-press ends the conversation now (ten minutes of your silence also ends it); double-tap is Even's exit. Catch tells your voice from others' by loudness on the simulator and by the glasses' own speaker role on a G2, so the person introducing themselves should be a step or two away.
+
+**On the phone:** Catch's own page in the Even app lists past conversations that produced a promise, newest first, with each conversation's names and your promises.
+
+**Privacy:** nothing survives a conversation unless it produced a promise; the transcript and audio are deleted when it ends (D76). Speech-to-text is Deepgram with model-improvement opted out; the promise detector sends sentences with a commitment in them, and a few before them, to Gemini on the free tier, under which Google may use that content to improve its models.
+
+**Built at LA Hacks:** the spec (`features/`, `docs/BUILD-PLAN.md`) was written before the event; every line of code was written during it, through a reviewed build pipeline. Not built: tick-off on the phone, a website, phone push notifications, pause, promises owed to you and keep-with-jogger unless listed on the Devpost as done, and restart persistence (see `features/OUT-OF-SCOPE.md`).
+
+**Run it without glasses:** see "Run Catch on this machine" below (the Even Hub simulator plus a local server).
+
+---
+
 # Catch — build tree
 
 The contract is `features/` (feature files, fence, ledger, DESIGN.md, docket); the plan is `docs/BUILD-PLAN.md`. Everything below is the build's.
