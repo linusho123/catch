@@ -65,6 +65,8 @@ export interface PhoneOptions {
   fetch?: typeof globalThis.fetch
   /** The phone's clock, for "today" and "yesterday". */
   now?: () => number
+  /** How often the history redraws itself while it is showing (ms); 5 s by default. */
+  refreshMs?: number
 }
 
 export interface Phone {
@@ -95,6 +97,8 @@ export interface Phone {
   addName(id: number, name: string): Promise<void>
   /** D135: adds a promise by hand, the wearer's (`you`) or owed to the wearer (`owed`), then draws the screen. */
   addPromise(id: number, side: 'you' | 'owed', text: string): Promise<void>
+  /** Stops the history's own refresh (tests; the page lives as long as the plugin). */
+  stop(): void
 }
 
 /** The history's button that ends the open conversation (the glasses' long-press is the Even OS's). */
@@ -422,6 +426,13 @@ export function startPhone(opts: PhoneOptions): Phone {
     if (shown?.id === id) root.innerHTML = conversationMarkup(shown, now(), ADD_NOT_SAVED)
   }
 
+  // The history redraws itself while it is the screen showing, so a conversation that ends shows up without a reload.
+  const refresher = setInterval(() => {
+    if (shown === undefined && root.innerHTML.includes('phone history')) void go(history)
+  }, opts.refreshMs ?? 5000)
+  // In Node (tests) the timer never keeps the process alive; in the WebView it is a plain number.
+  ;(refresher as unknown as { unref?: () => void }).unref?.()
+
   const phone: Phone = {
     home: () => go(history),
     open: (id) => go(() => conversation(id)),
@@ -437,6 +448,7 @@ export function startPhone(opts: PhoneOptions): Phone {
     endConversation,
     addName: (id, name) => add(id, PHONE_NAMES_SUFFIX, { name }),
     addPromise: (id, side, text) => add(id, PHONE_PROMISES_SUFFIX, { side, text }),
+    stop: () => clearInterval(refresher),
   }
 
   root.addEventListener('click', ({ target }) => {

@@ -170,6 +170,23 @@ describe('the page', () => {
     expect(sectionsOn(root.innerHTML).find((s) => s.title === 'OWED TO YOU')!.promises.map((p) => p.text)).toContain('Dev sends the agenda')
   })
 
+  it('refreshes the history by itself while it is showing, and leaves a conversation screen alone', async () => {
+    let answer: HistoryResponse = { open: 0, conversations: [] }
+    const { asked, fetch } = fakeServer({ '/phone/history': () => new Response(JSON.stringify(answer), { status: 200 }), '/phone/conversations/3': json(CONVERSATION) })
+    const root = new PhoneScreenRecord(systemClock)
+    const phone = startPhone({ root, server: 'ws://localhost:8080', token: 't0k', fetch, now: () => NOW, refreshMs: 20 })
+    await phone.home()
+    expect(rowsOn(root.innerHTML)).toEqual([])
+    answer = HISTORY
+    await new Promise((r) => setTimeout(r, 60))
+    expect(rowsOn(root.innerHTML).length, 'a conversation ended meanwhile shows up').toBeGreaterThan(0)
+    await phone.open(3)
+    const before = asked.length
+    await new Promise((r) => setTimeout(r, 60))
+    expect(asked.length, 'no refresh while a conversation is open').toBe(before)
+    phone.stop()
+  })
+
   it('says when the server refuses the token or cannot be reached, with a way to try again', async () => {
     const refused = fakeServer({ '/phone/history': () => new Response('', { status: 401 }) })
     const root = new PhoneScreenRecord(systemClock)

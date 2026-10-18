@@ -128,3 +128,4 @@ The orienting document for the agent that builds Catch, with the human as second
 - 2026-10-18 — on the real G2: the Even OS keeps long-press, so the phone page gains End conversation; one `chosen` line.
 - 2026-10-18 — D135: names and promises added by hand on the phone page; one ruled line changed.
 - 2026-10-18 — D136: on the real G2 the Even OS keeps long-press, so a swipe down at the bare dot ends the conversation; the package's version now changes with every Beta so the Even app installs it.
+- 2026-10-18 — the phone page's history redraws itself every five seconds while it is showing, so a conversation that ends appears without reopening the page.
