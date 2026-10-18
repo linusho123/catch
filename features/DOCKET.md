@@ -1064,3 +1064,12 @@ D130 2026-10-17 [V] amends D126
   serves: N4 N8
   touches: D126 D98 D99 D100 D102 D104 D118
 # the visionary, Saturday afternoon, when asked how many phases remained: "keep P4 and P5 as important optional parts of the build. They should happen for the project to succeed"; then, asked where the jogger and the owed list appear with no iPhone app, chose the plugin's phone page, and chose to demo both. Roads not taken: the jogger on the lens; the jogger in the notification only; P4 and P5 built but switched off in the demo build. Unverified: that the Even app shows a plugin's page on the phone while the glasses run it; the next builder checks it in the simulator and the SDK docs first and raises a question if it does not hold.
+
+D131 2026-10-17 [V] amends D48
+  resp: the thread is the wearer's most recent continuous run of speech, one in which nobody else took the floor; the lens shows a leading ellipsis and the last {5 words} of that run, {6} marks with the ellipsis counted as the sixth, as every example row reads (`…and the second reason is`); a run shorter than {5 words} is shown whole, and the thread never reaches back across someone else's turn [V]
+  why: {5 words} and {6} read the rulings' {6 words} the way their own examples count it, with the ellipsis as the sixth mark [V]
+  -> structural
+  serves: N5
+  spread: Someone else takes the floor
+  touches: D48 D35
+# the visionary at the P3 questions, Saturday evening: the rulings said six words while every bound row shows the ellipsis and five; chosen: "Match the examples". D35's own {6 words} is read the same way. Also ruled the same evening, without changing any ruling: the demo changes, not D35. The thread line still clears when the wearer speaks again; in the demo the teammate's cut-in is a question long enough that the line shows while they are still talking, and the judge glances at it before answering.

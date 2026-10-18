@@ -371,7 +371,7 @@ The plan's second revision follows four rulings, each signed by the visionary th
 The order is chosen for reliability first and originality second: the opener depends on the teammate, whom the team controls; the climax depends on the judge talking, which the teammate provokes.
 
 1. **(0:00)** The judge wears the G2; the lens shows a dot. The teammate: "Hi, I'm Priya." `Priya` for a second and a half. The judge has understood the product.
-2. **(0:20)** The teammate: "Tell me about your own project." The judge talks. The teammate, warned in advance that this is the trick, cuts in with a question. The judge answers it, looks back at the lens: `…and the second reason is` is waiting. The teammate: "That's the one nobody else does."
+2. **(0:20)** The teammate: "Tell me about your own project." The judge talks. The teammate, warned in advance that this is the trick, cuts in with a question that runs at least four seconds. Two to three seconds in, while the teammate is still talking, `…and the second reason is` appears; the judge glances at it before answering (it clears when the judge speaks, D35; ruled 2026-10-17 at the P3 questions, D131's note). The teammate: "That's the one nobody else does."
 3. **(1:15)** If the judge happens to say "I'll …" in conversation, the promise line is the bonus: `promised · send Priya the link`. The teammate may fish for it once ("will you send me the link?") and never twice.
 4. **(1:45)** The judge taps: Priya; swipe down: the promise, or `no promises yet`.
 5. **(2:15, only if P2b landed)** The operator long-presses: the phone shows "Send Priya the link". Without P2b, the operator says what the phone would show and moves on.
