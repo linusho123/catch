@@ -50,6 +50,16 @@ export interface SessionOptions {
   show?: (view: LensView) => void
   /** The wearer's name (CATCH_WEARER_NAME): never caught, whatever the split decides, beside D29's own-name exclusion. */
   wearerName?: string
+  /** A conversation has ended (quiet or long-press): what it held, for the phone's history (D100). */
+  onEnd?: (ended: EndedConversation) => void
+}
+
+/** A conversation as it ends, on the session's clock (ms). P2a adds its promises, P4 its keep. */
+export interface EndedConversation {
+  startedAt: number
+  endedAt: number
+  /** The names caught, in the order heard. */
+  names: string[]
 }
 
 /** One lens's hold on the session: what its socket may still do. */
@@ -92,6 +102,8 @@ export class Session {
 
   // The conversation.
   private inConversation = false
+  private startedAt = 0
+  private readonly onEnd: ((ended: EndedConversation) => void) | undefined
   /** Whether any conversation has begun since Catch started: until one has, anyone's speech begins it (D129). */
   private begun = false
   /**
@@ -124,6 +136,7 @@ export class Session {
     this.clock = opts.clock
     this.split = opts.split
     this.wearerName = opts.wearerName?.trim().toLowerCase() || undefined
+    this.onEnd = opts.onEnd
     if (opts.show) this.attach(opts.show)
   }
 
@@ -280,6 +293,7 @@ export class Session {
     if (!this.inConversation && end > this.pressedAt && (side === 'wearer' || !this.begun)) {
       this.inConversation = true
       this.begun = true
+      this.startedAt = this.clock.now() - agoMs
       this.restartQuiet(agoMs)
     }
     if (side === 'wearer') {
@@ -316,6 +330,7 @@ export class Session {
   private endConversation(): void {
     if (this.quietTimer) this.clock.clearTimeout(this.quietTimer)
     this.quietTimer = undefined
+    if (this.inConversation) this.onEnd?.({ startedAt: this.startedAt, endedAt: this.clock.now(), names: this.names.list() })
     this.inConversation = false
     this.names.clear()
     this.otherRun = []

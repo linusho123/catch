@@ -42,6 +42,7 @@ The orienting document for the agent that builds Catch, with the human as second
 - The phone receives one notification per conversation that produced promises, written as commands, with a second line for promises owed; a long list is cut off with an ellipsis and opens in full. Promises wait for an unreachable phone however long it takes. [ruled: D28, D38]
 - The website is cut (D126): its rows in the screen outlines over a surface column stay scenario-scoped `wip` and are deferred to the fence. [ruled: D103, D115, D126]
 - The native app is a preference, protected as a ruling, not a requirement the build must reconstruct. [ruled: D105]
+- The phone page is the plugin's own page (`apps/lens/index.html`, `src/phone.ts`), shown by the Even app on the phone beside the glasses: it reads a read-only HTTP API on the server (`GET /phone/history`, `GET /phone/conversations/<id>`) with the shared token as a bearer header, on the http(s) twin of the lens's server origin. The server writes a conversation for the phone only as it ends, and only one that produced a promise or a keep; nothing of any other conversation is ever stored. The open count on a row counts both sections. Tick boxes are drawn disabled. [chosen]
 
 ## What survives, and what is deleted
 
@@ -82,3 +83,4 @@ The orienting document for the agent that builds Catch, with the human as second
 - 2026-10-17 — P1a fix round: the glyphs `chosen` line now says only that the check was done in the simulator (M4). No ruled line touched.
 - 2026-10-17 — D130: the phone's screens return on the plugin's own phone page in Even Hub; P4 and P5 required and in the demo build; one ruled line changed.
 - 2026-10-17 — P1b: two `chosen` lines: the conversation held per account across lost sockets (the operator's carry, under D79); the names page as dim text containers rather than the SDK's list container. No ruled line touched.
+- 2026-10-17 — P2b′ (D130): one `chosen` line, the phone page and its read-only API. No ruled line touched.
