@@ -62,9 +62,9 @@
 {"file":"features/promises.feature","title":"Dev's promise is held in the owed list, apart from the wearer's own","status":"passed"}
 {"file":"features/promises.feature","title":"Thinking about it is not a promise","status":"passed"}
 {"file":"features/promises.feature","title":"Two unnamed promisers are numbered, and a name attaches to the most recent","status":"passed"}
-{"file":"features/staying-dark.feature","title":"A pause freezes the conversation","status":"unbound"}
-{"file":"features/staying-dark.feature","title":"A second swipe down resumes listening","status":"unbound"}
-{"file":"features/staying-dark.feature","title":"A swipe down pauses Catch and shows the dash","status":"unbound"}
+{"file":"features/staying-dark.feature","title":"A pause freezes the conversation","status":"passed"}
+{"file":"features/staying-dark.feature","title":"A second swipe down resumes listening","status":"passed"}
+{"file":"features/staying-dark.feature","title":"A swipe down pauses Catch and shows the dash","status":"passed"}
 {"file":"features/staying-dark.feature","title":"Nothing has slipped, so the wearer sees only the dot","status":"passed"}
 {"file":"features/staying-dark.feature","title":"The dot disappears while Catch cannot hear","status":"passed"}
 {"file":"features/staying-dark.feature","title":"The newest catch replaces a page that is showing","status":"passed"}

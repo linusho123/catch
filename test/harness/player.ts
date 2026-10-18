@@ -67,6 +67,9 @@ export function readWavPcm(path: string): Uint8Array {
  * provider going away and coming back (D37): while it is down every stream
  * the server opens fails, and the words said meanwhile are never transcribed.
  *
+ * A pause (P6) is the same for the words: the server closes its stream, and
+ * none said until it opens another is ever transcribed.
+ *
  * Like Deepgram, each stream times its words from its own first audio, not
  * from the fixture's start (M1): once `attach`ed to the server's events it
  * knows when the first PCM fed to each stream was captured, and `deliver`
@@ -119,6 +122,10 @@ export class FixtureStt implements SpeechToText {
     this.attached = true
     events.on('frame', ({ frame }) => {
       this.lastFrame = frame
+    })
+    // P6: the wearer paused; the server closes its stream, and nothing said until it opens another is transcribed.
+    events.on('paused', ({ paused }) => {
+      if (paused) this.lost = true
     })
   }
 

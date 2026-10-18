@@ -94,6 +94,68 @@ function quiet(silence: number): ScriptLine[] {
   return lines
 }
 
+/**
+ * P6, D81: quiet()'s opening (so the wearer's promise is judged as in the
+ * quiet fixtures), then the wearer silent for four minutes while Dev talks;
+ * the scenario pauses at PAUSE_FREEZE.pauseAt for twelve minutes, while the
+ * wearer and Sam speak (never heard); after the resume Dev talks on and the
+ * wearer says nothing, so the conversation ends six minutes later (D92).
+ */
+export const PAUSE_FREEZE = { pauseAt: 248, resumeAt: 968 }
+const PAUSE_FREEZE_LINES: ScriptLine[] = [
+  { at: 0, who: 'wearer', text: 'Hey Dev, how is it going?' },
+  { at: 2.5, who: 'Priya', text: "Hi, I'm Priya." },
+  { at: 6, who: 'wearer', text: "Dev, I'll send you the deck.", span: 2 },
+  ...[28, 78, 128, 178, 228].map((at, i) => ({ at, who: 'Dev', text: DEV_FILLER[i % DEV_FILLER.length]! })),
+  // Paused from 248 to 968: none of this is heard.
+  { at: 300, who: 'wearer', text: "Sorry, I'll take this call." },
+  { at: 420, who: 'Sam', text: "Hi, I'm Sam." },
+  { at: 600, who: 'Dev', text: 'The boxes came in.' },
+  { at: 900, who: 'wearer', text: 'Okay, back again.' },
+  // Listening again from 968: Dev talks on, the wearer says nothing.
+  ...[1000, 1100, 1200, 1300].map((at, i) => ({ at, who: 'Dev', text: DEV_FILLER[i % DEV_FILLER.length]! })),
+]
+
+/** D62's booth chat, before brisk(): `booth-chat`, and `pause-booth` with a pause inside it (P6). */
+const BOOTH_CHAT: ScriptLine[] = [
+  { at: 0, who: 'wearer', text: 'Hi, what are you showing here?' },
+  { at: 2.5, who: 'Marcus', text: "Hi, I'm Marcus." },
+  { at: 15, who: 'Marcus', text: 'This rig maps rooms with lidar.', terms: ['lidar'] },
+  { at: 40, who: 'wearer', text: 'How accurate is it?', ask: 'accura' },
+  { gap: 1, who: 'Marcus', text: 'About two centimeters, thanks to SLAM.', terms: ['SLAM'] },
+  { at: 100, who: 'wearer', text: 'Nice, good luck with it.' },
+]
+
+/**
+ * P6, D86: the booth chat, kept at second 7 and paused from PAUSE_BOOTH.pauseAt
+ * to PAUSE_BOOTH.resumeAt, while Sam introduces himself, the wearer and Sam
+ * each make a promise and Marcus names a term; none of it may reach the lens,
+ * the held pages or the jogger, which is the booth chat's own.
+ */
+export const PAUSE_BOOTH = { pauseAt: 18, resumeAt: 36, words: ['Sam', 'specs', 'brochure', 'Jetson'] }
+const PAUSE_BOOTH_LINES: ScriptLine[] = [
+  ...BOOTH_CHAT.slice(0, 3),
+  { at: 21, who: 'Sam', text: "Hi, I'm Sam." },
+  { at: 24, who: 'wearer', text: "I'll email you the specs tonight." },
+  { at: 28, who: 'Sam', text: "I'll send you the brochure." },
+  { at: 31, who: 'Marcus', text: 'It also runs on Jetson boards.' },
+  ...BOOTH_CHAT.slice(3),
+]
+
+/**
+ * P6, D86: a little talk with Dev, paused from PAUSE_RESUME.pauseAt to
+ * PAUSE_RESUME.resumeAt (Dev and the wearer talk on, unheard), then heard again.
+ */
+export const PAUSE_RESUME = { pauseAt: 6, resumeAt: 15, unheard: ['parking', 'lot'], heard: ['where', 'fine'] }
+const PAUSE_RESUME_LINES: ScriptLine[] = [
+  { at: 0, who: 'wearer', text: 'So how was the drive in this morning?' },
+  { gap: 1, who: 'Dev', text: 'Not bad, the traffic was light for once.' },
+  { at: 9, who: 'Dev', text: 'Anyway, the parking was a mess.' },
+  { at: 12, who: 'wearer', text: 'Right, the lot was full.' },
+  { at: 17, who: 'wearer', text: 'Sorry, where were we?' },
+  { gap: 1, who: 'Dev', text: 'The drive in, it was fine.' },
+]
+
 const SMALL_TALK: ScriptLine[] = (() => {
   const lines: ScriptLine[] = []
   // The turns run in order, round and round: 45 of them run just past three minutes.
@@ -546,14 +608,11 @@ export const SCRIPTS: Record<string, ScriptLine[]> = {
     { gap: 1, who: 'Ana', text: 'Great, talk soon.' },
   ]),
   // D62: a two-minute chat at a booth, kept at second 7, long-pressed at 2:00.
-  'booth-chat': brisk([
-    { at: 0, who: 'wearer', text: 'Hi, what are you showing here?' },
-    { at: 2.5, who: 'Marcus', text: "Hi, I'm Marcus." },
-    { at: 15, who: 'Marcus', text: 'This rig maps rooms with lidar.', terms: ['lidar'] },
-    { at: 40, who: 'wearer', text: 'How accurate is it?', ask: 'accura' },
-    { gap: 1, who: 'Marcus', text: 'About two centimeters, thanks to SLAM.', terms: ['SLAM'] },
-    { at: 100, who: 'wearer', text: 'Nice, good luck with it.' },
-  ]),
+  'booth-chat': brisk(BOOTH_CHAT),
+  // P6 (D86, D81): the pause's three scenarios.
+  'pause-booth': brisk(PAUSE_BOOTH_LINES),
+  'pause-resume': PAUSE_RESUME_LINES,
+  'pause-freeze': PAUSE_FREEZE_LINES,
   // D74, D116: a three-hour workshop, kept at second 7, long-pressed at 3:00:00.
   workshop: WORKSHOP,
   // D53: kept at second 4; Catch cannot hear from second 20 to second 260 (the

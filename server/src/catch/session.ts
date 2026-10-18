@@ -117,6 +117,26 @@ import type { TranscriptWord } from './transcript.ts'
 // words (or a final it marks speech_final), ends the sentence being gathered,
 // so a promise is judged at a natural pause and not only at the provider's
 // punctuation. Promises, the thread and the transcript stay on the finals.
+//
+// Pause (P6, D86, D81), only with the operator's switch on (CATCH_PAUSE; off
+// in the demo build, D130, D133): a swipe down at the bare dot pauses Catch.
+// The lens shows `paused` for a second and a half, then a dim dash in the
+// dot's place until the wearer swipes down again, which shows `listening` for
+// a second and a half and the dot. While paused nothing is heard, held or
+// transcribed: the attached lens is told to stop streaming (app.ts closes its
+// speech-to-text stream and discards any frame that still arrives), and the
+// session takes no frame, interim, or word said after the swipe. The final
+// words the provider still gives for what was said before it (ending within
+// the audio heard by then) are judged as ever (risk-1, the operator's answer
+// 4), and no line comes on the lens (a name or a promise then is held
+// without one). The open conversation is frozen (D81): its quiet timer stops
+// with what was left of its ten minutes and runs on from there at the
+// resume, and nothing goes to the phone meanwhile; the pause is a span not
+// heard (D53, the fence), so a kept jogger says how long was missed. The
+// pause is part of the saved state, so it holds across a restart (P9). A tap
+// or a swipe up while paused does nothing; a long-press still ends the
+// conversation (D52), and Catch stays paused, showing the dash. With the
+// switch off, a swipe down at the dot means nothing, as before.
 
 /** D17: a catch line holds for a second and a half. A ruling, not a tuning value. */
 export const LINE_MS = 1500
@@ -147,6 +167,10 @@ export const KEEP_PROMPT = 'keep this conversation?'
 export const KEPT = 'kept'
 /** The line a swipe up shows in a conversation already kept, for a second and a half (D54). */
 export const ALREADY_KEPT = 'already kept'
+/** The line a swipe down at the dot shows as Catch pauses, for a second and a half, before the dash (D86). */
+export const PAUSED = 'paused'
+/** The line a swipe down at the dash shows as Catch listens again, for a second and a half, before the dot (D86). */
+export const LISTENING = 'listening'
 
 /** The most recent words the split sees at once (the provider-label split reads them together). */
 const SPLIT_WINDOW_WORDS = 200
@@ -244,13 +268,21 @@ export interface SessionOptions {
   saved?: SessionState
   /** `persist` threw (a store error); the session goes on in memory. */
   onSaveError?: (error: unknown) => void
+  /**
+   * Whether a swipe down at the bare dot pauses Catch (P6, D86): the
+   * operator's CATCH_PAUSE, off by default and in the demo build (D130,
+   * D133). Read at every swipe, and as a saved pause is taken up.
+   */
+  pause?: () => boolean
 }
 
 /** The open conversation as the store keeps it across a restart (P9, D73). Nothing of what was said: that is the transcript's, and goes with it (D76). */
 export interface SavedConversation {
   startedAt: number
-  /** The clock reading at which ten minutes of the wearer's silence end it (D92). */
+  /** The clock reading at which ten minutes of the wearer's silence end it (D92); while paused, stale: `quietLeft` holds. */
   quietUntil: number
+  /** While paused (P6, D81): what was left of the ten minutes as the wearer paused, frozen until the resume. */
+  quietLeft?: number
   names: HeldNamesState
   /** The wearer's promises held, in the order made, each with where it was said (seconds on the session's timeline). */
   promises: { summary: string; at: number }[]
@@ -279,6 +311,8 @@ export interface SessionState {
   coveredUntil: number
   /** The clock when this state was saved: Catch heard at least until then. */
   savedAt: number
+  /** The wearer has paused Catch (P6, D86): it stays paused across a restart. */
+  paused?: true
   conversation?: SavedConversation
 }
 
@@ -387,6 +421,12 @@ export interface AttachOptions {
   lens?: string
   /** A newer lens took this one's place (one wearer per account, D79). */
   onReplaced?: () => void
+  /**
+   * The wearer paused (true) or resumed (false) Catch (P6, D86): the lens is
+   * to stop or start streaming, and the speech-to-text stream to close or
+   * open. Called as the lens attaches when Catch is paused, and at every change.
+   */
+  onPaused?: (paused: boolean) => void
 }
 
 const DEAF = JSON.stringify({ kind: 'deaf' } satisfies LensView)
@@ -395,7 +435,7 @@ export class Session {
   private readonly clock: Clock
   private readonly split: WearerSplit
   private send: (view: LensView) => void = () => {}
-  private attached: { active: boolean; show: (view: LensView) => void; onReplaced?: () => void } | undefined
+  private attached: { active: boolean; show: (view: LensView) => void; onReplaced?: () => void; onPaused?: (paused: boolean) => void } | undefined
   private lensId: string | undefined
 
   // The lens frames on the session's timeline (seconds from the first frame's start), and how far they reach.
@@ -505,6 +545,15 @@ export class Session {
   private readonly onSaveError: (error: unknown) => void
   /** The state last handed to `persist`, without its time: an unchanged state is not written again. */
   private savedKey: string | undefined
+  /** The operator's switch: whether a swipe down at the dot pauses (P6). */
+  private readonly pauseEnabled: () => boolean
+  /** The wearer has paused Catch (D86): nothing is heard, held or transcribed until the resume. */
+  private paused = false
+  /** While paused with a conversation open: what was left of its quiet as the wearer paused (D81). */
+  private quietLeft: number | undefined
+  /** Where the pause began on the session's timeline (the end of the audio heard) and on the clock: a word ending after it was said while paused. */
+  private pausedAt = 0
+  private pausedClock = 0
 
   constructor(opts: SessionOptions) {
     this.clock = opts.clock
@@ -519,6 +568,7 @@ export class Session {
     this.transcript = opts.transcript
     this.persist = opts.persist
     this.onSaveError = opts.onSaveError ?? (() => {})
+    this.pauseEnabled = opts.pause ?? (() => false)
     if (opts.saved) this.restore(opts.saved)
     if (opts.show) this.attach(opts.show)
   }
@@ -531,9 +581,13 @@ export class Session {
   private restore(state: SessionState): void {
     this.lensId = state.lens
     this.begun = state.begun
+    if (state.paused && this.pauseEnabled()) this.paused = true
     this.ownNames = new Set(state.ownNames)
     this.epochMs = state.epochMs
     this.coveredUntil = state.coveredUntil
+    // No frame is taken while paused, so the audio heard ends where the pause began.
+    this.pausedAt = state.coveredUntil
+    this.pausedClock = state.savedAt
     this.savedKey = JSON.stringify({ ...state, savedAt: 0 })
     const c = state.conversation
     if (!c) return
@@ -553,8 +607,24 @@ export class Session {
     this.keep = c.keep
     this.gaps = c.gaps.map((g) => ({ ...g }))
     this.lastCaught = c.lastCaught
-    // Not heard since the last process stopped hearing, or at the latest since it last saved (a crash).
+    // Not heard since the last process stopped hearing, or at the latest since it last saved (a crash); or since the
+    // wearer paused, for a pause is a span not heard too (D53, the fence; the operator's answer 1).
     this.deafSince = c.deafSince ? { ...c.deafSince } : { at: state.coveredUntil, clock: state.savedAt }
+    if (state.paused) {
+      // P6, D81: paused as the last process stopped. The conversation stays frozen with what was left of its quiet.
+      const left = Math.max(0, c.quietLeft ?? c.quietUntil - state.savedAt)
+      this.pausedClock = this.deafSince.clock
+      if (this.pauseEnabled()) {
+        this.paused = true
+        this.quietLeft = left
+        return
+      }
+      // The operator has switched pause off since: Catch listens again, and the quiet runs on from where it froze.
+      this.savedKey = undefined
+      this.quietUntil = this.clock.now() + left
+      this.armQuiet(left)
+      return
+    }
     this.quietUntil = c.quietUntil
     const left = c.quietUntil - this.clock.now()
     if (left <= 0) this.endConversation(c.quietUntil)
@@ -579,11 +649,13 @@ export class Session {
       ...(this.epochMs !== undefined ? { epochMs: this.epochMs } : {}),
       coveredUntil: this.coveredUntil,
       savedAt: this.clock.now(),
+      ...(this.paused ? { paused: true as const } : {}),
       ...(this.inConversation
         ? {
             conversation: {
               startedAt: this.startedAt,
               quietUntil: this.quietUntil,
+              ...(this.paused && this.quietLeft !== undefined ? { quietLeft: this.quietLeft } : {}),
               names: this.names.snapshot(),
               promises: held(this.promises).map((summary, i) => ({ summary, at: heldTimes(this.promises)[i]! })),
               owed,
@@ -630,13 +702,15 @@ export class Session {
     }
     this.send = () => {}
     this.setHearing(false)
-    const mine = { active: true, show, onReplaced: opts.onReplaced }
+    const mine = { active: true, show, onReplaced: opts.onReplaced, onPaused: opts.onPaused }
     this.attached = mine
     this.send = show
-    // A lens that has just connected shows no dot (D37) until told otherwise.
+    // A lens that has just connected shows no dot (D37) until told otherwise; a paused Catch shows the dash (D86).
     this.sent = DEAF
     this.render()
     this.save()
+    // P6: a lens that joins a paused Catch is told not to stream.
+    if (this.paused) opts.onPaused?.(true)
     return {
       get active() {
         return mine.active
@@ -663,6 +737,8 @@ export class Session {
    */
   frame(frame: AudioFrame): number {
     const seconds = frame.pcm.byteLength / (16000 * 2)
+    // P6: nothing is heard while paused (app.ts discards such frames before they get here).
+    if (this.paused) return this.epochMs === undefined ? 0 : (frame.captureMs - this.epochMs) / 1000 - seconds
     this.epochMs ??= frame.captureMs - seconds * 1000
     const end = (frame.captureMs - this.epochMs) / 1000
     this.frames.push({ start: end - seconds, end, role: frame.speakerRole, loudness: pcmLoudnessDbfs(frame.pcm) })
@@ -691,6 +767,13 @@ export class Session {
    * one before, and are read only for names (PT).
    */
   words(words: readonly SttWord[]): void {
+    // P6: nothing said while paused is transcribed. The provider's final words for what was said before the
+    // swipe (ending within the audio heard by then) may come after it, and are judged as ever (risk-1, the
+    // operator's answer 4); an interim, and any word past the pause, never are.
+    if (this.paused) {
+      words = words.filter((w) => w.isFinal && this.beforePause(w.end))
+      if (words.length === 0) return
+    }
     const finals = words.filter((w) => w.isFinal)
     for (const w of finals) this.pending.push(w)
     this.finalsHeard += finals.length
@@ -711,6 +794,7 @@ export class Session {
    * utterance's final words, and is taken in order with them (PT).
    */
   utteranceEnd(lastWordEnd: number): void {
+    if (this.paused && !this.beforePause(lastWordEnd)) return
     this.pending.push({ utteranceEnd: lastWordEnd })
     this.drain(false)
   }
@@ -728,9 +812,10 @@ export class Session {
       this.interimRead = undefined
       for (const t of this.tentatives.slice()) this.withdraw(t)
     }
-    // D53: a span the open conversation did not hear, from here to when Catch hears again (or the end).
-    if (!hearing && this.inConversation) this.deafSince = { at: this.coveredUntil, clock: this.clock.now() }
-    if (hearing) this.closeGap()
+    // D53: a span the open conversation did not hear, from here to when Catch hears again (or the end); a pause has begun its own already (P6).
+    if (!hearing && this.inConversation && !this.paused) this.deafSince = { at: this.coveredUntil, clock: this.clock.now() }
+    // Paused, a stream that opens hears nothing yet: the pause's span runs on to the resume (P6).
+    if (hearing && !this.paused) this.closeGap()
     this.clearView()
     this.toRest()
     this.render()
@@ -742,7 +827,7 @@ export class Session {
    * anything else showing goes back to the dot (D34).
    */
   tap(): void {
-    if (!this.hearing) return
+    if (!this.hearing || this.paused) return
     // D111: a tap on the prompt keeps the conversation.
     if (this.promptShowing) {
       this.keep = 'kept'
@@ -766,10 +851,14 @@ export class Session {
    * A swipe down: on the names page, the next page of names while there are
    * names past the ones in view, and at the last name the promises page, each
    * for five seconds of its own (D43, D112, P10); on the keep prompt, no
-   * (D40). On the promises page it means nothing, and at the dot nothing yet
-   * (P6 pauses there).
+   * (D40); with the pause switched on (P6, D86), at the bare dot it pauses
+   * Catch, and at the dash it resumes. Anywhere else (a catch line, the
+   * promises page) it means nothing.
    */
   swipeDown(): void {
+    if (this.closed) return
+    // D86: the second swipe down listens again, whatever showed the dash.
+    if (this.paused) return this.resume()
     if (!this.hearing) return
     // D40: a swipe down on the prompt declines it; nothing is kept, and a later swipe up asks again.
     if (this.promptShowing) {
@@ -786,8 +875,12 @@ export class Session {
         else this.showPromises()
         return
       }
+      case 'dot':
+        // D86: at the bare dot, the swipe pauses (only with the operator's switch on).
+        if (this.pauseEnabled()) this.pause()
+        return
       default:
-        // The dot, a line, the promises page: nothing (P6's pause comes at the dot).
+        // A line, the promises page: nothing.
         return
     }
   }
@@ -803,7 +896,7 @@ export class Session {
    * there is nothing to keep, and it does nothing.
    */
   swipeUp(): void {
-    if (!this.hearing || this.closed || this.promptShowing) return
+    if (!this.hearing || this.closed || this.promptShowing || this.paused) return
     switch (this.view.kind) {
       case 'names': {
         const page = this.heldPage ?? { thread: this.view.thread, from: 0 }
@@ -839,10 +932,95 @@ export class Session {
   longPress(): void {
     this.pressedAt = this.coveredUntil
     this.endConversation()
-    if (!this.hearing || this.closed) return
+    if (this.closed) return
+    // Paused, Catch stays paused: the dash, at once (P6).
+    if (this.paused) {
+      this.clearView()
+      this.toRest()
+      this.render()
+      return
+    }
+    if (!this.hearing) return
     this.clearView()
     this.view = { kind: 'dot' }
     this.render()
+  }
+
+  /** Whether the wearer has paused Catch (P6, D86). */
+  get isPaused(): boolean {
+    return this.paused
+  }
+
+  /** Where the audio heard ends, on the session's timeline (seconds): while paused, where the pause began. */
+  get heardUntil(): number {
+    return this.coveredUntil
+  }
+
+  /**
+   * The wearer pauses Catch (P6, D86): `paused` for a second and a half, then
+   * the dash. Nothing is heard from here: the interim goes, words past the
+   * audio heard are never judged, and those within it still are (risk-1); the
+   * open conversation freezes with what was left of its quiet (D81), and a
+   * span not heard begins (D53).
+   */
+  private pause(): void {
+    this.paused = true
+    this.pausedAt = this.coveredUntil
+    this.pausedClock = this.clock.now()
+    // The final words waiting for frames end past the audio heard: said after the swipe, never judged. The rest are judged now (risk-1).
+    this.pending = this.pending.filter((p) => !('text' in p) || this.beforePause(p.end))
+    this.drain(false)
+    this.interim = []
+    this.interimRead = undefined
+    for (const t of this.tentatives.slice()) this.withdraw(t)
+    // What the wearer was saying is not known to be cut off by anyone (D35).
+    this.thread.clear()
+    if (this.inConversation) {
+      this.quietLeft = Math.max(0, this.quietUntil - this.clock.now())
+      if (this.quietTimer) this.clock.clearTimeout(this.quietTimer)
+      this.quietTimer = undefined
+      // D53, the fence: a pause is a span not heard, and a kept jogger says how long was missed (the operator's answer 1).
+      if (!this.deafSince) this.deafSince = { at: this.coveredUntil, clock: this.clock.now() }
+    }
+    this.showStatus(PAUSED)
+    this.save()
+    this.attached?.onPaused?.(true)
+  }
+
+  /**
+   * The wearer resumes (P6, D86): `listening` for a second and a half, then
+   * the dot; the conversation's quiet runs on from where it froze (D81).
+   */
+  private resume(): void {
+    this.paused = false
+    // A sentence left open at the swipe (its last words never came) is finished: nothing said after the pause joins it.
+    this.finishWearer()
+    this.finishOther()
+    if (this.inConversation) {
+      const left = this.quietLeft ?? Math.max(0, this.quietUntil - this.clock.now())
+      this.quietUntil = this.clock.now() + left
+      this.armQuiet(left)
+      // The span not heard that the pause began ends here, or, for a lens that came back during the pause and has no stream yet, once it hears (D53).
+      this.deafSince ??= { at: this.coveredUntil, clock: this.pausedClock }
+      if (this.hearing) this.closeGap()
+    }
+    this.quietLeft = undefined
+    this.showStatus(LISTENING)
+    this.save()
+    this.attached?.onPaused?.(false)
+  }
+
+  /** Whether a word (or an utterance) ending at `end` on the session's timeline was said before the pause began: within the audio heard by then. */
+  private beforePause(end: number): boolean {
+    return end <= this.pausedAt + 1e-6
+  }
+
+  /** `paused` or `listening` for a second and a half (D86), then the lens at rest: the dash, or the dot. */
+  private showStatus(text: string): void {
+    this.clearView()
+    this.view = { kind: 'line', text }
+    this.render()
+    this.viewTimer = this.clock.setTimeout(() => this.backToDot(), LINE_MS)
   }
 
   /** Whether a conversation is open. */
@@ -1055,6 +1233,8 @@ export class Session {
       this.begun = true
       this.startedAt = this.clock.now() - agoMs
       this.restartQuiet(agoMs)
+      // Opened by words said before a swipe, delivered after it: the pause is a span it did not hear (D53).
+      if (this.paused) this.deafSince ??= { at: this.pausedAt, clock: this.pausedClock }
     }
     if (this.inConversation) this.transcript?.add({ text, start, end, side })
     this.sentences(text, side, end)
@@ -1280,6 +1460,11 @@ export class Session {
 
   /** The quiet timer starts over: the conversation ends ten minutes after the wearer last spoke (D92). */
   private restartQuiet(agoMs: number): void {
+    // Paused (D81): the wearer's words from before the swipe set what is left, and the quiet stays frozen until the resume.
+    if (this.paused) {
+      this.quietLeft = Math.max(0, QUIET_MS - agoMs)
+      return
+    }
     this.quietUntil = this.clock.now() + QUIET_MS - agoMs
     this.armQuiet(QUIET_MS - agoMs)
   }
@@ -1323,6 +1508,7 @@ export class Session {
     const promises = this.promises
     this.promises = noPromises()
     this.inConversation = false
+    this.quietLeft = undefined
     this.keep = 'none'
     this.gaps = []
     this.deafSince = undefined
@@ -1374,7 +1560,8 @@ export class Session {
   }
 
   private showLine(text: string): void {
-    if (!this.hearing || this.closed) return
+    // P6: nothing comes on the lens while paused; a promise answered then is held without its line.
+    if (!this.hearing || this.closed || this.paused) return
     this.clearView()
     this.view = { kind: 'line', text }
     this.render()
@@ -1383,7 +1570,7 @@ export class Session {
 
   /** The dropped-thread line: no timer; it stays until the wearer speaks again or taps (D34, D35). */
   private showThread(text: string): void {
-    if (!this.hearing || this.closed) return
+    if (!this.hearing || this.closed || this.paused) return
     this.clearView()
     this.view = { kind: 'line', text }
     this.threadShowing = true
@@ -1403,6 +1590,11 @@ export class Session {
    * cannot hear (D37). Call after clearView.
    */
   private toRest(): void {
+    // D86: paused, the dash, whether or not a stream is open, so paused never looks like can't-hear.
+    if (this.paused) {
+      this.view = { kind: 'dash' }
+      return
+    }
     if (this.hearing && this.inConversation && this.keep === 'asking') {
       this.view = { kind: 'line', text: KEEP_PROMPT }
       this.promptShowing = true

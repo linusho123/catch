@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { LINE_PX, NAMES_PER_PAGE, NAMES_PER_PAGE_UNDER_THREAD, parseLensMessage } from '../../../shared/lens-protocol.ts'
-import { containersFor, DIM, NAMES_HEADER, NO_PROMISES, NOTHING_HELD, PROMISES_HEADER, PROMISES_HINT } from './lens.ts'
+import { containersFor, DIM, NAMES_HEADER, NO_PROMISES, NOTHING_HELD, PAUSED_MARK, PROMISES_HEADER, PROMISES_HINT } from './lens.ts'
 
 // What the lens hands the bridge for one view: the containers as the SDK
 // receives them. The features read the same payloads from the bridge stub.
@@ -78,5 +78,20 @@ describe('a page of names fits the lens (P10, D43)', () => {
     expect(plain.content).toBe(names(NAMES_PER_PAGE).join('\n'))
     const threaded = box({ kind: 'names', names: names(NAMES_PER_PAGE_UNDER_THREAD), thread: '…and the second reason is' })
     expect(Math.floor((threaded.height ?? 0) / LINE_PX)).toBe(NAMES_PER_PAGE_UNDER_THREAD)
+  })
+})
+
+describe('the pause (P6, D86)', () => {
+  it("draws the dash dim in the dot's own box, never the empty box of can't-hear", () => {
+    const [dot] = containersFor({ kind: 'dot' })
+    const [dash] = containersFor({ kind: 'dash' })
+    const [deaf] = containersFor({ kind: 'deaf' })
+    expect(dash!.content).toBe(PAUSED_MARK)
+    expect(PAUSED_MARK.trim()).not.toBe('')
+    expect(dash!.content).not.toBe(dot!.content)
+    expect(deaf!.content).toBe('')
+    expect(dash!.textColor).toBe(DIM)
+    expect([dash!.xPosition, dash!.yPosition, dash!.width, dash!.height]).toEqual([dot!.xPosition, dot!.yPosition, dot!.width, dot!.height])
+    expect(dash!.isEventCapture, 'the dash takes the touches, so the second swipe down arrives').toBe(1)
   })
 })

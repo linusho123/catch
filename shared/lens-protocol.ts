@@ -12,6 +12,8 @@ export type LensView =
   | { kind: 'dot' }
   /** Catch cannot hear: no mark at all (D37). */
   | { kind: 'deaf' }
+  /** The wearer paused Catch: a dim dash in the dot's place for as long as the pause lasts, so paused never looks like can't-hear (D86, P6). */
+  | { kind: 'dash' }
   /** One catch: a dim line in the lower third, for a second and a half (D17) or, the dropped thread, until cleared (D35). */
   | { kind: 'line'; text: string }
   /**
@@ -54,13 +56,23 @@ export type ServerMessage =
   | FrameAck
   | { type: 'show'; view: LensView }
   | { type: 'error'; message: string }
+  /**
+   * Whether the lens streams the glasses' audio (P6, D86): `false` while the
+   * wearer has paused Catch, so nothing said then leaves the glasses; `true`
+   * when the wearer resumes. Each socket starts muted on the lens: the server
+   * says `true` as it takes one, unless Catch is paused, so a lens that
+   * reconnects during a pause never reopens the microphone.
+   */
+  | { type: 'listening'; on: boolean }
 
 /**
  * A tap; a long-press ends the conversation now (D52); a swipe down scrolls
  * the names page and, past its last name, turns to the promises page (D43),
- * and declines the keep prompt (D40); a swipe up asks to keep the
- * conversation at the dot (D40) and scrolls a held page back (D43, P10). Double-tap is Even's exit and
- * never leaves the lens.
+ * declines the keep prompt (D40), and, with the pause switched on
+ * (CATCH_PAUSE, P6), pauses Catch at the bare dot and resumes it at the dash
+ * (D86); a swipe up asks to keep the conversation at the dot (D40) and
+ * scrolls a held page back (D43, P10). Double-tap is Even's exit and never
+ * leaves the lens.
  */
 export type Gesture = 'tap' | 'long-press' | 'swipe-down' | 'swipe-up'
 
