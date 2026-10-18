@@ -838,14 +838,6 @@ export class Session {
       return
     }
     if (this.view.kind === 'dot') {
-      // D136: with no conversation open, a tap at the dot starts one now (the wearer need not speak first).
-      if (!this.inConversation) {
-        this.inConversation = true
-        this.begun = true
-        this.startedAt = this.clock.now()
-        this.restartQuiet(0)
-        this.save()
-      }
       // D120: with detection off, the page gives the thread back as its first line.
       const thread = this.threadDetection() ? undefined : this.thread.line()
       this.showNames(thread, 0)
